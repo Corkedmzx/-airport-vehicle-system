@@ -316,6 +316,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Download, Delete, Refresh, Document, Warning, InfoFilled, CircleCheck,
@@ -323,6 +324,8 @@ import {
 } from '@element-plus/icons-vue'
 import type { Log } from '@/api/types'
 import dayjs from 'dayjs'
+
+const router = useRouter()
 
 // 日志统计数据
 const logStats = ref({
@@ -461,7 +464,7 @@ const formatDateTime = (time: string) => {
 
 // 查看用户
 const viewUser = (userId: string) => {
-  ElMessage.info(`查看用户详情功能开发中，用户ID: ${userId}`)
+  router.push(`/users/${userId}`)
 }
 
 // 查看日志详情
@@ -507,10 +510,58 @@ const exportLogs = async () => {
       }
     )
     
-    // TODO: 调用API导出日志
-    ElMessage.success('日志导出功能开发中')
-  } catch {
-    // 用户取消
+    ElMessage.info('正在导出日志数据...')
+    
+    // 获取所有日志数据
+    const { getLogsApi } = await import('@/api/logs')
+    const response = await getLogsApi({
+      page: 0,
+      size: 10000, // 获取所有数据
+      level: searchForm.level || undefined,
+      category: searchForm.category || undefined
+    })
+    
+    if (response.data.code === 200) {
+      const logs = response.data.data.content || []
+      
+      // 转换为CSV格式
+      const headers = ['日志ID', '级别', '类别', '消息', '用户名', 'IP地址', '模块', '请求URL', '请求方法', '执行时间(ms)', '创建时间']
+      const rows = logs.map((log: any) => [
+        log.id,
+        log.level,
+        log.category,
+        log.message,
+        log.username || '-',
+        log.ipAddress || '-',
+        log.module || '-',
+        log.requestUrl || '-',
+        log.requestMethod || '-',
+        log.executionTime || '-',
+        log.createTime
+      ])
+      
+      // 创建CSV内容
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n')
+      
+      // 创建下载链接
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `系统日志_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      ElMessage.success('日志数据导出成功')
+    }
+  } catch (error) {
+    console.error('Export logs failed:', error)
+    ElMessage.error('导出失败，请稍后重试')
   }
 }
 
@@ -527,13 +578,16 @@ const clearLogs = async () => {
       }
     )
     
-    // TODO: 调用API清空日志
+    const { clearLogsApi } = await import('@/api/logs')
+    await clearLogsApi()
     logs.value = []
     pagination.value.total = 0
     ElMessage.success('日志已清空')
     await loadLogStats()
-  } catch {
-    // 用户取消
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '清空失败')
+    }
   }
 }
 
@@ -599,7 +653,28 @@ const loadData = async () => {
 // 加载日志统计数据
 const loadLogStats = async () => {
   try {
-    // TODO: 调用API获取统计数据
+    const { getLogStatisticsApi } = await import('@/api/logs')
+    const response = await getLogStatisticsApi()
+    if (response.data.code === 200) {
+      const stats = response.data.data
+      logStats.value = {
+        totalLogs: stats.totalLogs || 0,
+        todayLogs: stats.todayLogs || 0,
+        errorLogs: stats.errorLogs || 0,
+        unreadErrors: stats.unreadErrors || 0,
+        warningLogs: stats.warningLogs || 0,
+        todayWarnings: 0,
+        infoLogs: stats.infoLogs || 0
+      }
+    }
+  } catch (error) {
+    console.error('Load log stats failed:', error)
+  }
+}
+
+// 加载日志统计数据（旧代码保留作为备用）
+const loadLogStatsOld = async () => {
+  try {
     // 模拟数据
     logStats.value = {
       totalLogs: 15420,
@@ -618,7 +693,42 @@ const loadLogStats = async () => {
 // 加载日志列表
 const loadLogs = async () => {
   try {
-    // TODO: 调用API获取日志列表
+    const { getLogsApi } = await import('@/api/logs')
+    const response = await getLogsApi({
+      page: pagination.value.page - 1,
+      size: pagination.value.size,
+      level: searchForm.value.level || undefined,
+      category: searchForm.value.category || undefined,
+      keyword: searchForm.value.keyword || undefined
+    })
+    
+    if (response.data.code === 200) {
+      const pageData = response.data.data
+      logs.value = (pageData.content || []).map((log: any) => ({
+        id: log.id.toString(),
+        timestamp: log.createTime,
+        level: log.level,
+        category: log.category,
+        message: log.message,
+        stackTrace: log.exception,
+        user: log.username,
+        userId: log.userId?.toString(),
+        ipAddress: log.ipAddress || '',
+        module: log.module || '',
+        read: false,
+        context: {}
+      }))
+      pagination.value.total = pageData.totalElements || 0
+    }
+  } catch (error) {
+    console.error('Load logs failed:', error)
+    logs.value = []
+  }
+}
+
+// 加载日志列表（旧代码保留作为备用）
+const loadLogsOld = async () => {
+  try {
     // 模拟数据
     logs.value = [
       {

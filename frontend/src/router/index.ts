@@ -12,6 +12,13 @@ const router = createRouter({
       meta: { title: '登录', requiresAuth: false }
     },
     {
+      path: '/register',
+      name: 'Register',
+      // @ts-ignore: ignore missing module/type declaration for .vue files
+      component: () => import('@/views/register/index.vue'),
+      meta: { title: '注册', requiresAuth: false }
+    },
+    {
       path: '/',
       redirect: '/dashboard',
       // @ts-ignore: ignore missing module/type declaration for .vue files
@@ -40,6 +47,20 @@ const router = createRouter({
           meta: { title: '车辆详情', hidden: true }
         },
         {
+          path: 'vehicles/add',
+          name: 'VehicleAdd',
+          // @ts-ignore: ignore missing module/type declaration for .vue files
+          component: () => import('@/views/Vehicles/Form.vue'),
+          meta: { title: '添加车辆', hidden: true }
+        },
+        {
+          path: 'vehicles/:id/edit',
+          name: 'VehicleEdit',
+          // @ts-ignore: ignore missing module/type declaration for .vue files
+          component: () => import('@/views/Vehicles/Form.vue'),
+          meta: { title: '编辑车辆', hidden: true }
+        },
+        {
           path: 'tasks',
           name: 'Tasks',
           // @ts-ignore: ignore missing module/type declaration for .vue files
@@ -52,6 +73,20 @@ const router = createRouter({
           // @ts-ignore: ignore missing module/type declaration for .vue files
           component: () => import('@/views/Tasks/Detail.vue'),
           meta: { title: '任务详情', hidden: true }
+        },
+        {
+          path: 'tasks/add',
+          name: 'TaskAdd',
+          // @ts-ignore: ignore missing module/type declaration for .vue files
+          component: () => import('@/views/Tasks/Form.vue'),
+          meta: { title: '创建任务', hidden: true }
+        },
+        {
+          path: 'tasks/:id/edit',
+          name: 'TaskEdit',
+          // @ts-ignore: ignore missing module/type declaration for .vue files
+          component: () => import('@/views/Tasks/Form.vue'),
+          meta: { title: '编辑任务', hidden: true }
         },
         {
           path: 'statistics',

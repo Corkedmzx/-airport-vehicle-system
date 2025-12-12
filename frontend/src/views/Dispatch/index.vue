@@ -460,8 +460,47 @@ const autoDispatch = async () => {
       }
     )
     
-    // TODO: 调用智能调度API
-    ElMessage.success('智能调度已完成')
+    // 智能调度逻辑：根据任务优先级和车辆位置自动分配
+    const unassignedTasks = pendingTasks.value
+    const availableVehicles = availableVehicles.value
+    
+    if (unassignedTasks.length === 0) {
+      ElMessage.warning('没有待分配的任务')
+      return
+    }
+    
+    if (availableVehicles.length === 0) {
+      ElMessage.warning('没有可用的车辆')
+      return
+    }
+    
+    // 按优先级排序任务
+    const sortedTasks = [...unassignedTasks].sort((a, b) => {
+      // 优先级：1-高, 2-中, 3-低
+      return a.priority - b.priority
+    })
+    
+    let assignedCount = 0
+    for (const task of sortedTasks) {
+      if (availableVehicles.length === 0) break
+      
+      // 选择第一个可用车辆
+      const vehicle = availableVehicles[0]
+      try {
+        const { assignTaskApi } = await import('@/api/tasks')
+        await assignTaskApi(Number(task.id), Number(vehicle.id))
+        assignedCount++
+        // 从可用车辆列表中移除已分配的车辆
+        const index = availableVehicles.findIndex(v => v.id === vehicle.id)
+        if (index > -1) {
+          availableVehicles.splice(index, 1)
+        }
+      } catch (error) {
+        console.error(`分配任务 ${task.taskNo} 失败:`, error)
+      }
+    }
+    
+    ElMessage.success(`智能调度完成，已分配 ${assignedCount} 个任务`)
     await loadData()
   } catch {
     // 用户取消
@@ -472,7 +511,7 @@ const autoDispatch = async () => {
 const autoAssignAll = async () => {
   try {
     await ElMessageBox.confirm(
-      '将自动分配所有待分配任务，是否继续？',
+      `将自动分配所有 ${pendingTasks.value.length} 个待分配任务，是否继续？`,
       '自动分配',
       {
         confirmButtonText: '确认分配',
@@ -481,8 +520,34 @@ const autoAssignAll = async () => {
       }
     )
     
-    // TODO: 调用自动分配API
-    ElMessage.success('自动分配已完成')
+    const unassignedTasks = pendingTasks.value
+    const availableVehicles = availableVehicles.value
+    
+    if (unassignedTasks.length === 0) {
+      ElMessage.warning('没有待分配的任务')
+      return
+    }
+    
+    if (availableVehicles.length === 0) {
+      ElMessage.warning('没有可用的车辆')
+      return
+    }
+    
+    let assignedCount = 0
+    for (let i = 0; i < Math.min(unassignedTasks.length, availableVehicles.length); i++) {
+      const task = unassignedTasks[i]
+      const vehicle = availableVehicles[i % availableVehicles.length]
+      
+      try {
+        const { assignTaskApi } = await import('@/api/tasks')
+        await assignTaskApi(Number(task.id), Number(vehicle.id))
+        assignedCount++
+      } catch (error) {
+        console.error(`分配任务 ${task.taskNo} 失败:`, error)
+      }
+    }
+    
+    ElMessage.success(`自动分配完成，已分配 ${assignedCount} 个任务`)
     await loadData()
   } catch {
     // 用户取消
@@ -502,8 +567,16 @@ const manualAssign = (task: DispatchTask) => {
 }
 
 // 分配任务给车辆
-const assignTaskToVehicle = (vehicle: Vehicle) => {
-  ElMessage.info(`为车辆 ${vehicle.plateNumber} 分配任务功能开发中`)
+const assignTaskToVehicle = async (vehicle: Vehicle) => {
+  if (pendingTasks.value.length === 0) {
+    ElMessage.warning('没有待分配的任务')
+    return
+  }
+  
+  // 选择第一个待分配任务进行分配
+  const task = pendingTasks.value[0]
+  manualAssign(task)
+  assignForm.value.vehicleId = vehicle.id.toString()
 }
 
 // 维修申请
@@ -529,12 +602,24 @@ const confirmAssign = async () => {
   try {
     await assignFormRef.value.validate()
     
-    // TODO: 调用分配API
-    ElMessage.success('任务分配成功')
-    assignDialogVisible.value = false
-    await loadData()
-  } catch (error) {
-    console.error('Assign validation failed:', error)
+    // 调用分配API
+    const { assignTaskApi } = await import('@/api/tasks')
+    const response = await assignTaskApi(
+      Number(assignForm.value.taskId),
+      Number(assignForm.value.vehicleId)
+    )
+    
+    if (response.data.code === 200) {
+      ElMessage.success('任务分配成功')
+      assignDialogVisible.value = false
+      await loadData()
+    } else {
+      ElMessage.error(response.data.message || '分配失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '分配失败')
+    }
   }
 }
 
@@ -581,9 +666,22 @@ const loadDispatchStats = async () => {
 // 加载待分配任务
 const loadPendingTasks = async () => {
   try {
-    // TODO: 调用API获取待分配任务
+    const { getPendingTasksApi } = await import('@/api/tasks')
+    const response = await getPendingTasksApi()
+    if (response.data.code === 200) {
+      pendingTasks.value = Array.isArray(response.data.data) ? response.data.data : []
+    }
+  } catch (error) {
+    console.error('Load pending tasks failed:', error)
+    pendingTasks.value = []
+  }
+}
+
+// 加载可用车辆（旧代码保留作为备用）
+const loadAvailableVehiclesOld = async () => {
+  try {
     // 模拟数据
-    pendingTasks.value = [
+    availableVehicles.value = [
       {
         id: '1',
         taskName: 'T3-01接机任务',
@@ -613,33 +711,26 @@ const loadPendingTasks = async () => {
 // 加载可用车辆
 const loadAvailableVehicles = async () => {
   try {
-    // TODO: 调用API获取车辆状态
-    // 模拟数据
-    availableVehicles.value = [
-      {
-        id: '1',
-        plateNumber: '京A12345',
-        vehicleType: '客运大巴',
-        status: 1,
-        location: 'T3航站楼',
-        distanceToTasks: 2.5,
+    const { getActiveVehiclesApi } = await import('@/api/vehicles')
+    const response = await getActiveVehiclesApi()
+    if (response.data.code === 200) {
+      const vehicles = Array.isArray(response.data.data) ? response.data.data : []
+      availableVehicles.value = vehicles.map(v => ({
+        id: v.id.toString(),
+        plateNumber: v.vehicleNo,
+        vehicleType: `类型${v.vehicleTypeId}`,
+        status: v.status,
+        location: v.locationAddress || '未知',
+        distanceToTasks: 0,
         currentLoad: 0,
-        efficiencyScore: 95
-      },
-      {
-        id: '2',
-        plateNumber: '京B67890',
-        vehicleType: '货运卡车',
-        status: 1,
-        location: '货机坪',
-        distanceToTasks: 1.8,
-        currentLoad: 0,
-        efficiencyScore: 88
-      }
-    ]
-    filteredVehicles.value = availableVehicles.value
+        efficiencyScore: 90
+      }))
+      filteredVehicles.value = availableVehicles.value
+    }
   } catch (error) {
     console.error('Load available vehicles failed:', error)
+    availableVehicles.value = []
+    filteredVehicles.value = []
   }
 }
 

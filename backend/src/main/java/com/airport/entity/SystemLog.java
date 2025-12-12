@@ -4,9 +4,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 // backend/src/main/java/com/airport/entity/SystemLog.java
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name = "system_log")
 public class SystemLog extends BaseEntity {

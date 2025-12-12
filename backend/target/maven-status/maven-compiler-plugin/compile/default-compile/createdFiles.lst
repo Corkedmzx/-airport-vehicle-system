@@ -1,3 +1,4 @@
+com\airport\controller\AlertController.class
 com\airport\common\exception\BusinessException.class
 com\airport\service\VehicleService.class
 com\airport\dto\VehicleLocationDTO.class
@@ -7,6 +8,7 @@ com\airport\dto\LoginRequest.class
 com\airport\dto\VehicleDTO.class
 com\airport\config\JacksonConfig.class
 com\airport\config\Knife4jConfiguration.class
+com\airport\entity\Alert.class
 com\airport\service\DispatchTaskService.class
 com\airport\entity\BaseEntity.class
 com\airport\config\OpenApiConfig.class
@@ -17,6 +19,7 @@ com\airport\utils\JwtUtils.class
 com\airport\dto\TaskStatistics.class
 com\airport\entity\Vehicle.class
 com\airport\repository\VehicleRepository.class
+com\airport\controller\SystemLogController.class
 com\airport\common\exception\GlobalExceptionHandler.class
 com\airport\dto\LoginResponse.class
 com\airport\service\impl\VehicleServiceImpl.class
@@ -27,6 +30,7 @@ com\airport\entity\SystemLog.class
 com\airport\controller\DispatchTaskController.class
 com\airport\dto\Result.class
 com\airport\config\SystemConfig.class
+com\airport\repository\AlertRepository.class
 com\airport\service\SysUserService.class
 com\airport\repository\SysUserRepository.class
 com\airport\dto\LoginResponse$UserInfo.class
@@ -37,3 +41,5 @@ com\airport\entity\SysUser.class
 com\airport\controller\StatisticsController.class
 com\airport\AirportVehicleSystemApplication.class
 com\airport\utils\PasswordUtils.class
+com\airport\controller\UserController.class
+com\airport\repository\SystemLogRepository.class

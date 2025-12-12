@@ -53,6 +53,30 @@ public class AuthController {
         return Result.success("认证系统运行正常");
     }
 
+    @PostMapping("/register")
+    @Operation(summary = "用户注册", description = "新用户注册")
+    public ResponseEntity<Result<LoginResponse>> register(@RequestBody LoginRequest request) {
+        try {
+            // 创建新用户
+            com.airport.entity.SysUser newUser = new com.airport.entity.SysUser();
+            newUser.setUsername(request.getUsername());
+            newUser.setPassword(request.getPassword());
+            newUser.setEmail(request.getEmail());
+            newUser.setPhone(request.getPhone());
+            newUser.setStatus(1); // 默认启用
+            
+            com.airport.entity.SysUser createdUser = userService.createUser(newUser);
+            
+            // 注册成功后自动登录
+            LoginResponse response = userService.login(createdUser.getUsername(), request.getPassword());
+            return ResponseEntity.ok(Result.success("注册成功", response));
+        } catch (Exception e) {
+            log.error("注册失败: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Result.error(e.getMessage()));
+        }
+    }
+
     @PostMapping("/logout")
     @Operation(summary = "用户登出", description = "用户退出登录")
     public Result<String> logout() {

@@ -52,9 +52,11 @@
         @row-click="handleRowClick"
       >
         <el-table-column prop="vehicleNo" label="车牌号" width="120" />
-        <el-table-column prop="brand" label="品牌" width="100" />
-        <el-table-column prop="model" label="型号" width="120" />
-        <el-table-column prop="color" label="颜色" width="80" />
+        <el-table-column prop="brand" label="品牌型号" width="150">
+          <template #default="{ row }">
+            {{ row.brand }} {{ row.model }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)" size="small">
@@ -62,24 +64,22 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="mileage" label="里程(km)" width="100">
-          <template #default="{ row }">
-            {{ row.mileage?.toFixed(1) || '0.0' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="locationAddress" label="当前位置" min-width="200">
+        <el-table-column prop="locationAddress" label="当前位置" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">
             <span v-if="row.locationAddress">{{ row.locationAddress }}</span>
             <span v-else class="text-muted">未定位</span>
           </template>
         </el-table-column>
-        <el-table-column prop="lastUpdateTime" label="最后更新" width="150">
+        <el-table-column prop="mileage" label="里程(km)" width="100">
           <template #default="{ row }">
-            {{ formatTime(row.lastUpdateTime) }}
+            {{ row.mileage?.toFixed(1) || '0.0' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
+            <el-button type="primary" link @click.stop="viewVehicleDetail(row)">
+              查看详情
+            </el-button>
             <el-button type="primary" link @click.stop="handleEdit(row)">
               编辑
             </el-button>
@@ -181,18 +181,22 @@ const loadVehicles = async () => {
     
     const response = await getVehiclesApi(params)
     if (response.data.code === 200) {
-      // 模拟分页数据
-      const allVehicles = generateMockVehicles()
-      const filteredVehicles = allVehicles.filter(vehicle => {
-        const matchKeyword = !searchForm.keyword || 
-          vehicle.vehicleNo.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-          (vehicle.brand && vehicle.brand.toLowerCase().includes(searchForm.keyword.toLowerCase())) ||
-          (vehicle.model && vehicle.model.toLowerCase().includes(searchForm.keyword.toLowerCase()))
-        
-        const matchStatus = searchForm.status === undefined || vehicle.status === searchForm.status
-        
-        return matchKeyword && matchStatus
-      })
+      const allVehicles = Array.isArray(response.data.data) ? response.data.data : []
+      
+      // 前端筛选
+      let filteredVehicles = allVehicles
+      if (searchForm.keyword) {
+        const keyword = searchForm.keyword.toLowerCase()
+        filteredVehicles = filteredVehicles.filter(vehicle => 
+          vehicle.vehicleNo.toLowerCase().includes(keyword) ||
+          (vehicle.brand && vehicle.brand.toLowerCase().includes(keyword)) ||
+          (vehicle.model && vehicle.model.toLowerCase().includes(keyword))
+        )
+      }
+      
+      if (searchForm.status !== undefined) {
+        filteredVehicles = filteredVehicles.filter(vehicle => vehicle.status === searchForm.status)
+      }
       
       // 分页
       const start = (pagination.page - 1) * pagination.size
@@ -207,34 +211,15 @@ const loadVehicles = async () => {
   }
 }
 
-// 生成模拟数据
-const generateMockVehicles = (): Vehicle[] => {
-  const vehicles: Vehicle[] = []
-  const brands = ['福田', '金龙', '解放', '比亚迪', '宇通']
-  const colors = ['白色', '蓝色', '黄色', '红色', '绿色']
-  const statuses = [1, 1, 1, 2, 3, 0]
-  
-  for (let i = 1; i <= 50; i++) {
-    vehicles.push({
-      id: i,
-      vehicleNo: `京A${String(Math.floor(Math.random() * 90000) + 10000)}`,
-      vehicleTypeId: 1,
-      brand: brands[Math.floor(Math.random() * brands.length)],
-      model: `Model-${i}`,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      mileage: Math.floor(Math.random() * 100000),
-      createTime: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      updateTime: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
-    })
-  }
-  
-  return vehicles
-}
 
 // 添加车辆
 const handleAdd = () => {
   router.push('/vehicles/add')
+}
+
+// 查看车辆详情
+const viewVehicleDetail = (row: Vehicle) => {
+  router.push(`/vehicles/${row.id}`)
 }
 
 // 编辑车辆
@@ -255,13 +240,13 @@ const handleDelete = async (row: Vehicle) => {
       }
     )
     
-    // 这里应该调用删除API
-    // await deleteVehicleApi(row.id)
-    
+    await deleteVehicleApi(row.id)
     ElMessage.success('删除成功')
     loadVehicles()
-  } catch {
-    // 用户取消
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '删除失败')
+    }
   }
 }
 

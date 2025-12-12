@@ -4,6 +4,8 @@ export { default as Dashboard } from './Dashboard/index.vue'
 // @ts-ignore: ignore missing module/type declaration for .vue files
 export { default as Login } from './Login/index.vue'
 // @ts-ignore: ignore missing module/type declaration for .vue files
+export { default as Register } from './Register/index.vue'
+// @ts-ignore: ignore missing module/type declaration for .vue files
 export { default as Vehicles } from './Vehicles/index.vue'
 // @ts-ignore: ignore missing module/type declaration for .vue files
 export { default as VehicleDetail } from './Vehicles/Detail.vue'

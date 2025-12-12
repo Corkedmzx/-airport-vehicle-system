@@ -29,4 +29,14 @@ public class LoginRequest {
      * 验证码key
      */
     private String captchaKey;
+
+    /**
+     * 邮箱（注册时使用）
+     */
+    private String email;
+
+    /**
+     * 手机号（注册时使用）
+     */
+    private String phone;
 }

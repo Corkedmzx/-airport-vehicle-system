@@ -89,7 +89,22 @@
 
     <!-- 地图容器 -->
     <div class="map-container">
-      <div ref="mapContainer" class="map-view"></div>
+      <div ref="mapContainer" class="map-view">
+        <div class="map-placeholder">
+          <div class="baidu-map-link">
+            <h3>地图监控</h3>
+            <p>点击下方按钮打开百度地图查看车辆位置</p>
+            <el-button type="primary" @click="openBaiduMap">
+              <el-icon><MapLocation /></el-icon>
+              打开百度地图
+            </el-button>
+            <el-button @click="showMapScreenshot">
+              <el-icon><Picture /></el-icon>
+              查看地图截图
+            </el-button>
+          </div>
+        </div>
+      </div>
       
       <!-- 图例 -->
       <div class="map-legend">
@@ -227,7 +242,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   Location, Road, Download, Search, Refresh, Close,
-  Connection, Odometer, Clock, MapLocation
+  Connection, Odometer, Clock, MapLocation, Picture
 } from '@element-plus/icons-vue'
 import type { Vehicle } from '@/api/types'
 import dayjs from 'dayjs'
@@ -378,15 +393,30 @@ const updateMapMarkers = () => {
   console.log('Updating map markers:', filteredVehicles.value.length)
 }
 
+// 打开百度地图
+const openBaiduMap = () => {
+  // 构建百度地图URL，使用首都机场的坐标
+  const lat = 40.0801
+  const lng = 116.5842
+  const url = `https://map.baidu.com/?q=${lat},${lng}&mode=normal&zoom=15`
+  window.open(url, '_blank')
+  ElMessage.success('已在新窗口打开百度地图')
+}
+
+// 显示地图截图
+const showMapScreenshot = () => {
+  ElMessage.info('地图截图功能：可以在此处显示机场地图的静态截图')
+  // 这里可以显示一个对话框展示地图截图
+}
+
 // 初始化地图
 const initMap = async () => {
   await nextTick()
   if (!mapContainer.value) return
   
   try {
-    // 模拟地图初始化
+    // 地图使用百度地图链接，不需要初始化
     mapStatus.value = '正常'
-    ElMessage.success('地图初始化成功')
   } catch (error) {
     console.error('Map initialization failed:', error)
     mapStatus.value = '异常'
@@ -566,6 +596,51 @@ onUnmounted(() => {
     justify-content: center;
     color: var(--text-secondary-color);
     font-size: 16px;
+    position: relative;
+    
+    // 百度地图链接按钮
+    .baidu-map-link {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px 40px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      z-index: 10;
+      
+      h3 {
+        margin: 0 0 12px 0;
+        color: var(--text-primary-color);
+        font-size: 18px;
+      }
+      
+      p {
+        margin: 0 0 20px 0;
+        color: var(--text-regular-color);
+        font-size: 14px;
+      }
+      
+      .el-button {
+        margin: 0 8px;
+      }
+    }
+    
+    // 地图截图占位
+    .map-placeholder {
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%23f0f0f0" width="800" height="600"/><text x="400" y="300" text-anchor="middle" fill="%23999" font-size="24" font-family="Arial">地图加载中...</text></svg>');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary-color);
+      font-size: 18px;
+    }
   }
   
   .map-legend {
