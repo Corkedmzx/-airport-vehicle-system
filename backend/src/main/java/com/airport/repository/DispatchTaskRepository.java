@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * 调度任务数据访问层
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Repository
 public interface DispatchTaskRepository extends JpaRepository<DispatchTask, Long> {

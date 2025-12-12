@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 /**
  * 调度任务DTO
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 public class DispatchTaskDTO {

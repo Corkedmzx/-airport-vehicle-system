@@ -7,6 +7,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 /**
  * Knife4j配置类
  * 专门处理Knife4j的静态资源映射
+ * 
+ * @author Corkedmzx
  */
 @Configuration
 public class Knife4jConfiguration implements WebMvcConfigurer {

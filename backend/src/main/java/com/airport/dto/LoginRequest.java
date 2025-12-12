@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 登录请求DTO
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 public class LoginRequest {

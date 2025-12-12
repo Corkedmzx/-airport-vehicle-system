@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * 系统统计控制器
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Slf4j
 @RestController

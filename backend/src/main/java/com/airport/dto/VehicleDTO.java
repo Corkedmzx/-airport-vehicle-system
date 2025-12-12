@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 车辆信息DTO
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 public class VehicleDTO {

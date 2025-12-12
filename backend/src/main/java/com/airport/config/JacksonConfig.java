@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Jackson配置类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Configuration
 public class JacksonConfig {

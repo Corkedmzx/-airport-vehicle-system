@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 /**
  * 基础实体类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 @MappedSuperclass

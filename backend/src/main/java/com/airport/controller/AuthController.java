@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 认证控制器
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Slf4j
 @RestController

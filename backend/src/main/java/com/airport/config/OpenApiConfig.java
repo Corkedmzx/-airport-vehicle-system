@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Swagger API文档配置
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Configuration
 public class OpenApiConfig {
@@ -26,8 +26,8 @@ public class OpenApiConfig {
                 .description("机场车辆监控与调度系统的RESTful API文档")
                 .version("1.0.0")
                 .contact(new Contact()
-                    .name("MiniMax Agent")
-                    .email("agent@minimax.com"))
+                    .name("Corkedmzx")
+                    .email("15778482044@163.com"))
                 .license(new License()
                     .name("MIT License")
                     .url("https://opensource.org/licenses/MIT")))
