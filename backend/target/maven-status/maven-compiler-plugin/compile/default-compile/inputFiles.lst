@@ -11,8 +11,8 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\Aut
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\BaseEntity.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\DispatchTaskService.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\DispatchTaskServiceImpl.java
-E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleDTO.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\AirportVehicleSystemApplication.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleDTO.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\OpenApiConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\security\SecurityConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SystemLog.java

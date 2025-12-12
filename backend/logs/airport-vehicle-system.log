@@ -3586,3 +3586,107 @@ This generated password is for development use only. Your security configuration
 2025-12-12 14:04:52.988 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
 2025-12-12 14:04:52.990 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
 2025-12-12 14:04:52.996 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2025-12-12 18:32:23.876 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - Starting AirportVehicleSystemApplication using Java 22.0.2 with PID 72608 (E:\share\airport-vehicle-system\backend\target\classes started by 86157 in E:\share\airport-vehicle-system\backend)
+2025-12-12 18:32:23.880 [restartedMain] DEBUG c.a.AirportVehicleSystemApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-12 18:32:23.881 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - The following 1 profile is active: "dev"
+2025-12-12 18:32:23.958 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-12-12 18:32:23.958 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-12-12 18:32:25.036 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-12-12 18:32:25.037 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-12 18:32:25.313 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 269 ms. Found 3 JPA repository interfaces.
+2025-12-12 18:32:25.839 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-12-12 18:32:25.840 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-12-12 18:32:25.859 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.DispatchTaskRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-12 18:32:25.859 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SysUserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-12 18:32:25.860 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.VehicleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-12 18:32:25.860 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 11 ms. Found 0 Redis repository interfaces.
+2025-12-12 18:32:26.016 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[com.airport]' package. Please check your configuration.
+2025-12-12 18:32:27.125 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-12-12 18:32:27.127 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - An older version [1.3.1] of the Apache Tomcat Native library is installed, while Tomcat recommends a minimum version of [2.0.5]
+2025-12-12 18:32:27.127 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - Loaded Apache Tomcat Native library [1.3.1] using APR version [1.7.4].
+2025-12-12 18:32:27.149 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - OpenSSL successfully initialized [OpenSSL 3.0.14 4 Jun 2024]
+2025-12-12 18:32:27.161 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-12-12 18:32:27.162 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-12 18:32:27.302 [restartedMain] INFO  o.a.c.c.C.[.[localhost].[/api] - Initializing Spring embedded WebApplicationContext
+2025-12-12 18:32:27.303 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3344 ms
+2025-12-12 18:32:27.601 [restartedMain] DEBUG c.a.c.s.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-12-12 18:32:27.644 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2025-12-12 18:32:28.100 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2025-12-12 18:32:28.316 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-12 18:32:28.379 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
+2025-12-12 18:32:28.419 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-12-12 18:32:28.671 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-12 18:32:28.766 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-12 18:32:28.767 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-12-12 18:32:29.795 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-12 18:32:29.888 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-12 18:32:30.271 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - JSqlParser is in classpath; If applicable, JSqlParser will be used
+2025-12-12 18:32:30.271 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-12-12 18:32:31.343 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-12 18:32:31.406 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 33624318-d5a3-4325-80f6-889153e23801
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-12-12 18:32:31.573 [restartedMain] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page: class path resource [static/index.html]
+2025-12-12 18:32:31.977 [restartedMain] INFO  org.redisson.Version - Redisson 3.23.4
+2025-12-12 18:32:32.397 [redisson-netty-2-6] INFO  o.r.c.p.MasterPubSubConnectionPool - 1 connections initialized for localhost/127.0.0.1:6379
+2025-12-12 18:32:32.507 [redisson-netty-2-20] INFO  o.r.c.pool.MasterConnectionPool - 24 connections initialized for localhost/127.0.0.1:6379
+2025-12-12 18:32:32.718 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoint(s) beneath base path '/actuator'
+2025-12-12 18:32:32.848 [restartedMain] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@65f620b4, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@4d552faa, org.springframework.security.web.context.SecurityContextHolderFilter@183cd283, org.springframework.security.web.header.HeaderWriterFilter@29c1bd2, org.springframework.web.filter.CorsFilter@106f4e2f, org.springframework.security.web.authentication.logout.LogoutFilter@535e1324, com.airport.config.security.JwtAuthenticationFilter@863b768, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@4cacbb4c, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@36afe685, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@607fe9d5, org.springframework.security.web.session.SessionManagementFilter@3a00b435, org.springframework.security.web.access.ExceptionTranslationFilter@d72c3cf, org.springframework.security.web.access.intercept.AuthorizationFilter@2aff3f1e]
+2025-12-12 18:32:34.192 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2025-12-12 18:32:34.271 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api'
+2025-12-12 18:32:34.286 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - Started AirportVehicleSystemApplication in 11.053 seconds (process running for 12.006)
+2025-12-12 18:50:30.162 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 41 class path changes (0 additions, 41 deletions, 0 modifications)
+2025-12-12 18:50:30.246 [Thread-5] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-12 18:50:30.253 [Thread-5] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2025-12-12 18:50:30.279 [Thread-5] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2025-12-12 18:50:44.658 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - Starting AirportVehicleSystemApplication using Java 22.0.2 with PID 72608 (E:\share\airport-vehicle-system\backend\target\classes started by 86157 in E:\share\airport-vehicle-system\backend)
+2025-12-12 18:50:44.661 [restartedMain] DEBUG c.a.AirportVehicleSystemApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-12 18:50:44.663 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - The following 1 profile is active: "dev"
+2025-12-12 18:50:46.003 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-12-12 18:50:46.005 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-12 18:50:46.116 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 109 ms. Found 3 JPA repository interfaces.
+2025-12-12 18:50:46.955 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-12-12 18:50:46.957 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-12-12 18:50:46.983 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.DispatchTaskRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-12 18:50:46.984 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SysUserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-12 18:50:46.986 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.VehicleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-12 18:50:46.988 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 29 ms. Found 0 Redis repository interfaces.
+2025-12-12 18:50:47.403 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[com.airport]' package. Please check your configuration.
+2025-12-12 18:50:49.615 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-12-12 18:50:49.620 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - An older version [1.3.1] of the Apache Tomcat Native library is installed, while Tomcat recommends a minimum version of [2.0.5]
+2025-12-12 18:50:49.624 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - Loaded Apache Tomcat Native library [1.3.1] using APR version [1.7.4].
+2025-12-12 18:50:49.627 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - OpenSSL successfully initialized [OpenSSL 3.0.14 4 Jun 2024]
+2025-12-12 18:50:49.632 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-12-12 18:50:49.637 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-12 18:50:50.181 [restartedMain] INFO  o.a.c.c.C.[.[localhost].[/api] - Initializing Spring embedded WebApplicationContext
+2025-12-12 18:50:50.183 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 5512 ms
+2025-12-12 18:50:51.051 [restartedMain] DEBUG c.a.c.s.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-12-12 18:50:51.143 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2025-12-12 18:50:51.540 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-2} inited
+2025-12-12 18:50:52.438 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-12 18:50:52.459 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-12-12 18:50:52.492 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-12 18:50:52.499 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-12 18:50:52.500 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-12-12 18:50:53.255 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-12 18:50:53.328 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-12 18:50:56.328 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-12 18:50:56.487 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 02146a1f-9504-44bf-8f2b-786150de37b1
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-12-12 18:50:56.634 [restartedMain] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page: class path resource [static/index.html]
+2025-12-12 18:50:57.132 [restartedMain] INFO  org.redisson.Version - Redisson 3.23.4
+2025-12-12 18:50:57.380 [redisson-netty-7-6] INFO  o.r.c.p.MasterPubSubConnectionPool - 1 connections initialized for localhost/127.0.0.1:6379
+2025-12-12 18:50:57.498 [redisson-netty-7-20] INFO  o.r.c.pool.MasterConnectionPool - 24 connections initialized for localhost/127.0.0.1:6379
+2025-12-12 18:50:58.585 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoint(s) beneath base path '/actuator'
+2025-12-12 18:50:58.959 [restartedMain] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@1c4bacd1, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@2e405acc, org.springframework.security.web.context.SecurityContextHolderFilter@660f44dc, org.springframework.security.web.header.HeaderWriterFilter@eedf46d, org.springframework.web.filter.CorsFilter@435319a5, org.springframework.security.web.authentication.logout.LogoutFilter@45cffb60, com.airport.config.security.JwtAuthenticationFilter@6ebdc9c8, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@456f77f7, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@71ab746a, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@76e9de8f, org.springframework.security.web.session.SessionManagementFilter@5fc966ad, org.springframework.security.web.access.ExceptionTranslationFilter@b53f6, org.springframework.security.web.access.intercept.AuthorizationFilter@28fbaf71]
+2025-12-12 18:51:01.042 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2025-12-12 18:51:01.145 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api'
+2025-12-12 18:51:01.159 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - Started AirportVehicleSystemApplication in 16.893 seconds (process running for 1118.879)
+2025-12-12 18:51:01.166 [restartedMain] INFO  o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
