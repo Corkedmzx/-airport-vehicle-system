@@ -1,6 +1,10 @@
 package com.airport.controller;
 
 import com.airport.dto.Result;
+import com.airport.dto.TaskStatistics;
+import com.airport.dto.VehicleStatistics;
+import com.airport.service.DispatchTaskService;
+import com.airport.service.VehicleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +30,8 @@ import java.util.Map;
 public class StatisticsController {
 
     // 注入统计服务
-    // private final VehicleService vehicleService;
-    // private final DispatchTaskService taskService;
+    private final VehicleService vehicleService;
+    private final DispatchTaskService taskService;
 
     @GetMapping("/system")
     @Operation(summary = "系统概览统计", description = "获取系统总体统计信息")
@@ -40,30 +44,29 @@ public class StatisticsController {
             overview.put("version", "1.0.0");
             overview.put("currentTime", LocalDateTime.now());
             
-            // TODO: 这里可以调用实际的统计服务
-            // VehicleService.VehicleStatistics vehicleStats = vehicleService.getVehicleStatistics();
-            // DispatchTaskService.TaskStatistics taskStats = taskService.getTaskStatistics();
+            // 调用实际的统计服务
+            VehicleStatistics vehicleStats = vehicleService.getVehicleStatistics();
+            TaskStatistics taskStats = taskService.getTaskStatistics();
             
-            // 临时模拟数据
-            Map<String, Object> vehicleStats = new HashMap<>();
-            vehicleStats.put("totalCount", 50L);
-            vehicleStats.put("activeCount", 40L);
-            vehicleStats.put("maintenanceCount", 5L);
-            vehicleStats.put("faultCount", 3L);
-            vehicleStats.put("offlineCount", 2L);
+            Map<String, Object> vehicleStatsMap = new HashMap<>();
+            vehicleStatsMap.put("totalCount", vehicleStats.getTotalCount());
+            vehicleStatsMap.put("activeCount", vehicleStats.getActiveCount());
+            vehicleStatsMap.put("maintenanceCount", vehicleStats.getMaintenanceCount());
+            vehicleStatsMap.put("faultCount", vehicleStats.getFaultCount());
+            vehicleStatsMap.put("offlineCount", vehicleStats.getOfflineCount());
             
-            Map<String, Object> taskStats = new HashMap<>();
-            taskStats.put("totalCount", 100L);
-            taskStats.put("pendingCount", 10L);
-            taskStats.put("assignedCount", 15L);
-            taskStats.put("inProgressCount", 20L);
-            taskStats.put("completedCount", 50L);
-            taskStats.put("cancelledCount", 3L);
-            taskStats.put("exceptionCount", 2L);
-            taskStats.put("todayCount", 25L);
+            Map<String, Object> taskStatsMap = new HashMap<>();
+            taskStatsMap.put("totalCount", taskStats.getTotalCount());
+            taskStatsMap.put("pendingCount", taskStats.getPendingCount());
+            taskStatsMap.put("assignedCount", taskStats.getAssignedCount());
+            taskStatsMap.put("inProgressCount", taskStats.getInProgressCount());
+            taskStatsMap.put("completedCount", taskStats.getCompletedCount());
+            taskStatsMap.put("cancelledCount", taskStats.getCancelledCount());
+            taskStatsMap.put("exceptionCount", taskStats.getExceptionCount());
+            taskStatsMap.put("todayCount", taskStats.getTodayCount());
             
-            overview.put("vehicleStatistics", vehicleStats);
-            overview.put("taskStatistics", taskStats);
+            overview.put("vehicleStatistics", vehicleStatsMap);
+            overview.put("taskStatistics", taskStatsMap);
             
             return Result.success(overview);
             

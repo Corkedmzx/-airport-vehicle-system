@@ -10,10 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.Predicate;
 import java.util.List;
 
 /**
@@ -157,17 +159,13 @@ public class SysUserServiceImpl implements SysUserService {
         return userRepository.existsByEmail(email);
     }
 
-    /**
-     * 获取所有用户
-     */
+    @Override
     @Transactional(readOnly = true)
     public List<SysUser> getAllUsers() {
         return userRepository.findAll();
     }
 
-    /**
-     * 根据ID获取用户
-     */
+    @Override
     @Transactional(readOnly = true)
     public SysUser getUserById(Long id) {
         return userRepository.findById(id)
@@ -176,7 +174,24 @@ public class SysUserServiceImpl implements SysUserService {
 
     @Override
     public Page<SysUser> findUsers(String search, Integer status, String role, Pageable pageable) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findUsers'");
+        Specification<SysUser> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new java.util.ArrayList<>();
+            
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim() + "%";
+                Predicate usernamePredicate = cb.like(root.get("username"), searchPattern);
+                Predicate realNamePredicate = cb.like(root.get("realName"), searchPattern);
+                Predicate emailPredicate = cb.like(root.get("email"), searchPattern);
+                predicates.add(cb.or(usernamePredicate, realNamePredicate, emailPredicate));
+            }
+            
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        
+        return userRepository.findAll(spec, pageable);
     }
 }

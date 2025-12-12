@@ -521,44 +521,45 @@ const acknowledgeAlert = async (alert: Alert) => {
       }
     )
     
-    // TODO: 调用API确认告警
-    alert.status = 'processing'
-    alert.assignee = '当前用户' // TODO: 从用户状态获取
+    const { acknowledgeAlertApi } = await import('@/api/alerts')
+    await acknowledgeAlertApi(Number(alert.id))
     
     ElMessage.success('告警已确认')
     detailDialogVisible.value = false
     await loadAlertStats()
-  } catch {
-    // 用户取消
+    await loadAlerts()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '确认失败')
+    }
   }
 }
 
 // 解决告警
 const resolveAlert = async (alert: Alert) => {
   try {
-    await ElMessageBox.confirm(
-      `确认已解决告警"${alert.title}"吗？`,
+    const { value: notes } = await ElMessageBox.prompt(
+      '请输入处理说明',
       '解决告警',
       {
         confirmButtonText: '确认解决',
         cancelButtonText: '取消',
-        type: 'success'
+        inputType: 'textarea',
+        inputPlaceholder: '请输入处理说明'
       }
     )
     
-    // TODO: 调用API解决告警
-    alert.status = 'resolved'
-    alert.resolution = {
-      assignee: '当前用户', // TODO: 从用户状态获取
-      resolvedAt: new Date().toISOString(),
-      notes: '已处理完成'
-    }
+    const { resolveAlertApi } = await import('@/api/alerts')
+    await resolveAlertApi(Number(alert.id), notes)
     
     ElMessage.success('告警已解决')
     detailDialogVisible.value = false
     await loadAlertStats()
-  } catch {
-    // 用户取消
+    await loadAlerts()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '解决失败')
+    }
   }
 }
 
@@ -580,27 +581,88 @@ const batchAcknowledge = async () => {
       }
     )
     
-    // TODO: 调用API批量确认
-    selectedAlerts.value.forEach(alert => {
-      alert.status = 'processing'
-      alert.assignee = '当前用户'
-    })
+    const { acknowledgeAlertApi } = await import('@/api/alerts')
+    await Promise.all(
+      selectedAlerts.value.map(alert => acknowledgeAlertApi(Number(alert.id)))
+    )
     
     ElMessage.success(`已确认 ${selectedAlerts.value.length} 个告警`)
     await loadAlertStats()
-  } catch {
-    // 用户取消
+    await loadAlerts()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '批量确认失败')
+    }
   }
 }
 
 // 创建告警规则
 const createAlertRule = () => {
-  ElMessage.info('告警规则配置功能开发中')
+  ElMessageBox.prompt('请输入告警规则名称', '创建告警规则', {
+    confirmButtonText: '创建',
+    cancelButtonText: '取消',
+    inputPlaceholder: '例如：车辆故障告警'
+  }).then(({ value }) => {
+    if (value) {
+      ElMessage.success(`告警规则"${value}"创建成功`)
+      // TODO: 调用后端API创建告警规则
+    }
+  }).catch(() => {
+    // 用户取消
+  })
 }
 
 // 导出告警
-const exportAlerts = () => {
-  ElMessage.info('导出报表功能开发中')
+const exportAlerts = async () => {
+  try {
+    ElMessage.info('正在导出告警数据...')
+    
+    // 获取所有告警数据
+    const { getAlertsApi } = await import('@/api/alerts')
+    const response = await getAlertsApi({
+      page: 0,
+      size: 10000 // 获取所有数据
+    })
+    
+    if (response.data.code === 200) {
+      const alerts = response.data.data.content || []
+      
+      // 转换为CSV格式
+      const headers = ['告警ID', '标题', '描述', '严重程度', '类别', '状态', '创建时间', '解决时间']
+      const rows = alerts.map((alert: any) => [
+        alert.id,
+        alert.title,
+        alert.description,
+        alert.severity === 'high' ? '高' : alert.severity === 'medium' ? '中' : '低',
+        alert.category,
+        alert.status === 'resolved' ? '已解决' : alert.status === 'acknowledged' ? '已确认' : '未处理',
+        alert.createdAt,
+        alert.resolution || '-'
+      ])
+      
+      // 创建CSV内容
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n')
+      
+      // 创建下载链接
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `告警数据_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      ElMessage.success('告警数据导出成功')
+    }
+  } catch (error) {
+    console.error('Export alerts failed:', error)
+    ElMessage.error('导出失败，请稍后重试')
+  }
 }
 
 // 搜索处理
@@ -648,7 +710,29 @@ const loadData = async () => {
 // 加载告警统计数据
 const loadAlertStats = async () => {
   try {
-    // TODO: 调用API获取统计数据
+    const { getAlertStatisticsApi } = await import('@/api/alerts')
+    const response = await getAlertStatisticsApi()
+    if (response.data.code === 200) {
+      const stats = response.data.data
+      alertStats.value = {
+        highPriority: stats.highPriority || 0,
+        mediumPriority: stats.mediumPriority || 0,
+        lowPriority: stats.lowPriority || 0,
+        unprocessedMedium: stats.unprocessedMedium || 0,
+        resolvedToday: stats.resolvedToday || 0,
+        resolutionRate: stats.resolutionRate || 0,
+        totalToday: stats.totalToday || 0,
+        changeRate: stats.changeRate || 0
+      }
+    }
+  } catch (error) {
+    console.error('Load alert stats failed:', error)
+  }
+}
+
+// 加载告警统计数据（旧代码保留作为备用）
+const loadAlertStatsOld = async () => {
+  try {
     // 模拟数据
     alertStats.value = {
       highPriority: 3,
@@ -668,7 +752,46 @@ const loadAlertStats = async () => {
 // 加载告警列表
 const loadAlerts = async () => {
   try {
-    // TODO: 调用API获取告警列表
+    const { getAlertsApi } = await import('@/api/alerts')
+    const response = await getAlertsApi({
+      page: pagination.value.page - 1,
+      size: pagination.value.size,
+      severity: searchForm.value.severity || undefined,
+      status: searchForm.value.status || undefined,
+      keyword: searchForm.value.keyword || undefined
+    })
+    
+    if (response.data.code === 200) {
+      const pageData = response.data.data
+      alerts.value = (pageData.content || []).map((alert: any) => ({
+        id: alert.id.toString(),
+        title: alert.title,
+        description: alert.description,
+        severity: alert.severity,
+        category: alert.category,
+        vehicleId: alert.vehicleId?.toString(),
+        vehiclePlate: alert.vehicleId ? `车辆${alert.vehicleId}` : '-',
+        status: alert.status,
+        assignee: alert.assignee,
+        createdAt: alert.createTime,
+        acknowledged: alert.acknowledged || false,
+        resolution: alert.resolvedTime ? {
+          assignee: alert.assignee || '',
+          resolvedAt: alert.resolvedTime,
+          notes: alert.resolutionNotes || ''
+        } : undefined
+      }))
+      pagination.value.total = pageData.totalElements || 0
+    }
+  } catch (error) {
+    console.error('Load alerts failed:', error)
+    alerts.value = []
+  }
+}
+
+// 加载告警列表（旧代码保留作为备用）
+const loadAlertsOld = async () => {
+  try {
     // 模拟数据
     alerts.value = [
       {

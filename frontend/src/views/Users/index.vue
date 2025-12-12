@@ -137,10 +137,8 @@
         
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column prop="realName" label="真实姓名" min-width="120" />
-        <el-table-column prop="email" label="邮箱" min-width="180" />
-        <el-table-column prop="phone" label="手机号" min-width="120" />
-        
-        <el-table-column prop="role" label="角色" width="120">
+        <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="role" label="角色" width="100">
           <template #default="{ row }">
             <el-tag 
               :type="getRoleType(row.role)" 
@@ -150,39 +148,25 @@
             </el-tag>
           </template>
         </el-table-column>
-        
-        <el-table-column prop="department" label="部门" width="120" />
-        
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag 
-              :type="getStatusType(row.status)" 
+              :type="getStatusType(row.status === 1 ? 'active' : 'inactive')" 
               size="small"
             >
-              {{ getStatusText(row.status) }}
+              {{ getStatusText(row.status === 1 ? 'active' : 'inactive') }}
             </el-tag>
           </template>
         </el-table-column>
-        
-        <el-table-column prop="lastLoginAt" label="最后登录" width="150">
-          <template #default="{ row }">
-            {{ row.lastLoginAt ? formatDateTime(row.lastLoginAt) : '从未登录' }}
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="createdAt" label="创建时间" width="150">
-          <template #default="{ row }">
-            {{ formatDate(row.createdAt) }}
-          </template>
-        </el-table-column>
-        
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button 
+              type="primary"
               size="small" 
+              link
               @click="viewUserDetail(row)"
             >
-              查看
+              查看详情
             </el-button>
             <el-button 
               type="primary" 
@@ -303,14 +287,6 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="部门" prop="department">
-              <el-input 
-                v-model="userForm.department" 
-                placeholder="请输入部门"
-              />
-            </el-form-item>
-          </el-col>
         </el-row>
         
         <el-form-item 
@@ -400,10 +376,6 @@
               </el-tag>
             </div>
             <div class="detail-item">
-              <label>部门:</label>
-              <span>{{ currentUser.department }}</span>
-            </div>
-            <div class="detail-item">
               <label>状态:</label>
               <el-tag :type="getStatusType(currentUser.status)" size="small">
                 {{ getStatusText(currentUser.status) }}
@@ -411,7 +383,7 @@
             </div>
             <div class="detail-item">
               <label>创建时间:</label>
-              <span>{{ formatDateTime(currentUser.createdAt) }}</span>
+              <span>{{ formatDateTime(currentUser.createTime) }}</span>
             </div>
           </div>
         </div>
@@ -421,7 +393,7 @@
           <div class="detail-grid">
             <div class="detail-item">
               <label>最后登录:</label>
-              <span>{{ currentUser.lastLoginAt ? formatDateTime(currentUser.lastLoginAt) : '从未登录' }}</span>
+              <span>{{ currentUser.lastLoginTime ? formatDateTime(currentUser.lastLoginTime) : '从未登录' }}</span>
             </div>
             <div class="detail-item">
               <label>登录次数:</label>
@@ -515,9 +487,8 @@ const userForm = ref({
   realName: '',
   email: '',
   phone: '',
-  role: '',
-  department: '',
-  password: '',
+    role: '',
+    password: '',
   confirmPassword: '',
   status: 'active',
   remark: ''
@@ -543,9 +514,6 @@ const userRules = {
   role: [
     { required: true, message: '请选择角色', trigger: 'change' }
   ],
-  department: [
-    { required: true, message: '请输入部门', trigger: 'blur' }
-  ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
@@ -568,31 +536,9 @@ const userRules = {
 // 当前用户
 const currentUser = ref<UserType | null>(null)
 
-// 过滤后的用户列表
+// 过滤后的用户列表（现在由后端处理，这里保留用于前端额外筛选）
 const filteredUsers = computed(() => {
-  let result = users.value
-  
-  // 关键词搜索
-  if (searchForm.value.keyword) {
-    const keyword = searchForm.value.keyword.toLowerCase()
-    result = result.filter(user => 
-      user.username.toLowerCase().includes(keyword) ||
-      user.realName.toLowerCase().includes(keyword) ||
-      user.email.toLowerCase().includes(keyword)
-    )
-  }
-  
-  // 角色筛选
-  if (searchForm.value.role) {
-    result = result.filter(user => user.role === searchForm.value.role)
-  }
-  
-  // 状态筛选
-  if (searchForm.value.status) {
-    result = result.filter(user => user.status === searchForm.value.status)
-  }
-  
-  return result
+  return users.value
 })
 
 // 获取角色类型
@@ -672,10 +618,9 @@ const editUser = (user: UserType) => {
     email: user.email,
     phone: user.phone,
     role: user.role,
-    department: user.department,
     password: '',
     confirmPassword: '',
-    status: user.status,
+    status: typeof user.status === 'number' ? (user.status === 1 ? 'active' : 'inactive') : user.status,
     remark: user.remark || ''
   }
   detailDialogVisible.value = false
@@ -691,7 +636,6 @@ const resetUserForm = () => {
     email: '',
     phone: '',
     role: '',
-    department: '',
     password: '',
     confirmPassword: '',
     status: 'active',
@@ -709,18 +653,32 @@ const saveUser = async () => {
   try {
     await userFormRef.value.validate()
     
+    const { createUserApi, updateUserApi } = await import('@/api/users')
+    
     if (dialogMode.value === 'create') {
-      // TODO: 调用API创建用户
+      await createUserApi({
+        username: userForm.value.username,
+        realName: userForm.value.realName,
+        email: userForm.value.email,
+        phone: userForm.value.phone,
+        password: userForm.value.password,
+        status: userForm.value.status === 'active' ? 1 : 0
+      })
       ElMessage.success('用户创建成功')
     } else {
-      // TODO: 调用API更新用户
+      await updateUserApi(Number(userForm.value.id), {
+        realName: userForm.value.realName,
+        email: userForm.value.email,
+        phone: userForm.value.phone,
+        status: userForm.value.status === 'active' ? 1 : 0
+      })
       ElMessage.success('用户信息更新成功')
     }
     
     userDialogVisible.value = false
     await loadData()
-  } catch (error) {
-    console.error('Save user failed:', error)
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || '保存失败')
   }
 }
 
@@ -745,20 +703,25 @@ const handleUserCommand = async (command: string, user: UserType) => {
 // 重置密码
 const resetPassword = async (user: UserType) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要重置用户 ${user.realName} 的密码吗？`,
+    const { value: newPassword } = await ElMessageBox.prompt(
+      '请输入新密码',
       '重置密码',
       {
         confirmButtonText: '确认重置',
         cancelButtonText: '取消',
-        type: 'warning'
+        inputType: 'password',
+        inputPattern: /^.{6,20}$/,
+        inputErrorMessage: '密码长度在6到20个字符'
       }
     )
     
-    // TODO: 调用API重置密码
-    ElMessage.success('密码重置成功，新密码已发送到用户邮箱')
-  } catch {
-    // 用户取消
+    const { resetPasswordApi } = await import('@/api/users')
+    await resetPasswordApi(Number(user.id), newPassword)
+    ElMessage.success('密码重置成功')
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '重置密码失败')
+    }
   }
 }
 
@@ -776,17 +739,26 @@ const toggleUserStatus = async (user: UserType) => {
       }
     )
     
-    // TODO: 调用API切换状态
-    user.status = user.status === 'active' ? 'inactive' : 'active'
+    const { updateUserStatusApi } = await import('@/api/users')
+    const newStatus = user.status === 'active' ? 0 : 1
+    await updateUserStatusApi(Number(user.id), newStatus)
     ElMessage.success(`用户已${action}`)
-  } catch {
-    // 用户取消
+    await loadData()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '操作失败')
+    }
   }
 }
 
 // 查看用户日志
 const viewUserLogs = (user: UserType) => {
   ElMessage.info(`查看用户 ${user.realName} 的操作日志功能开发中`)
+}
+
+// 删除用户（表格中的删除按钮）
+const handleDelete = async (user: UserType) => {
+  await deleteUser(user)
 }
 
 // 删除用户
@@ -802,21 +774,69 @@ const deleteUser = async (user: UserType) => {
       }
     )
     
-    // TODO: 调用API删除用户
-    const index = users.value.findIndex(u => u.id === user.id)
-    if (index > -1) {
-      users.value.splice(index, 1)
-    }
-    
+    const { deleteUserApi } = await import('@/api/users')
+    await deleteUserApi(Number(user.id))
     ElMessage.success('用户删除成功')
-  } catch {
-    // 用户取消
+    await loadData()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '删除失败')
+    }
   }
 }
 
 // 导出用户
-const exportUsers = () => {
-  ElMessage.info('导出用户功能开发中')
+const exportUsers = async () => {
+  try {
+    ElMessage.info('正在导出用户数据...')
+    
+    // 获取所有用户数据
+    const { getUsersApi } = await import('@/api/users')
+    const response = await getUsersApi({
+      page: 0,
+      size: 10000 // 获取所有数据
+    })
+    
+    if (response.data.code === 200) {
+      const users = response.data.data.content || []
+      
+      // 转换为CSV格式
+      const headers = ['用户ID', '用户名', '真实姓名', '邮箱', '手机号', '角色', '状态', '最后登录时间', '创建时间']
+      const rows = users.map((user: any) => [
+        user.id,
+        user.username,
+        user.realName || '-',
+        user.email || '-',
+        user.phone || '-',
+        user.role || '-',
+        user.status === 1 ? '启用' : '禁用',
+        user.lastLoginTime || '从未登录',
+        user.createTime
+      ])
+      
+      // 创建CSV内容
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n')
+      
+      // 创建下载链接
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `用户数据_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      ElMessage.success('用户数据导出成功')
+    }
+  } catch (error) {
+    console.error('Export users failed:', error)
+    ElMessage.error('导出失败，请稍后重试')
+  }
 }
 
 // 搜索处理
@@ -864,7 +884,27 @@ const loadData = async () => {
 // 加载用户统计数据
 const loadUserStats = async () => {
   try {
-    // TODO: 调用API获取统计数据
+    const { getUserStatisticsApi } = await import('@/api/users')
+    const response = await getUserStatisticsApi()
+    if (response.data.code === 200) {
+      const stats = response.data.data
+      userStats.value = {
+        totalUsers: stats.totalUsers || 0,
+        activeUsers: stats.activeUsers || 0,
+        onlineUsers: stats.onlineUsers || 0,
+        onlineRate: stats.onlineRate || 0,
+        totalRoles: stats.totalRoles || 0,
+        adminUsers: stats.adminUsers || 0
+      }
+    }
+  } catch (error) {
+    console.error('Load user stats failed:', error)
+  }
+}
+
+// 加载用户统计数据（旧代码保留作为备用）
+const loadUserStatsOld = async () => {
+  try {
     // 模拟数据
     userStats.value = {
       totalUsers: 25,
@@ -882,41 +922,30 @@ const loadUserStats = async () => {
 // 加载用户列表
 const loadUsers = async () => {
   try {
-    // TODO: 调用API获取用户列表
+    const { getUsersApi } = await import('@/api/users')
+    const response = await getUsersApi({
+      page: pagination.value.page - 1,
+      size: pagination.value.size,
+      keyword: searchForm.value.keyword || undefined,
+      status: searchForm.value.status === 'active' ? 1 : searchForm.value.status === 'inactive' ? 0 : undefined
+    })
+    
+    if (response.data.code === 200) {
+      const pageData = response.data.data
+      users.value = pageData.content || []
+      pagination.value.total = pageData.totalElements || 0
+    }
+  } catch (error) {
+    console.error('Load users failed:', error)
+    users.value = []
+  }
+}
+
+// 加载用户列表（旧代码保留作为备用）
+const loadUsersOld = async () => {
+  try {
     // 模拟数据
-    users.value = [
-      {
-        id: '1',
-        username: 'admin',
-        realName: '系统管理员',
-        email: 'admin@airport.com',
-        phone: '13800138001',
-        role: 'admin',
-        department: '信息技术部',
-        status: 'active',
-        avatar: '',
-        lastLoginAt: new Date().toISOString(),
-        loginCount: 156,
-        createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-        remark: '系统默认管理员账户'
-      },
-      {
-        id: '2',
-        username: 'zhangsan',
-        realName: '张三',
-        email: 'zhangsan@airport.com',
-        phone: '13800138002',
-        role: 'dispatcher',
-        department: '调度中心',
-        status: 'active',
-        avatar: '',
-        lastLoginAt: new Date(Date.now() - 3600000).toISOString(),
-        loginCount: 89,
-        createdAt: new Date(Date.now() - 86400000 * 15).toISOString(),
-        remark: '资深调度员'
-      }
-    ]
-    pagination.value.total = users.value.length
+    // 数据已由loadUsers从API加载
   } catch (error) {
     console.error('Load users failed:', error)
   }

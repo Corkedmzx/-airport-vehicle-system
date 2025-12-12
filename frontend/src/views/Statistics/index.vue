@@ -276,6 +276,12 @@ const loadStatistics = async () => {
     if (taskRes.data.code === 200) {
       taskStats.value = taskRes.data.data
     }
+    
+    // 更新图表数据
+    setTimeout(() => {
+      initVehicleChart()
+      initTaskChart()
+    }, 100)
   } catch (error) {
     console.error('Load statistics failed:', error)
   }

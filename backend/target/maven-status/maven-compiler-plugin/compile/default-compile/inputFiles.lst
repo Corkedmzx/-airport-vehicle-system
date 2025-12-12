@@ -5,14 +5,18 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\common\excepti
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\DispatchTaskDTO.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\SystemConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\DispatchTaskRepository.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\AlertRepository.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SystemLogRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\JacksonConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\WebConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\AuthController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\BaseEntity.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\SystemLogController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\DispatchTaskService.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\DispatchTaskServiceImpl.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\AirportVehicleSystemApplication.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleDTO.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\Alert.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\OpenApiConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\security\SecurityConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SystemLog.java
@@ -23,6 +27,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\Knife4j
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\Result.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\Vehicle.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\SysUserServiceImpl.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\UserController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\LoginResponse.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\common\exception\GlobalExceptionHandler.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleStatistics.java
@@ -36,3 +41,4 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\Dispatc
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\VehicleService.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\security\JwtAuthenticationFilter.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\DispatchTaskController.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\AlertController.java

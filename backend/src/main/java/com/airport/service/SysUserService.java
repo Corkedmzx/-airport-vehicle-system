@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import com.airport.dto.LoginResponse;
 import com.airport.entity.SysUser;
 
+import java.util.List;
+
 /**
  * 用户服务接口
  * 
@@ -78,5 +80,29 @@ public interface SysUserService {
      */
     boolean existsByEmail(String email);
 
+    /**
+     * 分页查询用户
+     * 
+     * @param search 搜索关键词
+     * @param status 状态
+     * @param role 角色
+     * @param pageable 分页参数
+     * @return 用户分页数据
+     */
     Page<SysUser> findUsers(String search, Integer status, String role, Pageable pageable);
+
+    /**
+     * 根据ID获取用户
+     * 
+     * @param id 用户ID
+     * @return 用户信息
+     */
+    SysUser getUserById(Long id);
+
+    /**
+     * 获取所有用户
+     * 
+     * @return 用户列表
+     */
+    List<SysUser> getAllUsers();
 }

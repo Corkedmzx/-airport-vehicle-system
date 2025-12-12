@@ -8,6 +8,7 @@ export interface LoginRequest {
   captchaKey?: string
 }
 
+// 登录响应类型
 export interface LoginResponse {
   message: string
   data: { token: any; user: any; expiresIn: any }
@@ -23,6 +24,22 @@ export interface LoginResponse {
     roles: string[]
   }
   expiresIn: number
+}
+
+// 注册相关类型
+export interface RegisterRequest {
+  username: string
+  password: string
+  email: string
+  phone?: string
+  captcha?: string
+  captchaKey?: string
+}
+
+// 注册响应类型
+export interface RegisterResponse {
+  message: string
+  code: number
 }
 
 // 车辆相关类型

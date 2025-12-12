@@ -53,13 +53,13 @@
         @row-click="handleRowClick"
       >
         <el-table-column prop="taskNo" label="任务编号" width="140" />
-        <el-table-column prop="taskName" label="任务名称" min-width="200" />
-        <el-table-column prop="taskType" label="任务类型" width="120">
+        <el-table-column prop="taskName" label="任务名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="taskType" label="类型" width="100">
           <template #default="{ row }">
             <el-tag size="small">{{ getTaskTypeText(row.taskType) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="priority" label="优先级" width="100">
+        <el-table-column prop="priority" label="优先级" width="90">
           <template #default="{ row }">
             <el-tag :type="getPriorityType(row.priority)" size="small">
               {{ getPriorityText(row.priority) }}
@@ -73,11 +73,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="startLocation" label="起点" min-width="150" />
-        <el-table-column prop="endLocation" label="终点" min-width="150" />
-        <el-table-column prop="startTime" label="开始时间" width="150">
+        <el-table-column label="路线" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
-            {{ formatTime(row.startTime) }}
+            {{ row.startLocation }} → {{ row.endLocation }}
           </template>
         </el-table-column>
         <el-table-column prop="progress" label="进度" width="100">
@@ -91,9 +89,12 @@
             <span style="font-size: 12px; color: #666;">{{ row.progress }}%</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <div class="btn-group">
+              <el-button type="primary" link @click.stop="viewTaskDetail(row)">
+                查看详情
+              </el-button>
               <el-button
                 v-if="row.status === 1"
                 type="primary"
@@ -148,9 +149,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+
+const router = useRouter()
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
-import { getTasksApi, assignTaskApi, startTaskApi, completeTaskApi } from '@/api/tasks'
+import { getTasksApi, assignTaskApi, startTaskApi, completeTaskApi, deleteTaskApi } from '@/api/tasks'
 import type { DispatchTask } from '@/api/types'
 import { timeAgo } from '@/utils'
 
@@ -257,17 +260,21 @@ const loadTasks = async () => {
     loading.value = true
     const response = await getTasksApi()
     if (response.data.code === 200) {
-      // 模拟分页数据
-      const allTasks = generateMockTasks()
-      const filteredTasks = allTasks.filter(task => {
-        const matchKeyword = !searchForm.keyword || 
-          task.taskName.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-          task.taskNo.toLowerCase().includes(searchForm.keyword.toLowerCase())
-        
-        const matchStatus = searchForm.status === undefined || task.status === searchForm.status
-        
-        return matchKeyword && matchStatus
-      })
+      const allTasks = Array.isArray(response.data.data) ? response.data.data : []
+      
+      // 前端筛选
+      let filteredTasks = allTasks
+      if (searchForm.keyword) {
+        const keyword = searchForm.keyword.toLowerCase()
+        filteredTasks = filteredTasks.filter(task => 
+          task.taskName.toLowerCase().includes(keyword) ||
+          task.taskNo.toLowerCase().includes(keyword)
+        )
+      }
+      
+      if (searchForm.status !== undefined) {
+        filteredTasks = filteredTasks.filter(task => task.status === searchForm.status)
+      }
       
       // 分页
       const start = (pagination.page - 1) * pagination.size
@@ -282,46 +289,15 @@ const loadTasks = async () => {
   }
 }
 
-// 生成模拟数据
-const generateMockTasks = (): DispatchTask[] => {
-  const tasks: DispatchTask[] = []
-  const taskTypes = ['regular', 'emergency', 'maintenance']
-  const priorities = [1, 2, 3, 4]
-  const statuses = [1, 2, 3, 4, 5]
-  const startLocations = ['T1航站楼', 'T2航站楼', 'T3航站楼', '货运区', '维修区']
-  const endLocations = ['货运区', '维修区', 'T1航站楼', 'T2航站楼', 'T3航站楼']
-  
-  for (let i = 1; i <= 100; i++) {
-    const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)]
-    const priority = priorities[Math.floor(Math.random() * priorities.length)]
-    const status = statuses[Math.floor(Math.random() * statuses.length)]
-    const startLocation = startLocations[Math.floor(Math.random() * startLocations.length)]
-    const endLocation = endLocations[Math.floor(Math.random() * endLocations.length)]
-    
-    const progress = status === 4 ? 100 : status === 3 ? Math.floor(Math.random() * 100) : 0
-    
-    tasks.push({
-      id: i,
-      taskNo: `TASK${new Date().getFullYear()}${String(i).padStart(4, '0')}`,
-      taskName: `${taskType === 'regular' ? '常规' : taskType === 'emergency' ? '紧急' : '维护'}任务-${i}`,
-      taskType,
-      priority,
-      startLocation,
-      endLocation,
-      status,
-      progress,
-      startTime: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-      createTime: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      updateTime: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString()
-    })
-  }
-  
-  return tasks
-}
 
 // 添加任务
 const handleAdd = () => {
   router.push('/tasks/add')
+}
+
+// 查看任务详情
+const viewTaskDetail = (row: DispatchTask) => {
+  router.push(`/tasks/${row.id}`)
 }
 
 // 编辑任务
@@ -342,26 +318,47 @@ const handleDelete = async (row: DispatchTask) => {
       }
     )
     
+    await deleteTaskApi(row.id)
     ElMessage.success('删除成功')
     loadTasks()
-  } catch {
-    // 用户取消
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '删除失败')
+    }
   }
 }
 
 // 分配任务
-const handleAssign = (row: DispatchTask) => {
-  ElMessage.info('分配任务功能开发中...')
+const handleAssign = async (row: DispatchTask) => {
+  try {
+    // 这里应该弹出对话框选择车辆
+    ElMessage.info('请前往调度中心进行任务分配')
+    router.push('/dispatch')
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
 }
 
 // 开始任务
-const handleStart = (row: DispatchTask) => {
-  ElMessage.info('开始任务功能开发中...')
+const handleStart = async (row: DispatchTask) => {
+  try {
+    await startTaskApi(row.id)
+    ElMessage.success('任务已开始')
+    loadTasks()
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || '操作失败')
+  }
 }
 
 // 完成任务
-const handleComplete = (row: DispatchTask) => {
-  ElMessage.info('完成任务功能开发中...')
+const handleComplete = async (row: DispatchTask) => {
+  try {
+    await completeTaskApi(row.id)
+    ElMessage.success('任务已完成')
+    loadTasks()
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || '操作失败')
+  }
 }
 
 // 行点击

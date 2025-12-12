@@ -217,9 +217,10 @@ const loadDashboardData = async () => {
     }
     
     // 加载最近任务
-    const tasksRes = await getTasksApi({ size: 5 })
+    const tasksRes = await getTasksApi()
     if (tasksRes.data.code === 200) {
-      recentTasks.value = tasksRes.data.data.slice(0, 5)
+      const allTasks = Array.isArray(tasksRes.data.data) ? tasksRes.data.data : []
+      recentTasks.value = allTasks.slice(0, 5)
     }
   } catch (error) {
     console.error('Load dashboard data failed:', error)
