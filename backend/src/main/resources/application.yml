@@ -1,0 +1,208 @@
+# 应用配置
+spring:
+  application:
+    name: airport-vehicle-system
+  
+  # 环境配置
+  profiles:
+    active: dev
+  
+  # Bean定义覆盖配置（解决jpaAuditingHandler冲突）
+  main:
+    allow-bean-definition-overriding: true
+  
+  # 数据源配置 - 使用MySQL数据库
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/airport_vehicle_system?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    username: app_user
+    password: App@Secure123!
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      use-global-data-source-stat: true
+      # 监控配置
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: admin
+        login-password: admin123
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    defer-datasource-initialization: false
+  
+  # 缓存配置
+  cache:
+    type: simple
+    simple:
+      time-to-live: 60000
+  
+  # WebSocket配置 - 移除端口配置，使用与HTTP相同端口
+  websocket:
+    path: /ws
+
+# 服务器配置 - 改为常用端口 8080
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 200
+    min-spare-threads: 30
+
+# knife4j API文档配置
+knife4j:
+  enable: true
+  setting:
+    language: zh-CN
+    enable-swagger-models: true
+    swagger-model-name: 实体类列表
+    enable-document-manage: true
+    enable-version: true
+  # 指定OpenAPI文档的URL
+  documents:
+    - group: default
+      name: 默认接口
+      locations: /api/v3/api-docs
+
+# 添加SpringDoc配置
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    try-it-out-enabled: true
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.airport.controller
+
+# 日志配置
+logging:
+  level:
+    com.airport: DEBUG
+    org.springframework.beans: ERROR
+    org.springframework.context: ERROR
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/airport-vehicle-system.log
+    max-size: 100MB
+    max-history: 30
+  charset:
+    console: UTF-8
+    file: UTF-8
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+# JWT配置
+jwt:
+  secret: airport-vehicle-system-secret-key-2024
+  expiration: 86400 # 24小时
+  header: Authorization
+  prefix: "Bearer "
+
+# 车辆监控配置
+vehicle:
+  tracking:
+    # 位置更新间隔(秒)
+    update-interval: 30
+    # 位置数据保留天数
+    retention-days: 30
+  # GPS相关配置
+  gps:
+    # 坐标系统 (WGS84, GCJ02, BD09)
+    coordinate-system: GCJ02
+    # 地图提供商 (baidu, gaode, tencent)
+    map-provider: baidu
+
+# 调度配置
+dispatch:
+  # 是否启用自动分配
+  auto-assign: true
+  # 任务超时时间(分钟)
+  task-timeout: 480
+  # 最大重试次数
+  max-retry: 3
+
+# 地图配置
+map:
+  provider: baidu
+  baidu:
+    ak: your-baidu-ak
+  gaode:
+    key: your-gaode-key
+  tencent:
+    key: your-tencent-key
+
+# 文件上传配置
+upload:
+  # 上传文件大小限制(MB)
+  max-size: 100
+  # 允许的文件类型
+  allowed-types: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx
+  # 上传目录
+  path: uploads/
+
+# 系统配置
+system:
+  # 分页大小
+  page-size: 10
+  # 文件导出最大条数
+  export-max-rows: 10000
+  # 系统维护开关
+  maintenance-mode: false
