@@ -11,7 +11,7 @@ import java.time.Clock;
 /**
  * 系统配置类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Configuration
 @EnableJpaAuditing

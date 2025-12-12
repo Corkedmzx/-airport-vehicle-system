@@ -3,7 +3,7 @@ package com.airport.common.exception;
 /**
  * 业务异常类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 public class BusinessException extends RuntimeException {
 

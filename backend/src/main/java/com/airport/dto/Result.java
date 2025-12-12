@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 统一响应结果
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 public class Result<T> {

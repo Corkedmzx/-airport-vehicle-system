@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * JWT工具类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Component
 public class JwtUtils {

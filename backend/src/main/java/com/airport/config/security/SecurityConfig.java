@@ -19,7 +19,7 @@ import java.util.Arrays;
 /**
  * Spring Security配置
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Configuration
 @EnableWebSecurity

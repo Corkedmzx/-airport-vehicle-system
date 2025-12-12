@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 /**
  * 调度任务实体类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 @Entity

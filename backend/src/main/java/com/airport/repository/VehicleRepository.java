@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  * 车辆数据访问层
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {

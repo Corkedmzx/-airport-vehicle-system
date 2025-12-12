@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 /**
  * 车辆位置信息DTO
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 public class VehicleLocationDTO {

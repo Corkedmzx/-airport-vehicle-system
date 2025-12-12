@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 /**
  * 车辆实体类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 @Entity

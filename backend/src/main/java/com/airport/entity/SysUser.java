@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * 用户实体类
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Data
 @Entity

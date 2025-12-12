@@ -22,7 +22,7 @@ import java.util.Collections;
 /**
  * JWT认证过滤器
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Slf4j
 @Component

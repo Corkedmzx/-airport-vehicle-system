@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * 全局异常处理器
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Slf4j
 @RestControllerAdvice

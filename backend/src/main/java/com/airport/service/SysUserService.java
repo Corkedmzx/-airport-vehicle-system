@@ -9,7 +9,7 @@ import com.airport.entity.SysUser;
 /**
  * 用户服务接口
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 public interface SysUserService {
 

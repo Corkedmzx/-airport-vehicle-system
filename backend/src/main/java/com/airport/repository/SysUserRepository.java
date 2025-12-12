@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * 用户数据访问层
  * 
- * @author MiniMax Agent
+ * @author Corkedmzx
  */
 @Repository
 public interface SysUserRepository extends JpaRepository<SysUser, Long> {

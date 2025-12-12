@@ -11,7 +11,7 @@ import java.util.Optional;
 /**
  * 车辆服务接口
  * 
- * @author MiniMax Agent
+ * @author Corkedmzxs
  */
 public interface VehicleService {
 
