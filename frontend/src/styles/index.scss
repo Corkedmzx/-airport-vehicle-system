@@ -1,0 +1,361 @@
+// 主题变量
+:root {
+  // 主色调
+  --primary-color: #409eff;
+  --primary-light-color: #66b1ff;
+  --primary-dark-color: #337ecc;
+  
+  // 成功色
+  --success-color: #67c23a;
+  --success-light-color: #85ce61;
+  --success-dark-color: #529b2e;
+  
+  // 警告色
+  --warning-color: #e6a23c;
+  --warning-light-color: #ebb563;
+  --warning-dark-color: #cf9236;
+  
+  // 危险色
+  --danger-color: #f56c6c;
+  --danger-light-color: #f78989;
+  --danger-dark-color: #d63e3a;
+  
+  // 信息色
+  --info-color: #909399;
+  --info-light-color: #a6a9ad;
+  --info-dark-color: #73767a;
+  
+  // 文字色
+  --text-primary-color: #303133;
+  --text-regular-color: #606266;
+  --text-secondary-color: #909399;
+  --text-placeholder-color: #c0c4cc;
+  
+  // 边框色
+  --border-base-color: #dcdfe6;
+  --border-light-color: #e4e7ed;
+  --border-lighter-color: #ebeef5;
+  --border-extra-light-color: #f2f6fc;
+  
+  // 背景色
+  --background-base-color: #ffffff;
+  --background-light-color: #f5f7fa;
+  --background-lighter-color: #fafafa;
+  --background-extra-light-color: #fafcff;
+  
+  // 阴影
+  --box-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+  --box-shadow-dark: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.12);
+  --box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+// 暗色主题
+[data-theme="dark"] {
+  --text-primary-color: #e5eaf3;
+  --text-regular-color: #cfd3dc;
+  --text-secondary-color: #a8abb2;
+  --text-placeholder-color: #6c6e72;
+  
+  --border-base-color: #4c4d4f;
+  --border-light-color: #414243;
+  --border-lighter-color: #363637;
+  --border-extra-light-color: #2b2b2c;
+  
+  --background-base-color: #1a1a1a;
+  --background-light-color: #262727;
+  --background-lighter-color: #2d2e33;
+  --background-extra-light-color: #262727;
+}
+
+// 通用样式
+.page-container {
+  background: var(--background-base-color);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow-light);
+  overflow: hidden;
+}
+
+.page-header {
+  padding: 20px;
+  background: var(--background-base-color);
+  border-bottom: 1px solid var(--border-lighter-color);
+  
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary-color);
+    margin-bottom: 8px;
+  }
+  
+  .page-breadcrumb {
+    color: var(--text-secondary-color);
+    font-size: 14px;
+  }
+}
+
+.page-content {
+  padding: 20px;
+}
+
+.page-footer {
+  padding: 20px;
+  background: var(--background-lighter-color);
+  border-top: 1px solid var(--border-lighter-color);
+  text-align: center;
+  color: var(--text-secondary-color);
+  font-size: 12px;
+}
+
+// 卡片样式
+.card {
+  background: var(--background-base-color);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow-light);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+  
+  &:hover {
+    box-shadow: var(--box-shadow-dark);
+  }
+  
+  .card-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border-lighter-color);
+    background: var(--background-lighter-color);
+    
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary-color);
+    }
+  }
+  
+  .card-body {
+    padding: 20px;
+  }
+}
+
+// 统计卡片
+.stat-card {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light-color) 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: rotate(45deg);
+  }
+  
+  .stat-icon {
+    font-size: 36px;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+  
+  .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  
+  .stat-label {
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  
+  .stat-trend {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    font-size: 12px;
+    opacity: 0.8;
+  }
+}
+
+// 表格样式
+.table-container {
+  background: var(--background-base-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--box-shadow-light);
+  
+  .table-header {
+    padding: 16px 20px;
+    background: var(--background-lighter-color);
+    border-bottom: 1px solid var(--border-lighter-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .table-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary-color);
+    }
+    
+    .table-actions {
+      display: flex;
+      gap: 12px;
+    }
+  }
+  
+  .el-table {
+    .el-table__header {
+      background: var(--background-lighter-color);
+    }
+    
+    .el-table__row {
+      &:hover > td {
+        background: var(--background-extra-light-color);
+      }
+    }
+  }
+}
+
+// 按钮组样式
+.btn-group {
+  display: flex;
+  gap: 8px;
+  
+  .el-button + .el-button {
+    margin-left: 0;
+  }
+}
+
+// 状态标签
+.status-tag {
+  &.status-active {
+    background: var(--success-light-color);
+    color: white;
+  }
+  
+  &.status-inactive {
+    background: var(--info-light-color);
+    color: white;
+  }
+  
+  &.status-warning {
+    background: var(--warning-light-color);
+    color: white;
+  }
+  
+  &.status-danger {
+    background: var(--danger-light-color);
+    color: white;
+  }
+}
+
+// 加载状态
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+// 空状态
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: var(--text-secondary-color);
+  
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+  
+  .empty-text {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .empty-description {
+    font-size: 12px;
+  }
+}
+
+// 响应式工具类
+@media (max-width: 768px) {
+  .page-container {
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .page-header {
+    padding: 16px;
+    
+    .page-title {
+      font-size: 18px;
+    }
+  }
+  
+  .page-content {
+    padding: 16px;
+  }
+  
+  .stat-card {
+    padding: 20px;
+    
+    .stat-value {
+      font-size: 28px;
+    }
+  }
+  
+  .card {
+    .card-body {
+      padding: 16px;
+    }
+  }
+  
+  .table-container {
+    .table-header {
+      padding: 12px 16px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .table-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+// 动画效果
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%);
+}
