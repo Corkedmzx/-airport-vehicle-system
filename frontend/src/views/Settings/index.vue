@@ -76,16 +76,43 @@
                         系统管理员权限不可修改，以防止误操作
                       </p>
                     </div>
-                    <!-- 其他角色：可编辑 -->
-                    <el-checkbox-group v-else v-model="row.permissions">
-                      <el-checkbox 
-                        v-for="permission in allPermissions" 
-                        :key="permission.value"
-                        :label="permission.value"
-                      >
-                        {{ permission.label }}
-                      </el-checkbox>
-                    </el-checkbox-group>
+                    <!-- 其他角色：默认显示权限标签，编辑模式下显示复选框 -->
+                    <div v-else>
+                      <!-- 显示模式：显示权限标签 -->
+                      <div v-if="!row.editing">
+                        <el-tag
+                          v-for="permission in getPermissionLabels(row.permissions || [])"
+                          :key="permission.code"
+                          type="success"
+                          style="margin-right: 8px; margin-bottom: 8px;"
+                        >
+                          {{ permission.name }}
+                        </el-tag>
+                        <span v-if="!row.permissions || row.permissions.length === 0" style="color: #909399;">
+                          暂无权限
+                        </span>
+                      </div>
+                      <!-- 编辑模式：显示复选框 -->
+                      <div v-else>
+                        <el-checkbox-group v-model="row.permissions" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                          <el-checkbox 
+                            v-for="permission in allPermissions" 
+                            :key="permission.value"
+                            :label="permission.value"
+                          >
+                            {{ permission.label }}
+                          </el-checkbox>
+                        </el-checkbox-group>
+                        <div style="margin-top: 12px;">
+                          <el-button type="primary" size="small" @click="saveRolePermissions(row)">
+                            保存
+                          </el-button>
+                          <el-button size="small" @click="cancelEditPermissions(row)">
+                            取消
+                          </el-button>
+                        </div>
+                      </div>
+                    </div>
                   </template>
                 </el-table-column>
                 <el-table-column label="操作" width="200">
@@ -100,14 +127,13 @@
                       >
                         查看权限内容
                       </el-button>
-                      <!-- 修改权限按钮（ADMIN角色不显示） -->
+                      <!-- 修改权限按钮（ADMIN角色不显示，编辑模式下显示"保存"） -->
                       <el-button 
-                        v-if="row.roleCode !== 'ADMIN'"
+                        v-if="row.roleCode !== 'ADMIN' && !row.editing"
                         type="primary" 
                         link 
                         size="small"
-                        @click="editRolePermissions(row)"
-                        :loading="row.saving"
+                        @click="startEditPermissions(row)"
                       >
                         修改权限
                       </el-button>
@@ -287,7 +313,8 @@ const loadRolePermissions = async () => {
             if (permResponse.data.code === 200) {
               return {
                 ...permResponse.data.data,
-                saving: false
+                saving: false,
+                editing: false // 默认不在编辑模式
               }
             }
             return {
@@ -295,7 +322,8 @@ const loadRolePermissions = async () => {
               roleName: role.roleName,
               roleCode: role.roleCode,
               permissions: [],
-              saving: false
+              saving: false,
+              editing: false
             }
           } catch (error) {
             console.error(`加载角色 ${role.roleName} 的权限失败:`, error)
@@ -304,7 +332,8 @@ const loadRolePermissions = async () => {
               roleName: role.roleName,
               roleCode: role.roleCode,
               permissions: [],
-              saving: false
+              saving: false,
+              editing: false
             }
           }
         })
@@ -341,37 +370,50 @@ const goToLogs = () => {
 
 // 查看角色权限
 const viewRolePermissions = (row: RolePermissionDTO & { id?: number }) => {
-  const permissionNames = getPermissionLabels(row.permissions || []).map(p => p.name).join('、')
+  const permissions = getPermissionLabels(row.permissions || [])
+  const permissionList = permissions.length > 0 
+    ? permissions.map(p => `<li style="margin: 8px 0;">${p.name}</li>`).join('')
+    : '<li style="color: #909399;">暂无权限</li>'
+  
   ElMessageBox.alert(
-    `<div style="text-align: left;">
-      <p><strong>角色：</strong>${row.roleName}</p>
-      <p><strong>权限列表：</strong></p>
-      <p>${permissionNames || '暂无权限'}</p>
+    `<div style="text-align: left; padding: 10px;">
+      <p style="margin-bottom: 12px;"><strong style="font-size: 16px;">角色：</strong><span style="font-size: 16px;">${row.roleName}</span></p>
+      <p style="margin-bottom: 8px;"><strong>权限列表：</strong></p>
+      <ul style="margin: 0; padding-left: 20px; max-height: 400px; overflow-y: auto;">
+        ${permissionList}
+      </ul>
+      <p style="margin-top: 12px; color: #909399; font-size: 12px;">共 ${permissions.length} 项权限</p>
     </div>`,
     '权限详情',
     {
       dangerouslyUseHTMLString: true,
-      confirmButtonText: '关闭'
+      confirmButtonText: '关闭',
+      width: '500px'
     }
   )
 }
 
-// 编辑角色权限
-const editRolePermissions = (row: RolePermissionDTO & { id?: number; saving?: boolean }) => {
-  // 提示用户可以在表格中直接勾选权限
-  ElMessageBox.confirm(
-    '请在下方表格中勾选权限，然后点击"保存"按钮',
-    '编辑权限',
-    {
-      confirmButtonText: '我知道了',
-      showCancelButton: false,
-      type: 'info'
-    }
-  )
+// 开始编辑权限
+const startEditPermissions = (row: RolePermissionDTO & { id?: number; editing?: boolean; originalPermissions?: string[] }) => {
+  // 保存原始权限，用于取消时恢复
+  row.originalPermissions = [...(row.permissions || [])]
+  // 进入编辑模式
+  row.editing = true
+}
+
+// 取消编辑权限
+const cancelEditPermissions = (row: RolePermissionDTO & { id?: number; editing?: boolean; originalPermissions?: string[] }) => {
+  // 恢复原始权限
+  if (row.originalPermissions) {
+    row.permissions = [...row.originalPermissions]
+  }
+  // 退出编辑模式
+  row.editing = false
+  row.originalPermissions = undefined
 }
 
 // 保存角色权限
-const saveRolePermissions = async (row: RolePermissionDTO & { id?: number; saving?: boolean }) => {
+const saveRolePermissions = async (row: RolePermissionDTO & { id?: number; saving?: boolean; editing?: boolean; originalPermissions?: string[] }) => {
   try {
     if (!row.roleId) {
       ElMessage.error('角色ID不存在')
@@ -403,6 +445,9 @@ const saveRolePermissions = async (row: RolePermissionDTO & { id?: number; savin
         message: `角色 ${row.roleName} 的权限已保存`,
         duration: 3000
       })
+      // 退出编辑模式
+      row.editing = false
+      row.originalPermissions = undefined
       // 重新加载数据
       await loadRolePermissions()
     } else {

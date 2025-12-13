@@ -33385,3 +33385,822 @@ This generated password is for development use only. Your security configuration
 2025-12-13 17:17:17.704 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
 2025-12-13 17:17:17.708 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
 2025-12-13 17:17:17.719 [SpringApplicationShutdownHook] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2025-12-13 17:21:49.124 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - Starting AirportVehicleSystemApplication using Java 22.0.2 with PID 25884 (E:\share\airport-vehicle-system\backend\target\classes started by 86157 in E:\share\airport-vehicle-system\backend)
+2025-12-13 17:21:49.127 [restartedMain] DEBUG c.a.AirportVehicleSystemApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-12-13 17:21:49.128 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - The following 1 profile is active: "dev"
+2025-12-13 17:21:49.279 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-12-13 17:21:49.280 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-12-13 17:21:50.664 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-12-13 17:21:50.666 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-13 17:21:51.100 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 424 ms. Found 10 JPA repository interfaces.
+2025-12-13 17:21:51.759 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-12-13 17:21:51.761 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-12-13 17:21:51.782 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.AlertRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.783 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.AlertRuleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.784 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.DispatchTaskRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.784 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SysPermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.784 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SysRolePermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.784 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SysRoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.785 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SystemLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.785 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SysUserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.785 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.SysUserRoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.786 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.airport.repository.VehicleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-12-13 17:21:51.786 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 15 ms. Found 0 Redis repository interfaces.
+2025-12-13 17:21:51.947 [restartedMain] WARN  o.m.s.mapper.ClassPathMapperScanner - No MyBatis mapper was found in '[com.airport]' package. Please check your configuration.
+2025-12-13 17:21:53.133 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-12-13 17:21:53.136 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - An older version [1.3.1] of the Apache Tomcat Native library is installed, while Tomcat recommends a minimum version of [2.0.5]
+2025-12-13 17:21:53.136 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - Loaded Apache Tomcat Native library [1.3.1] using APR version [1.7.4].
+2025-12-13 17:21:53.143 [restartedMain] INFO  o.a.c.core.AprLifecycleListener - OpenSSL successfully initialized [OpenSSL 3.0.14 4 Jun 2024]
+2025-12-13 17:21:53.156 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-12-13 17:21:53.156 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-13 17:21:53.315 [restartedMain] INFO  o.a.c.c.C.[.[localhost].[/api] - Initializing Spring embedded WebApplicationContext
+2025-12-13 17:21:53.315 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 4033 ms
+2025-12-13 17:21:53.643 [restartedMain] DEBUG c.a.c.s.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-12-13 17:21:53.686 [restartedMain] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2025-12-13 17:21:54.362 [restartedMain] INFO  c.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2025-12-13 17:21:54.810 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-13 17:21:54.889 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
+2025-12-13 17:21:54.931 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-12-13 17:21:55.196 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-13 17:21:55.273 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-13 17:21:55.276 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-12-13 17:21:56.403 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-13 17:21:56.469 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-13 17:21:56.879 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - JSqlParser is in classpath; If applicable, JSqlParser will be used
+2025-12-13 17:21:56.879 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-12-13 17:21:58.599 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-13 17:21:58.693 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 25ea0853-e455-42ce-af17-5b8feeb6a7c4
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-12-13 17:21:58.894 [restartedMain] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page: class path resource [static/index.html]
+2025-12-13 17:21:59.680 [restartedMain] INFO  org.redisson.Version - Redisson 3.23.4
+2025-12-13 17:22:00.467 [redisson-netty-2-5] INFO  o.r.c.p.MasterPubSubConnectionPool - 1 connections initialized for localhost/127.0.0.1:6379
+2025-12-13 17:22:00.576 [redisson-netty-2-20] INFO  o.r.c.pool.MasterConnectionPool - 24 connections initialized for localhost/127.0.0.1:6379
+2025-12-13 17:22:00.801 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoint(s) beneath base path '/actuator'
+2025-12-13 17:22:00.951 [restartedMain] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@16fd2eec, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@c80372, org.springframework.security.web.context.SecurityContextHolderFilter@553ab297, org.springframework.security.web.header.HeaderWriterFilter@e47d461, org.springframework.web.filter.CorsFilter@7c7aa394, org.springframework.security.web.authentication.logout.LogoutFilter@67a6ff37, com.airport.config.security.JwtAuthenticationFilter@398aca5d, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@399c4151, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@761d15f4, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@55cf6371, org.springframework.security.web.session.SessionManagementFilter@5f6313bc, org.springframework.security.web.access.ExceptionTranslationFilter@3d8a2827, org.springframework.security.web.access.intercept.AuthorizationFilter@502ccc20]
+2025-12-13 17:22:02.460 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2025-12-13 17:22:02.541 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api'
+2025-12-13 17:22:02.555 [restartedMain] INFO  c.a.AirportVehicleSystemApplication - Started AirportVehicleSystemApplication in 14.327 seconds (process running for 15.616)
+2025-12-13 17:22:20.250 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[.[localhost].[/api] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-12-13 17:22:20.251 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-12-13 17:22:20.253 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2025-12-13 17:22:20.285 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing POST /auth/login
+2025-12-13 17:22:20.325 [http-nio-8080-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-12-13 17:22:20.327 [http-nio-8080-exec-1] DEBUG o.s.s.w.s.SessionManagementFilter - Request requested invalid session id 15ABC039CDE6D3E7D8ADE136ABFF49D8
+2025-12-13 17:22:20.330 [http-nio-8080-exec-1] WARN  o.s.w.s.h.HandlerMappingIntrospector - Cache miss for REQUEST dispatch to '/api/auth/login' (previous null). Performing MatchableHandlerMapping lookup. This is logged once only at WARN level, and every time at TRACE.
+2025-12-13 17:22:20.350 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Secured POST /auth/login
+2025-12-13 17:22:20.597 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        su1_0.id,
+        su1_0.avatar,
+        su1_0.create_time,
+        su1_0.email,
+        su1_0.last_login_time,
+        su1_0.password,
+        su1_0.phone,
+        su1_0.real_name,
+        su1_0.status,
+        su1_0.update_time,
+        su1_0.username 
+    from
+        sys_user su1_0 
+    where
+        su1_0.username=?
+2025-12-13 17:22:20.868 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        sur1_0.id,
+        sur1_0.create_time,
+        sur1_0.role_id,
+        sur1_0.update_time,
+        sur1_0.user_id 
+    from
+        sys_user_role sur1_0 
+    where
+        sur1_0.user_id=?
+2025-12-13 17:22:20.891 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:22:20.899 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:22:20.902 [http-nio-8080-exec-1] INFO  c.a.service.impl.SysUserServiceImpl - 用户 admin 登录成功
+2025-12-13 17:22:20.905 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        su1_0.id,
+        su1_0.avatar,
+        su1_0.create_time,
+        su1_0.email,
+        su1_0.last_login_time,
+        su1_0.password,
+        su1_0.phone,
+        su1_0.real_name,
+        su1_0.status,
+        su1_0.update_time,
+        su1_0.username 
+    from
+        sys_user su1_0 
+    where
+        su1_0.id=?
+2025-12-13 17:22:20.916 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        su1_0.id,
+        su1_0.avatar,
+        su1_0.create_time,
+        su1_0.email,
+        su1_0.last_login_time,
+        su1_0.password,
+        su1_0.phone,
+        su1_0.real_name,
+        su1_0.status,
+        su1_0.update_time,
+        su1_0.username 
+    from
+        sys_user su1_0 
+    where
+        su1_0.id=?
+2025-12-13 17:22:20.999 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    update
+        sys_user 
+    set
+        avatar=?,
+        email=?,
+        last_login_time=?,
+        password=?,
+        phone=?,
+        real_name=?,
+        status=?,
+        update_time=?,
+        username=? 
+    where
+        id=?
+2025-12-13 17:22:21.358 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /vehicles/statistics
+2025-12-13 17:22:21.362 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /tasks/statistics
+2025-12-13 17:22:21.449 [http-nio-8080-exec-2] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:21.449 [http-nio-8080-exec-3] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:21.484 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /vehicles/statistics
+2025-12-13 17:22:21.484 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Secured GET /tasks/statistics
+2025-12-13 17:22:21.513 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        dt1_0.status,
+        count(dt1_0.id) 
+    from
+        dispatch_task dt1_0 
+    group by
+        dt1_0.status
+2025-12-13 17:22:21.513 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        v1_0.status,
+        count(v1_0.id) 
+    from
+        vehicle v1_0 
+    group by
+        v1_0.status
+2025-12-13 17:22:21.528 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        count(dt1_0.id) 
+    from
+        dispatch_task dt1_0 
+    where
+        dt1_0.create_time between ? and ?
+2025-12-13 17:22:21.585 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /tasks
+2025-12-13 17:22:21.589 [http-nio-8080-exec-4] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:21.603 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /tasks
+2025-12-13 17:22:21.609 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        dt1_0.id,
+        dt1_0.actual_end_time,
+        dt1_0.actual_start_time,
+        dt1_0.assigned_driver_id,
+        dt1_0.assigned_vehicle_id,
+        dt1_0.create_time,
+        dt1_0.description,
+        dt1_0.end_location,
+        dt1_0.end_time,
+        dt1_0.priority,
+        dt1_0.progress,
+        dt1_0.remark,
+        dt1_0.start_location,
+        dt1_0.start_time,
+        dt1_0.status,
+        dt1_0.task_name,
+        dt1_0.task_no,
+        dt1_0.task_type,
+        dt1_0.update_time 
+    from
+        dispatch_task dt1_0
+2025-12-13 17:22:24.729 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /vehicles?page=1&size=20
+2025-12-13 17:22:24.734 [http-nio-8080-exec-5] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:24.751 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Secured GET /vehicles?page=1&size=20
+2025-12-13 17:22:24.758 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        v1_0.id,
+        v1_0.brand,
+        v1_0.color,
+        v1_0.create_time,
+        v1_0.current_fuel,
+        v1_0.engine_no,
+        v1_0.fuel_capacity,
+        v1_0.gps_device_id,
+        v1_0.last_update_time,
+        v1_0.location_address,
+        v1_0.location_latitude,
+        v1_0.location_longitude,
+        v1_0.mileage,
+        v1_0.model,
+        v1_0.purchase_date,
+        v1_0.status,
+        v1_0.update_time,
+        v1_0.vehicle_no,
+        v1_0.vehicle_type_id,
+        v1_0.vin 
+    from
+        vehicle v1_0
+2025-12-13 17:22:30.937 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /tasks
+2025-12-13 17:22:30.943 [http-nio-8080-exec-6] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:30.959 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /tasks
+2025-12-13 17:22:30.963 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        dt1_0.id,
+        dt1_0.actual_end_time,
+        dt1_0.actual_start_time,
+        dt1_0.assigned_driver_id,
+        dt1_0.assigned_vehicle_id,
+        dt1_0.create_time,
+        dt1_0.description,
+        dt1_0.end_location,
+        dt1_0.end_time,
+        dt1_0.priority,
+        dt1_0.progress,
+        dt1_0.remark,
+        dt1_0.start_location,
+        dt1_0.start_time,
+        dt1_0.status,
+        dt1_0.task_name,
+        dt1_0.task_no,
+        dt1_0.task_type,
+        dt1_0.update_time 
+    from
+        dispatch_task dt1_0
+2025-12-13 17:22:39.567 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /vehicles?page=0&size=20&status=1
+2025-12-13 17:22:39.575 [http-nio-8080-exec-7] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:39.592 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /vehicles?page=0&size=20&status=1
+2025-12-13 17:22:39.596 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    select
+        v1_0.id,
+        v1_0.brand,
+        v1_0.color,
+        v1_0.create_time,
+        v1_0.current_fuel,
+        v1_0.engine_no,
+        v1_0.fuel_capacity,
+        v1_0.gps_device_id,
+        v1_0.last_update_time,
+        v1_0.location_address,
+        v1_0.location_latitude,
+        v1_0.location_longitude,
+        v1_0.mileage,
+        v1_0.model,
+        v1_0.purchase_date,
+        v1_0.status,
+        v1_0.update_time,
+        v1_0.vehicle_no,
+        v1_0.vehicle_type_id,
+        v1_0.vin 
+    from
+        vehicle v1_0
+2025-12-13 17:22:39.857 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /alerts?page=0&size=10&status=unprocessed
+2025-12-13 17:22:39.862 [http-nio-8080-exec-8] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:39.873 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /alerts?page=0&size=10&status=unprocessed
+2025-12-13 17:22:39.899 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.id,
+        a1_0.acknowledged,
+        a1_0.acknowledged_time,
+        a1_0.assignee,
+        a1_0.category,
+        a1_0.create_time,
+        a1_0.description,
+        a1_0.resolution_notes,
+        a1_0.resolved_time,
+        a1_0.severity,
+        a1_0.status,
+        a1_0.task_id,
+        a1_0.title,
+        a1_0.update_time,
+        a1_0.vehicle_id 
+    from
+        alert a1_0 
+    order by
+        a1_0.create_time desc 
+    limit
+        ?, ?
+2025-12-13 17:22:43.164 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /vehicles/active
+2025-12-13 17:22:43.164 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /tasks/pending
+2025-12-13 17:22:43.170 [http-nio-8080-exec-9] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:43.170 [http-nio-8080-exec-10] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:43.181 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Secured GET /tasks/pending
+2025-12-13 17:22:43.182 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Secured GET /vehicles/active
+2025-12-13 17:22:43.186 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        dt1_0.id,
+        dt1_0.actual_end_time,
+        dt1_0.actual_start_time,
+        dt1_0.assigned_driver_id,
+        dt1_0.assigned_vehicle_id,
+        dt1_0.create_time,
+        dt1_0.description,
+        dt1_0.end_location,
+        dt1_0.end_time,
+        dt1_0.priority,
+        dt1_0.progress,
+        dt1_0.remark,
+        dt1_0.start_location,
+        dt1_0.start_time,
+        dt1_0.status,
+        dt1_0.task_name,
+        dt1_0.task_no,
+        dt1_0.task_type,
+        dt1_0.update_time 
+    from
+        dispatch_task dt1_0 
+    where
+        dt1_0.status=1 
+    order by
+        dt1_0.priority desc,
+        dt1_0.start_time
+2025-12-13 17:22:43.186 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    select
+        v1_0.id,
+        v1_0.brand,
+        v1_0.color,
+        v1_0.create_time,
+        v1_0.current_fuel,
+        v1_0.engine_no,
+        v1_0.fuel_capacity,
+        v1_0.gps_device_id,
+        v1_0.last_update_time,
+        v1_0.location_address,
+        v1_0.location_latitude,
+        v1_0.location_longitude,
+        v1_0.mileage,
+        v1_0.model,
+        v1_0.purchase_date,
+        v1_0.status,
+        v1_0.update_time,
+        v1_0.vehicle_no,
+        v1_0.vehicle_type_id,
+        v1_0.vin 
+    from
+        vehicle v1_0 
+    where
+        v1_0.status=1
+2025-12-13 17:22:49.244 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /alerts/statistics
+2025-12-13 17:22:49.248 [http-nio-8080-exec-1] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:49.251 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /alerts?page=0&size=20
+2025-12-13 17:22:49.256 [http-nio-8080-exec-2] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:49.259 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Secured GET /alerts/statistics
+2025-12-13 17:22:49.262 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.severity,
+        count(a1_0.id) 
+    from
+        alert a1_0 
+    group by
+        a1_0.severity
+2025-12-13 17:22:49.265 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /alerts?page=0&size=20
+2025-12-13 17:22:49.266 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.status,
+        count(a1_0.id) 
+    from
+        alert a1_0 
+    group by
+        a1_0.status
+2025-12-13 17:22:49.269 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.id,
+        a1_0.acknowledged,
+        a1_0.acknowledged_time,
+        a1_0.assignee,
+        a1_0.category,
+        a1_0.create_time,
+        a1_0.description,
+        a1_0.resolution_notes,
+        a1_0.resolved_time,
+        a1_0.severity,
+        a1_0.status,
+        a1_0.task_id,
+        a1_0.title,
+        a1_0.update_time,
+        a1_0.vehicle_id 
+    from
+        alert a1_0 
+    order by
+        a1_0.create_time desc 
+    limit
+        ?, ?
+2025-12-13 17:22:49.270 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        count(a1_0.id) 
+    from
+        alert a1_0 
+    where
+        date(a1_0.create_time)=current_date
+2025-12-13 17:22:50.154 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /vehicles/statistics
+2025-12-13 17:22:50.159 [http-nio-8080-exec-3] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:50.178 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Secured GET /vehicles/statistics
+2025-12-13 17:22:50.183 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        v1_0.status,
+        count(v1_0.id) 
+    from
+        vehicle v1_0 
+    group by
+        v1_0.status
+2025-12-13 17:22:50.458 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /tasks/statistics
+2025-12-13 17:22:50.461 [http-nio-8080-exec-4] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:50.466 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /tasks/statistics
+2025-12-13 17:22:50.468 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        dt1_0.status,
+        count(dt1_0.id) 
+    from
+        dispatch_task dt1_0 
+    group by
+        dt1_0.status
+2025-12-13 17:22:50.471 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        count(dt1_0.id) 
+    from
+        dispatch_task dt1_0 
+    where
+        dt1_0.create_time between ? and ?
+2025-12-13 17:22:52.213 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /users?page=0&size=20
+2025-12-13 17:22:52.217 [http-nio-8080-exec-5] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:52.227 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Secured GET /users?page=0&size=20
+2025-12-13 17:22:52.242 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        su1_0.id,
+        su1_0.avatar,
+        su1_0.create_time,
+        su1_0.email,
+        su1_0.last_login_time,
+        su1_0.password,
+        su1_0.phone,
+        su1_0.real_name,
+        su1_0.status,
+        su1_0.update_time,
+        su1_0.username 
+    from
+        sys_user su1_0 
+    where
+        1=1 
+    limit
+        ?, ?
+2025-12-13 17:22:52.249 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        sur1_0.id,
+        sur1_0.create_time,
+        sur1_0.role_id,
+        sur1_0.update_time,
+        sur1_0.user_id 
+    from
+        sys_user_role sur1_0 
+    where
+        sur1_0.user_id=?
+2025-12-13 17:22:52.253 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:22:52.509 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /users/statistics
+2025-12-13 17:22:52.511 [http-nio-8080-exec-6] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:22:52.516 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /users/statistics
+2025-12-13 17:22:52.520 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        su1_0.id,
+        su1_0.avatar,
+        su1_0.create_time,
+        su1_0.email,
+        su1_0.last_login_time,
+        su1_0.password,
+        su1_0.phone,
+        su1_0.real_name,
+        su1_0.status,
+        su1_0.update_time,
+        su1_0.username 
+    from
+        sys_user su1_0
+2025-12-13 17:23:09.043 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /logs?page=0&size=50
+2025-12-13 17:23:09.046 [http-nio-8080-exec-7] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:09.053 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /logs?page=0&size=50
+2025-12-13 17:23:09.059 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    select
+        sl1_0.id,
+        sl1_0.category,
+        sl1_0.create_time,
+        sl1_0.exception,
+        sl1_0.execution_time,
+        sl1_0.ip_address,
+        sl1_0.level,
+        sl1_0.message,
+        sl1_0.module,
+        sl1_0.request_method,
+        sl1_0.request_url,
+        sl1_0.update_time,
+        sl1_0.user_id,
+        sl1_0.username 
+    from
+        system_log sl1_0 
+    order by
+        sl1_0.create_time desc 
+    limit
+        ?, ?
+2025-12-13 17:23:09.340 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /logs/statistics
+2025-12-13 17:23:09.343 [http-nio-8080-exec-8] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:09.349 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /logs/statistics
+2025-12-13 17:23:09.356 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        count(*) 
+    from
+        system_log sl1_0
+2025-12-13 17:23:09.361 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        count(sl1_0.id) 
+    from
+        system_log sl1_0 
+    where
+        sl1_0.level=?
+2025-12-13 17:23:09.364 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        count(sl1_0.id) 
+    from
+        system_log sl1_0 
+    where
+        sl1_0.level=?
+2025-12-13 17:23:09.366 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        count(sl1_0.id) 
+    from
+        system_log sl1_0 
+    where
+        sl1_0.level=?
+2025-12-13 17:23:09.372 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        count(sl1_0.id) 
+    from
+        system_log sl1_0 
+    where
+        sl1_0.create_time between ? and ?
+2025-12-13 17:23:13.203 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/permissions
+2025-12-13 17:23:13.203 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles
+2025-12-13 17:23:13.207 [http-nio-8080-exec-10] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.207 [http-nio-8080-exec-9] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.219 [http-nio-8080-exec-9] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles
+2025-12-13 17:23:13.220 [http-nio-8080-exec-10] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/permissions
+2025-12-13 17:23:13.224 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0
+2025-12-13 17:23:13.224 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
+    select
+        sp1_0.id,
+        sp1_0.create_time,
+        sp1_0.description,
+        sp1_0.permission_code,
+        sp1_0.permission_name,
+        sp1_0.permission_type,
+        sp1_0.resource,
+        sp1_0.status,
+        sp1_0.update_time 
+    from
+        sys_permission sp1_0
+2025-12-13 17:23:13.551 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles/1/permissions
+2025-12-13 17:23:13.551 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles/2/permissions
+2025-12-13 17:23:13.551 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles/3/permissions
+2025-12-13 17:23:13.551 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles/4/permissions
+2025-12-13 17:23:13.551 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles/5/permissions
+2025-12-13 17:23:13.551 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles/6/permissions
+2025-12-13 17:23:13.553 [http-nio-8080-exec-1] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.553 [http-nio-8080-exec-2] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.553 [http-nio-8080-exec-4] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.553 [http-nio-8080-exec-5] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.554 [http-nio-8080-exec-6] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.554 [http-nio-8080-exec-3] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.566 [http-nio-8080-exec-2] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles/1/permissions
+2025-12-13 17:23:13.566 [http-nio-8080-exec-1] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles/2/permissions
+2025-12-13 17:23:13.566 [http-nio-8080-exec-3] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles/3/permissions
+2025-12-13 17:23:13.567 [http-nio-8080-exec-4] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles/4/permissions
+2025-12-13 17:23:13.567 [http-nio-8080-exec-5] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles/5/permissions
+2025-12-13 17:23:13.568 [http-nio-8080-exec-6] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles/6/permissions
+2025-12-13 17:23:13.570 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:23:13.570 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:23:13.578 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:23:13.578 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:23:13.581 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:23:13.592 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:23:13.594 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:23:13.595 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:23:13.596 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:23:13.602 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:23:13.603 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:23:13.610 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:23:13.894 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Securing GET /role-permissions/roles/7/permissions
+2025-12-13 17:23:13.898 [http-nio-8080-exec-7] DEBUG c.a.c.s.JwtAuthenticationFilter - 用户 admin 认证成功
+2025-12-13 17:23:13.904 [http-nio-8080-exec-7] DEBUG o.s.security.web.FilterChainProxy - Secured GET /role-permissions/roles/7/permissions
+2025-12-13 17:23:13.907 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    select
+        sr1_0.id,
+        sr1_0.create_time,
+        sr1_0.description,
+        sr1_0.role_code,
+        sr1_0.role_name,
+        sr1_0.status,
+        sr1_0.update_time 
+    from
+        sys_role sr1_0 
+    where
+        sr1_0.id=?
+2025-12-13 17:23:13.910 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
+    select
+        srp1_0.id,
+        srp1_0.create_time,
+        srp1_0.permission_id,
+        srp1_0.role_id,
+        srp1_0.update_time 
+    from
+        sys_role_permission srp1_0 
+    where
+        srp1_0.role_id=?
+2025-12-13 17:24:06.909 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Securing GET /actuator/health
+2025-12-13 17:24:06.910 [http-nio-8080-exec-8] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter - Set SecurityContextHolder to anonymous SecurityContext
+2025-12-13 17:24:06.910 [http-nio-8080-exec-8] DEBUG o.s.s.w.s.SessionManagementFilter - Request requested invalid session id 15ABC039CDE6D3E7D8ADE136ABFF49D8
+2025-12-13 17:24:06.914 [http-nio-8080-exec-8] DEBUG o.s.security.web.FilterChainProxy - Secured GET /actuator/health
