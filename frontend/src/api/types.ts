@@ -22,6 +22,7 @@ export interface LoginResponse {
     email: string
     avatar: string
     roles: string[]
+    permissions: string[]
   }
   expiresIn: number
 }
@@ -160,6 +161,7 @@ export interface Alert {
 
 // 用户相关类型
 export interface User {
+  roles?: string[] // 角色代码列表
   id: string
   username: string
   realName: string

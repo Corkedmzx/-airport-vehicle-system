@@ -5,7 +5,11 @@
       <h1 class="page-title">用户管理</h1>
       <p class="page-description">管理系统用户、角色和权限</p>
       <div class="header-actions">
-        <el-button type="primary" @click="createUser">
+        <el-button 
+          v-if="hasPermission('user:create')"
+          type="primary" 
+          @click="createUser"
+        >
           <el-icon><UserFilled /></el-icon>
           添加用户
         </el-button>
@@ -141,11 +145,16 @@
         <el-table-column prop="role" label="角色" width="100">
           <template #default="{ row }">
             <el-tag 
-              :type="getRoleType(row.role)" 
+              v-if="row.roles && row.roles.length > 0"
+              v-for="roleCode in row.roles"
+              :key="roleCode"
+              :type="getRoleType(roleCode.toLowerCase())" 
               size="small"
+              style="margin-right: 4px;"
             >
-              {{ getRoleText(row.role) }}
+              {{ getRoleText(roleCode.toLowerCase()) }}
             </el-tag>
+            <span v-else style="color: #909399;">未分配</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -169,6 +178,7 @@
               查看详情
             </el-button>
             <el-button 
+              v-if="hasPermission('user:update')"
               type="primary" 
               size="small" 
               @click="editUser(row)"
@@ -181,17 +191,23 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="resetPassword">
+                  <el-dropdown-item 
+                    v-if="hasPermission('user:update')"
+                    command="resetPassword"
+                  >
                     重置密码
                   </el-dropdown-item>
-                  <el-dropdown-item command="toggleStatus">
+                  <el-dropdown-item 
+                    v-if="hasPermission('user:update')"
+                    command="toggleStatus"
+                  >
                     {{ row.status === 'active' ? '禁用' : '启用' }}
                   </el-dropdown-item>
                   <el-dropdown-item command="viewLogs">
                     操作日志
                   </el-dropdown-item>
                   <el-dropdown-item 
-                    v-if="row.role !== 'admin'"
+                    v-if="hasPermission('user:delete') && row.role !== 'admin'"
                     command="delete"
                     divided
                   >
@@ -371,9 +387,18 @@
             </div>
             <div class="detail-item">
               <label>角色:</label>
-              <el-tag :type="getRoleType(currentUser.role)" size="small">
-                {{ getRoleText(currentUser.role) }}
-              </el-tag>
+              <div v-if="currentUser.roles && currentUser.roles.length > 0">
+                <el-tag 
+                  v-for="roleCode in currentUser.roles"
+                  :key="roleCode"
+                  :type="getRoleType(roleCode)" 
+                  size="small"
+                  style="margin-right: 4px;"
+                >
+                  {{ getRoleText(roleCode) }}
+                </el-tag>
+              </div>
+              <span v-else style="color: #909399;">未分配</span>
             </div>
             <div class="detail-item">
               <label>状态:</label>
@@ -429,6 +454,7 @@ import {
 } from '@element-plus/icons-vue'
 import type { User as UserType } from '@/api/types'
 import dayjs from 'dayjs'
+import { hasPermission } from '@/utils/permission'
 
 // 用户统计数据
 const userStats = ref({
@@ -445,11 +471,13 @@ const users = ref<UserType[]>([])
 
 // 角色选项
 const roleOptions = ref([
-  { label: '系统管理员', value: 'admin' },
-  { label: '调度员', value: 'dispatcher' },
-  { label: '监控员', value: 'monitor' },
-  { label: '操作员', value: 'operator' },
-  { label: '查看者', value: 'viewer' }
+  { label: '系统管理员', value: 'ADMIN' },
+  { label: '调度员', value: 'DISPATCHER' },
+  { label: '监控员', value: 'MONITOR' },
+  { label: '操作员', value: 'OPERATOR' },
+  { label: '查看者', value: 'VIEWER' },
+  { label: '司机', value: 'DRIVER' },
+  { label: '维修员', value: 'MAINTENANCE' }
 ])
 
 // 搜索表单
@@ -542,27 +570,33 @@ const filteredUsers = computed(() => {
 })
 
 // 获取角色类型
-const getRoleType = (role: string) => {
+const getRoleType = (role: string | undefined) => {
+  if (!role) return 'info'
   const typeMap: Record<string, string> = {
     admin: 'danger',
     dispatcher: 'warning',
     monitor: 'primary',
     operator: 'info',
-    viewer: 'success'
+    viewer: 'success',
+    driver: 'success',
+    maintenance: 'warning'
   }
-  return typeMap[role] || 'info'
+  return typeMap[role.toLowerCase()] || 'info'
 }
 
 // 获取角色文本
-const getRoleText = (role: string) => {
+const getRoleText = (role: string | undefined) => {
+  if (!role) return '未分配'
   const textMap: Record<string, string> = {
     admin: '系统管理员',
     dispatcher: '调度员',
     monitor: '监控员',
     operator: '操作员',
-    viewer: '查看者'
+    viewer: '查看者',
+    driver: '司机',
+    maintenance: '维修员'
   }
-  return textMap[role] || role
+  return textMap[role.toLowerCase()] || role
 }
 
 // 获取状态类型
@@ -611,13 +645,15 @@ const viewUserDetail = (user: UserType) => {
 // 编辑用户
 const editUser = (user: UserType) => {
   dialogMode.value = 'edit'
+  // 获取用户的第一个角色（如果用户有多个角色，取第一个）
+  const userRole = user.roles && user.roles.length > 0 ? user.roles[0] : ''
   userForm.value = {
     id: user.id,
     username: user.username,
     realName: user.realName,
     email: user.email,
     phone: user.phone,
-    role: user.role,
+    role: userRole, // 使用roles数组的第一个角色
     password: '',
     confirmPassword: '',
     status: typeof user.status === 'number' ? (user.status === 1 ? 'active' : 'inactive') : user.status,
@@ -670,6 +706,7 @@ const saveUser = async () => {
         realName: userForm.value.realName,
         email: userForm.value.email,
         phone: userForm.value.phone,
+        role: userForm.value.role, // 添加角色字段
         status: userForm.value.status === 'active' ? 1 : 0
       })
       ElMessage.success('用户信息更新成功')

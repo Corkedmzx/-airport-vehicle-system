@@ -19,6 +19,13 @@ const router = createRouter({
       meta: { title: '注册', requiresAuth: false }
     },
     {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      // @ts-ignore: ignore missing module/type declaration for .vue files
+      component: () => import('@/views/ForgotPassword/index.vue'),
+      meta: { title: '账户找回', requiresAuth: false }
+    },
+    {
       path: '/',
       redirect: '/dashboard',
       // @ts-ignore: ignore missing module/type declaration for .vue files

@@ -14,7 +14,7 @@ USE airport_vehicle_system;
 -- ================================
 
 -- 用户表
-CREATE TABLE `sys_user` (
+CREATE TABLE IF NOT EXISTS `sys_user` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户ID',
     `username` varchar(50) NOT NULL COMMENT '用户名',
     `password` varchar(100) NOT NULL COMMENT '密码(加密)',
@@ -32,7 +32,7 @@ CREATE TABLE `sys_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- 角色表
-CREATE TABLE `sys_role` (
+CREATE TABLE IF NOT EXISTS `sys_role` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '角色ID',
     `role_name` varchar(50) NOT NULL COMMENT '角色名称',
     `role_code` varchar(50) NOT NULL COMMENT '角色编码',
@@ -45,23 +45,52 @@ CREATE TABLE `sys_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色表';
 
 -- 用户角色关联表
-CREATE TABLE `sys_user_role` (
+CREATE TABLE IF NOT EXISTS `sys_user_role` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `user_id` bigint NOT NULL COMMENT '用户ID',
     `role_id` bigint NOT NULL COMMENT '角色ID',
     `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_role` (`user_id`, `role_id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_role_id` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户角色关联表';
 
+-- 权限表
+CREATE TABLE IF NOT EXISTS `sys_permission` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '权限ID',
+    `permission_name` varchar(100) NOT NULL COMMENT '权限名称',
+    `permission_code` varchar(100) NOT NULL COMMENT '权限编码',
+    `permission_type` varchar(20) DEFAULT 'api' COMMENT '权限类型:menu-菜单,button-按钮,api-接口',
+    `resource` varchar(200) DEFAULT NULL COMMENT '资源路径',
+    `description` varchar(200) DEFAULT NULL COMMENT '描述',
+    `status` tinyint DEFAULT 1 COMMENT '状态:0-禁用,1-启用',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_permission_code` (`permission_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='权限表';
+
+-- 角色权限关联表
+CREATE TABLE IF NOT EXISTS `sys_role_permission` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `role_id` bigint NOT NULL COMMENT '角色ID',
+    `permission_id` bigint NOT NULL COMMENT '权限ID',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_role_permission` (`role_id`, `permission_id`),
+    KEY `idx_role_id` (`role_id`),
+    KEY `idx_permission_id` (`permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色权限关联表';
+
 -- ================================
 -- 2. 车辆管理相关表
 -- ================================
 
 -- 车辆类型表
-CREATE TABLE `vehicle_type` (
+CREATE TABLE IF NOT EXISTS `vehicle_type` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '类型ID',
     `type_name` varchar(50) NOT NULL COMMENT '类型名称',
     `type_code` varchar(20) NOT NULL COMMENT '类型编码',
@@ -76,7 +105,7 @@ CREATE TABLE `vehicle_type` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='车辆类型表';
 
 -- 车辆表
-CREATE TABLE `vehicle` (
+CREATE TABLE IF NOT EXISTS `vehicle` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '车辆ID',
     `vehicle_no` varchar(20) NOT NULL COMMENT '车牌号',
     `vehicle_type_id` bigint NOT NULL COMMENT '车辆类型ID',
@@ -106,7 +135,7 @@ CREATE TABLE `vehicle` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='车辆表';
 
 -- 车辆实时位置表
-CREATE TABLE `vehicle_location` (
+CREATE TABLE IF NOT EXISTS `vehicle_location` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `vehicle_id` bigint NOT NULL COMMENT '车辆ID',
     `longitude` decimal(10,7) NOT NULL COMMENT '经度',
@@ -128,7 +157,7 @@ CREATE TABLE `vehicle_location` (
 -- ================================
 
 -- 调度任务表
-CREATE TABLE `dispatch_task` (
+CREATE TABLE IF NOT EXISTS `dispatch_task` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '任务ID',
     `task_no` varchar(20) NOT NULL COMMENT '任务编号',
     `task_name` varchar(100) NOT NULL COMMENT '任务名称',
@@ -156,7 +185,7 @@ CREATE TABLE `dispatch_task` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='调度任务表';
 
 -- 任务执行记录表
-CREATE TABLE `task_execution` (
+CREATE TABLE IF NOT EXISTS `task_execution` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `task_id` bigint NOT NULL COMMENT '任务ID',
     `vehicle_id` bigint NOT NULL COMMENT '车辆ID',
@@ -177,8 +206,60 @@ CREATE TABLE `task_execution` (
 -- 4. 维护管理相关表
 -- ================================
 
+-- 告警信息表
+CREATE TABLE IF NOT EXISTS `alert` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '告警ID',
+    `title` varchar(200) NOT NULL COMMENT '告警标题',
+    `description` text COMMENT '告警描述',
+    `severity` varchar(20) NOT NULL COMMENT '严重程度:high,medium,low',
+    `category` varchar(50) NOT NULL COMMENT '告警类别:vehicle_fault,task_timeout,system_error,safety_alert',
+    `vehicle_id` bigint DEFAULT NULL COMMENT '关联车辆ID',
+    `task_id` bigint DEFAULT NULL COMMENT '关联任务ID',
+    `status` varchar(20) DEFAULT 'unprocessed' COMMENT '状态:unprocessed-未处理,processing-处理中,resolved-已解决',
+    `assignee` varchar(50) DEFAULT NULL COMMENT '处理人',
+    `acknowledged` tinyint DEFAULT 0 COMMENT '是否已确认:0-未确认,1-已确认',
+    `acknowledged_time` datetime DEFAULT NULL COMMENT '确认时间',
+    `resolved_time` datetime DEFAULT NULL COMMENT '解决时间',
+    `resolution_notes` text COMMENT '解决备注',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_vehicle_id` (`vehicle_id`),
+    KEY `idx_task_id` (`task_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_severity` (`severity`),
+    KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='告警信息表';
+
+-- 告警规则表
+CREATE TABLE IF NOT EXISTS `alert_rule` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '规则ID',
+    `rule_name` varchar(100) NOT NULL COMMENT '规则名称',
+    `rule_type` varchar(50) NOT NULL COMMENT '规则类型:vehicle_fault,task_timeout,system_error,safety_alert,fuel_low,speed_exceed',
+    `condition_type` varchar(50) NOT NULL COMMENT '条件类型:大于,小于,等于,范围',
+    `condition_value` varchar(200) NOT NULL COMMENT '条件值',
+    `severity` varchar(20) NOT NULL COMMENT '告警严重程度:high,medium,low',
+    `enabled` tinyint DEFAULT 1 COMMENT '是否启用:0-禁用,1-启用',
+    `description` text COMMENT '规则描述',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_rule_type` (`rule_type`),
+    KEY `idx_enabled` (`enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='告警规则表';
+
+-- 插入默认告警规则
+INSERT INTO `alert_rule` (`rule_name`, `rule_type`, `condition_type`, `condition_value`, `severity`, `description`) VALUES
+('车辆引擎温度过高', 'vehicle_fault', '大于', '100', 'high', '当车辆引擎温度超过100度时触发告警'),
+('车辆油量过低', 'fuel_low', '小于', '20', 'medium', '当车辆油量低于20%时触发告警'),
+('任务执行超时', 'task_timeout', '大于', '3600', 'medium', '当任务执行时间超过1小时时触发告警'),
+('车辆速度超限', 'speed_exceed', '大于', '80', 'high', '当车辆速度超过80km/h时触发告警'),
+('系统错误', 'system_error', '等于', 'error', 'high', '当系统发生错误时触发告警'),
+('安全告警', 'safety_alert', '等于', 'safety', 'high', '当发生安全相关问题时触发告警') AS new
+ON DUPLICATE KEY UPDATE `rule_name` = new.`rule_name`;
+
 -- 维修记录表
-CREATE TABLE `maintenance_record` (
+CREATE TABLE IF NOT EXISTS `maintenance_record` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `vehicle_id` bigint NOT NULL COMMENT '车辆ID',
     `maintenance_type` varchar(20) NOT NULL COMMENT '维修类型:定期保养,故障维修,预防性维护',
@@ -205,7 +286,7 @@ CREATE TABLE `maintenance_record` (
 -- ================================
 
 -- 车辆运行记录表
-CREATE TABLE `vehicle_operation` (
+CREATE TABLE IF NOT EXISTS `vehicle_operation` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `vehicle_id` bigint NOT NULL COMMENT '车辆ID',
     `task_id` bigint DEFAULT NULL COMMENT '关联任务ID',
@@ -233,7 +314,7 @@ CREATE TABLE `vehicle_operation` (
 -- ================================
 
 -- 系统配置表
-CREATE TABLE `system_config` (
+CREATE TABLE IF NOT EXISTS `system_config` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `config_key` varchar(100) NOT NULL COMMENT '配置键',
     `config_value` text NOT NULL COMMENT '配置值',
@@ -246,7 +327,7 @@ CREATE TABLE `system_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
 
 -- 操作日志表
-CREATE TABLE `operation_log` (
+CREATE TABLE IF NOT EXISTS `operation_log` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `user_id` bigint DEFAULT NULL COMMENT '操作用户ID',
     `username` varchar(50) DEFAULT NULL COMMENT '操作用户名',
@@ -260,8 +341,7 @@ CREATE TABLE `operation_log` (
     `error_msg` text COMMENT '错误信息',
     `operation_time` datetime NOT NULL COMMENT '操作时间',
     PRIMARY KEY (`id`),
-    KEY `idx_user_id` (`user_id`),
-    KEY `idx_operation_time` (`operation_time`)
+    KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
 
 -- ================================
@@ -274,7 +354,10 @@ INSERT INTO `sys_role` (`role_name`, `role_code`, `description`) VALUES
 ('调度员', 'DISPATCHER', '调度员，负责车辆调度管理'),
 ('司机', 'DRIVER', '司机，负责车辆驾驶任务'),
 ('维修员', 'MAINTENANCE', '维修员，负责车辆维护管理'),
-('监控员', 'MONITOR', '监控员，负责车辆监控');
+('监控员', 'MONITOR', '监控员，负责车辆监控'),
+('查看者', 'VIEWER', '查看者，只能查看信息，不能编辑'),
+('操作员', 'OPERATOR', '操作员，可以管理用户和车辆信息') AS new
+ON DUPLICATE KEY UPDATE `role_name` = new.`role_name`;
 
 -- 插入车辆类型
 INSERT INTO `vehicle_type` (`type_name`, `type_code`, `description`, `max_speed`, `fuel_type`) VALUES
@@ -283,7 +366,8 @@ INSERT INTO `vehicle_type` (`type_name`, `type_code`, `description`, `max_speed`
 ('货运车', 'CARGO_TRUCK', '货物运输车辆', 50.00, '柴油'),
 ('清洁车', 'CLEANING_VEHICLE', '机场清洁车辆', 25.00, '电动'),
 ('维修车', 'MAINTENANCE_VEHICLE', '机场维修车辆', 35.00, '汽油'),
-('巡逻车', 'PATROL_CAR', '机场巡逻车辆', 60.00, '汽油');
+('巡逻车', 'PATROL_CAR', '机场巡逻车辆', 60.00, '汽油') AS new
+ON DUPLICATE KEY UPDATE `type_name` = new.`type_name`;
 
 -- 插入系统配置
 INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `description`) VALUES
@@ -291,40 +375,79 @@ INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `descr
 ('task.auto.assign.enabled', 'true', 'boolean', '是否启用自动任务分配'),
 ('system.maintenance.reminder.days', '7', 'number', '维护提醒提前天数'),
 ('map.provider', 'baidu', 'string', '地图服务提供商'),
-('location.tracking.enabled', 'true', 'boolean', '是否启用位置追踪');
+('location.tracking.enabled', 'true', 'boolean', '是否启用位置追踪') AS new
+ON DUPLICATE KEY UPDATE `config_value` = new.`config_value`;
 
 -- 创建默认管理员用户 (密码: admin123)
 INSERT INTO `sys_user` (`username`, `password`, `email`, `real_name`, `status`) VALUES
-('admin', '$2a$10$Leq3vhN2WBx4hSVOrqReteVcfl1Pnav14OQN/cgL13TUxQiXqFw9O', 'admin@airport.com', '系统管理员', 1);
+('admin', '$2a$10$Leq3vhN2WBx4hSVOrqReteVcfl1Pnav14OQN/cgL13TUxQiXqFw9O', 'admin@airport.com', '系统管理员', 1) AS new
+ON DUPLICATE KEY UPDATE `password` = new.`password`;
 
 -- 分配管理员角色
-INSERT INTO `sys_user_role` (`user_id`, `role_id`) VALUES (1, 1);
+INSERT INTO `sys_user_role` (`user_id`, `role_id`) VALUES (1, 1) AS new
+ON DUPLICATE KEY UPDATE `user_id` = new.`user_id`;
 
 -- 创建示例车辆
 INSERT INTO `vehicle` (`vehicle_no`, `vehicle_type_id`, `brand`, `model`, `color`, `purchase_date`, `status`, `location_longitude`, `location_latitude`, `location_address`) VALUES
 ('京A12345', 1, '福田', 'BJ5040XYZ', '白色', '2023-01-15', 1, 116.4074, 39.9042, '首都机场T3航站楼'),
 ('京B67890', 2, '金龙', 'XMQ6127G', '蓝色', '2023-03-20', 1, 116.4134, 39.9109, '首都机场T2航站楼'),
 ('京C11111', 3, '解放', 'CA1165PK2L2T4E', '黄色', '2022-11-10', 1, 116.4200, 39.8968, '货运区'),
-('京D22222', 4, '比亚迪', 'T4A', '绿色', '2024-01-08', 1, 116.4334, 39.9156, '清洁区');
+('京D22222', 4, '比亚迪', 'T4A', '绿色', '2024-01-08', 1, 116.4334, 39.9156, '清洁区') AS new
+ON DUPLICATE KEY UPDATE `vehicle_no` = new.`vehicle_no`;
 
 -- 创建示例调度任务
 INSERT INTO `dispatch_task` (`task_no`, `task_name`, `task_type`, `priority`, `description`, `start_location`, `end_location`, `start_time`) VALUES
 ('TASK20251130001', 'T3航站楼行李运输', '常规调度', 2, '将行李从T3航站楼运至货运区', 'T3航站楼', '货运区', '2025-11-30 14:00:00'),
 ('TASK20251130002', '乘客摆渡任务', '常规调度', 3, '接送乘客从T2航站楼至登机口', 'T2航站楼', 'A12登机口', '2025-11-30 15:00:00'),
-('TASK20251130003', '紧急货物运输', '紧急调度', 4, '紧急运输重要货物至货运区', 'T1航站楼', '货运区', '2025-11-30 16:00:00');
+('TASK20251130003', '紧急货物运输', '紧急调度', 4, '紧急运输重要货物至货运区', 'T1航站楼', '货运区', '2025-11-30 16:00:00') AS new
+ON DUPLICATE KEY UPDATE `task_name` = new.`task_name`;
 
 -- ================================
 -- 创建索引优化
 -- ================================
 
--- 为经常查询的字段创建复合索引
-CREATE INDEX idx_vehicle_status_location ON vehicle (status, last_update_time);
-CREATE INDEX idx_task_status_start_time ON dispatch_task (status, start_time);
-CREATE INDEX idx_vehicle_location_time ON vehicle_location (vehicle_id, location_time);
-CREATE INDEX idx_operation_vehicle_date ON vehicle_operation (vehicle_id, operation_date);
+-- 创建存储过程：安全创建索引（如果不存在）
+DELIMITER $$
 
--- 为日志表创建分区索引
-CREATE INDEX idx_operation_log_user_time ON operation_log (user_id, operation_time);
-CREATE INDEX idx_operation_log_operation_time ON operation_log (operation_time);
+DROP PROCEDURE IF EXISTS create_index_if_not_exists$$
+
+CREATE PROCEDURE create_index_if_not_exists(
+    IN p_table_name VARCHAR(128),
+    IN p_index_name VARCHAR(128),
+    IN p_index_columns VARCHAR(512)
+)
+BEGIN
+    DECLARE index_exists INT DEFAULT 0;
+    
+    SELECT COUNT(*) INTO index_exists
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = p_table_name
+      AND index_name = p_index_name;
+    
+    IF index_exists = 0 THEN
+        SET @sql = CONCAT('CREATE INDEX ', p_index_name, ' ON ', p_table_name, ' (', p_index_columns, ')');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- 为经常查询的字段创建复合索引
+CALL create_index_if_not_exists('vehicle', 'idx_vehicle_status_location', 'status, last_update_time');
+CALL create_index_if_not_exists('dispatch_task', 'idx_task_status_start_time', 'status, start_time');
+CALL create_index_if_not_exists('vehicle_location', 'idx_vehicle_location_time', 'vehicle_id, location_time');
+CALL create_index_if_not_exists('vehicle_operation', 'idx_operation_vehicle_date', 'vehicle_id, operation_date');
+
+-- 为日志表创建索引
+CALL create_index_if_not_exists('operation_log', 'idx_operation_log_user_time', 'user_id, operation_time');
+CALL create_index_if_not_exists('operation_log', 'idx_operation_log_operation_time', 'operation_time');
+
+-- 删除临时存储过程
+-- 注意：如果存储过程不存在，会产生警告但不影响执行
+-- MySQL 不允许在存储过程内部删除其他存储过程，所以直接使用 DROP PROCEDURE IF EXISTS
+DROP PROCEDURE IF EXISTS create_index_if_not_exists;
 
 COMMIT;

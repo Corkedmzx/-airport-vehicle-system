@@ -56,4 +56,12 @@ public interface SysUserRepository extends JpaRepository<SysUser, Long>, JpaSpec
      */
     @Query("SELECT u FROM SysUser u WHERE u.status = :status")
     java.util.List<SysUser> findByStatus(Integer status);
+
+    /**
+     * 根据手机号查找用户
+     * 
+     * @param phone 手机号
+     * @return 用户信息
+     */
+    Optional<SysUser> findByPhone(String phone);
 }

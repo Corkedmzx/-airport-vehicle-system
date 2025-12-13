@@ -2,7 +2,9 @@ package com.airport.service.impl;
 
 import com.airport.dto.TaskStatistics;
 import com.airport.entity.DispatchTask;
+import com.airport.entity.Vehicle;
 import com.airport.repository.DispatchTaskRepository;
+import com.airport.repository.VehicleRepository;
 import com.airport.service.DispatchTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import java.util.Optional;
 public class DispatchTaskServiceImpl implements DispatchTaskService {
 
     private final DispatchTaskRepository taskRepository;
+    private final VehicleRepository vehicleRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -59,6 +62,23 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
 
     @Override
     public DispatchTask createTask(DispatchTask task) {
+        // 验证必填字段
+        if (task.getTaskName() == null || task.getTaskName().trim().isEmpty()) {
+            throw new RuntimeException("任务名称不能为空");
+        }
+        if (task.getTaskType() == null || task.getTaskType().trim().isEmpty()) {
+            throw new RuntimeException("任务类型不能为空");
+        }
+        if (task.getStartLocation() == null || task.getStartLocation().trim().isEmpty()) {
+            throw new RuntimeException("起始位置不能为空");
+        }
+        if (task.getEndLocation() == null || task.getEndLocation().trim().isEmpty()) {
+            throw new RuntimeException("目标位置不能为空");
+        }
+        if (task.getStartTime() == null) {
+            throw new RuntimeException("开始时间不能为空");
+        }
+
         // 生成任务编号
         if (task.getTaskNo() == null || task.getTaskNo().trim().isEmpty()) {
             String taskNo = generateTaskNo();
@@ -66,8 +86,11 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
         }
 
         // 检查任务编号是否已存在
-        if (taskRepository.findByTaskNo(task.getTaskNo()) != null) {
-            throw new RuntimeException("任务编号已存在");
+        DispatchTask existingTask = taskRepository.findByTaskNo(task.getTaskNo());
+        if (existingTask != null) {
+            // 如果已存在，重新生成
+            String taskNo = generateTaskNo();
+            task.setTaskNo(taskNo);
         }
 
         // 设置默认值
@@ -89,18 +112,40 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
         DispatchTask existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("任务不存在"));
 
-        // 更新字段
-        existingTask.setTaskName(task.getTaskName());
-        existingTask.setTaskType(task.getTaskType());
-        existingTask.setPriority(task.getPriority());
-        existingTask.setDescription(task.getDescription());
-        existingTask.setStartLocation(task.getStartLocation());
-        existingTask.setEndLocation(task.getEndLocation());
-        existingTask.setStartTime(task.getStartTime());
-        existingTask.setEndTime(task.getEndTime());
-        existingTask.setStatus(task.getStatus());
-        existingTask.setProgress(task.getProgress());
-        existingTask.setRemark(task.getRemark());
+        // 验证必填字段
+        if (task.getTaskName() != null && !task.getTaskName().trim().isEmpty()) {
+            existingTask.setTaskName(task.getTaskName());
+        }
+        if (task.getTaskType() != null && !task.getTaskType().trim().isEmpty()) {
+            existingTask.setTaskType(task.getTaskType());
+        }
+        if (task.getPriority() != null) {
+            existingTask.setPriority(task.getPriority());
+        }
+        if (task.getDescription() != null) {
+            existingTask.setDescription(task.getDescription());
+        }
+        if (task.getStartLocation() != null && !task.getStartLocation().trim().isEmpty()) {
+            existingTask.setStartLocation(task.getStartLocation());
+        }
+        if (task.getEndLocation() != null && !task.getEndLocation().trim().isEmpty()) {
+            existingTask.setEndLocation(task.getEndLocation());
+        }
+        if (task.getStartTime() != null) {
+            existingTask.setStartTime(task.getStartTime());
+        }
+        if (task.getEndTime() != null) {
+            existingTask.setEndTime(task.getEndTime());
+        }
+        if (task.getStatus() != null) {
+            existingTask.setStatus(task.getStatus());
+        }
+        if (task.getProgress() != null) {
+            existingTask.setProgress(task.getProgress());
+        }
+        if (task.getRemark() != null) {
+            existingTask.setRemark(task.getRemark());
+        }
 
         return taskRepository.save(existingTask);
     }
@@ -119,6 +164,12 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
             throw new RuntimeException("只能分配待分配状态的任务");
         }
 
+        // 更新车辆状态为已分配（2）
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("车辆不存在"));
+        vehicle.setStatus(2); // 2-已分配
+        vehicleRepository.save(vehicle);
+
         task.setAssignedVehicleId(vehicleId);
         task.setAssignedDriverId(driverId);
         task.setStatus(2); // 已分配
@@ -126,7 +177,7 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
 
         DispatchTask updatedTask = taskRepository.save(task);
         
-        log.info("任务 {} 已分配给车辆 {} 和司机 {}", 
+        log.info("任务 {} 已分配给车辆 {} 和司机 {}，车辆状态已更新为已分配", 
                 task.getTaskNo(), vehicleId, driverId);
 
         return updatedTask;

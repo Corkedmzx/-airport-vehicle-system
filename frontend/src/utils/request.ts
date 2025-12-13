@@ -78,24 +78,35 @@ service.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response
       
-      switch (status) {
-        case 400:
-          message = data.message || '请求参数错误'
-          break
-        case 401:
-          message = '未授权，请重新登录'
-          break
-        case 403:
-          message = '拒绝访问'
-          break
-        case 404:
-          message = '请求资源不存在'
-          break
-        case 500:
-          message = '服务器内部错误'
-          break
-        default:
-          message = `连接错误${status}`
+      // 优先使用后端返回的错误消息
+      if (data && data.message) {
+        message = data.message
+      } else {
+        switch (status) {
+          case 400:
+            message = '请求参数错误'
+            break
+          case 401:
+            message = data?.message || '未授权，请重新登录'
+            // 如果是登录相关的401错误，不自动跳转，让调用方处理
+            if (!error.config?.url?.includes('/auth/login')) {
+              const userStore = useUserStore()
+              userStore.logout()
+              router.push('/login')
+            }
+            break
+          case 403:
+            message = '拒绝访问'
+            break
+          case 404:
+            message = '请求资源不存在'
+            break
+          case 500:
+            message = data?.message || '服务器内部错误'
+            break
+          default:
+            message = data?.message || `连接错误${status}`
+        }
       }
     } else if (error.request) {
       message = '网络连接超时'
@@ -103,7 +114,8 @@ service.interceptors.response.use(
       message = error.message || '请求失败'
     }
     
-    ElMessage.error(message)
+    // 不在拦截器中统一显示错误，让调用方决定是否显示
+    // ElMessage.error(message)
     return Promise.reject(error)
   }
 )

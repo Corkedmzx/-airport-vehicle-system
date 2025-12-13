@@ -303,9 +303,11 @@ const handleRegister = async () => {
     } else {
       ElMessage.error(response.data.message || '注册失败，请稍后重试')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Register error:', error)
-    ElMessage.error('注册失败，请稍后重试')
+    // 显示更详细的错误信息
+    const errorMessage = error?.response?.data?.message || error?.message || '注册失败，请稍后重试'
+    ElMessage.error(errorMessage)
   } finally {
     loading.value = false
   }
