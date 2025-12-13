@@ -217,7 +217,7 @@ const getVehicleStatusType = (status: number) => {
 // 获取车辆状态文本
 const getVehicleStatusText = (status: number) => {
   const statusMap: Record<number, string> = {
-    1: '正常运行',
+    1: '正常',
     2: '维修中',
     3: '故障',
     0: '停用'
@@ -244,6 +244,46 @@ const getAlertSeverityClass = (severity: string) => {
     low: 'alert-low'
   }
   return classMap[severity] || 'alert-unknown'
+}
+
+// 获取告警级别类型（与告警管理页面一致）
+const getAlertSeverityType = (severity: string) => {
+  const typeMap: Record<string, string> = {
+    high: 'danger',
+    medium: 'warning',
+    low: 'info'
+  }
+  return typeMap[severity] || 'info'
+}
+
+// 获取告警级别文本（与告警管理页面一致）
+const getAlertSeverityText = (severity: string) => {
+  const textMap: Record<string, string> = {
+    high: '高优先级',
+    medium: '中优先级',
+    low: '低优先级'
+  }
+  return textMap[severity] || '未知'
+}
+
+// 获取告警状态类型（与告警管理页面一致）
+const getAlertStatusType = (status: string) => {
+  const typeMap: Record<string, string> = {
+    unprocessed: 'danger',
+    processing: 'warning',
+    resolved: 'success'
+  }
+  return typeMap[status] || 'info'
+}
+
+// 获取告警状态文本（与告警管理页面一致）
+const getAlertStatusText = (status: string) => {
+  const textMap: Record<string, string> = {
+    unprocessed: '未处理',
+    processing: '处理中',
+    resolved: '已解决'
+  }
+  return textMap[status] || '未知'
 }
 
 // 格式化时间
@@ -318,67 +358,75 @@ const loadMonitoringStats = async () => {
 // 加载实时车辆数据
 const loadRealTimeVehicles = async () => {
   try {
-    // TODO: 调用API获取实时车辆数据
-    // 模拟数据
-    realTimeVehicles.value = [
-      {
-        id: '1',
-        plateNumber: '京A12345',
-        vehicleType: '客运大巴',
-        status: 1,
-        location: 'T3航站楼',
-        speed: 45,
-        batteryLevel: 85,
-        lastUpdate: new Date().toISOString(),
-        currentTask: {
-          taskName: 'T3-01接机任务',
-          progress: 65
-        }
-      },
-      {
-        id: '2',
-        plateNumber: '京B67890',
-        vehicleType: '货运卡车',
-        status: 3,
-        location: '货机坪',
+    const { getVehiclesApi } = await import('@/api/vehicles')
+    const response = await getVehiclesApi({ 
+      page: 0, 
+      size: 20,
+      status: 1 // 只获取正常状态的车辆
+    })
+    
+    if (response.data && Array.isArray(response.data)) {
+      realTimeVehicles.value = response.data.map((v: any) => ({
+        id: v.id?.toString() || '',
+        plateNumber: v.vehicleNo || '',
+        vehicleType: v.vehicleTypeId?.toString() || '',
+        status: v.status || 0,
+        location: v.locationAddress || '未知',
+        speed: 0, // 需要从GPS数据获取
+        batteryLevel: v.currentFuel && v.fuelCapacity ? Math.round((v.currentFuel / v.fuelCapacity) * 100) : 0,
+        lastUpdate: v.lastUpdateTime || v.updateTime || '',
+        currentTask: null // 需要从任务表关联获取
+      }))
+    } else if (response.data?.content) {
+      // 分页数据
+      realTimeVehicles.value = response.data.content.map((v: any) => ({
+        id: v.id?.toString() || '',
+        plateNumber: v.vehicleNo || '',
+        vehicleType: v.vehicleTypeId?.toString() || '',
+        status: v.status || 0,
+        location: v.locationAddress || '未知',
         speed: 0,
-        batteryLevel: 30,
-        lastUpdate: new Date().toISOString(),
+        batteryLevel: v.currentFuel && v.fuelCapacity ? Math.round((v.currentFuel / v.fuelCapacity) * 100) : 0,
+        lastUpdate: v.lastUpdateTime || v.updateTime || '',
         currentTask: null
-      }
-    ]
+      }))
+    }
   } catch (error) {
     console.error('Load real-time vehicles failed:', error)
+    ElMessage.error('加载实时车辆数据失败')
   }
 }
 
 // 加载实时告警数据
 const loadRealTimeAlerts = async () => {
   try {
-    // TODO: 调用API获取实时告警数据
-    // 模拟数据
-    realTimeAlerts.value = [
-      {
-        id: '1',
-        title: '车辆故障告警',
-        description: '京B67890车辆引擎温度过高',
-        severity: 'high',
-        vehiclePlate: '京B67890',
-        createdAt: new Date().toISOString(),
-        acknowledged: false
-      },
-      {
-        id: '2',
-        title: '任务超时提醒',
-        description: 'T3-01接机任务执行超时',
-        severity: 'medium',
-        vehiclePlate: '京A12345',
-        createdAt: new Date(Date.now() - 300000).toISOString(),
-        acknowledged: false
-      }
-    ]
+    const { getAlertsApi } = await import('@/api/alerts')
+    const response = await getAlertsApi({ 
+      page: 0, 
+      size: 10,
+      status: 'unprocessed' // 只获取未处理的告警
+    })
+    
+    if (response.data?.code === 200 && response.data.data) {
+      const pageData = response.data.data
+      const alerts = pageData.content || pageData || []
+      realTimeAlerts.value = alerts.map((a: any) => ({
+        id: a.id?.toString() || '',
+        title: a.title || '',
+        description: a.description || '',
+        severity: a.severity || 'medium',
+        category: a.category || '',
+        vehicleId: a.vehicleId?.toString(),
+        vehiclePlate: a.vehicleId ? `车辆${a.vehicleId}` : '-',
+        status: a.status || 'unprocessed',
+        assignee: a.assignee || '',
+        createdAt: a.createTime || new Date().toISOString(),
+        acknowledged: a.acknowledged || false
+      }))
+    }
   } catch (error) {
     console.error('Load real-time alerts failed:', error)
+    ElMessage.error('加载实时告警数据失败')
   }
 }
 

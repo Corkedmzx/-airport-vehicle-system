@@ -177,11 +177,25 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     loading.value = true
     
+    // 准备提交数据，确保时间格式正确
+    const submitData: any = {
+      ...form,
+      startTime: form.startTime ? dayjs(form.startTime).format('YYYY-MM-DD HH:mm:ss') : null,
+      endTime: form.endTime ? dayjs(form.endTime).format('YYYY-MM-DD HH:mm:ss') : null
+    }
+    
+    // 移除空值字段
+    Object.keys(submitData).forEach(key => {
+      if (submitData[key] === '' || submitData[key] === undefined) {
+        delete submitData[key]
+      }
+    })
+    
     if (isEdit.value) {
-      await updateTaskApi(Number(route.params.id), form)
+      await updateTaskApi(Number(route.params.id), submitData)
       ElMessage.success('任务更新成功')
     } else {
-      await createTaskApi(form)
+      await createTaskApi(submitData)
       ElMessage.success('任务创建成功')
     }
     

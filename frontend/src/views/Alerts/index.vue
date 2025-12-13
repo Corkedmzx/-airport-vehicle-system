@@ -334,6 +334,118 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 告警规则管理对话框 -->
+    <el-dialog
+      v-model="ruleDialogVisible"
+      title="告警规则管理"
+      width="900px"
+      @close="ruleForm = {
+        id: undefined,
+        ruleName: '',
+        ruleType: 'vehicle_fault',
+        conditionType: '大于',
+        conditionValue: '',
+        severity: 'medium',
+        enabled: true,
+        description: ''
+      }"
+    >
+      <el-tabs>
+        <el-tab-pane label="规则列表">
+          <el-table :data="alertRules" style="width: 100%">
+            <el-table-column prop="ruleName" label="规则名称" width="150" />
+            <el-table-column prop="ruleType" label="规则类型" width="120">
+              <template #default="{ row }">
+                {{ ruleTypes.find(t => t.value === row.ruleType)?.label || row.ruleType }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="conditionType" label="条件类型" width="100" />
+            <el-table-column prop="conditionValue" label="条件值" width="100" />
+            <el-table-column prop="severity" label="严重程度" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getSeverityType(row.severity)" size="small">
+                  {{ severities.find(s => s.value === row.severity)?.label || row.severity }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="enabled" label="状态" width="80">
+              <template #default="{ row }">
+                <el-switch
+                  v-model="row.enabled"
+                  @change="toggleAlertRule(row.id)"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="150">
+              <template #default="{ row }">
+                <el-button type="primary" link @click="editAlertRule(row)">
+                  编辑
+                </el-button>
+                <el-button type="danger" link @click="deleteAlertRule(row.id)">
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+        <el-tab-pane :label="ruleForm.id ? '编辑规则' : '新建规则'">
+          <el-form :model="ruleForm" label-width="120px">
+            <el-form-item label="规则名称">
+              <el-input v-model="ruleForm.ruleName" placeholder="请输入规则名称" />
+            </el-form-item>
+            <el-form-item label="规则类型">
+              <el-select v-model="ruleForm.ruleType" style="width: 100%">
+                <el-option
+                  v-for="type in ruleTypes"
+                  :key="type.value"
+                  :label="type.label"
+                  :value="type.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="条件类型">
+              <el-select v-model="ruleForm.conditionType" style="width: 100%">
+                <el-option
+                  v-for="type in conditionTypes"
+                  :key="type.value"
+                  :label="type.label"
+                  :value="type.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="条件值">
+              <el-input v-model="ruleForm.conditionValue" placeholder="请输入条件值" />
+            </el-form-item>
+            <el-form-item label="严重程度">
+              <el-select v-model="ruleForm.severity" style="width: 100%">
+                <el-option
+                  v-for="severity in severities"
+                  :key="severity.value"
+                  :label="severity.label"
+                  :value="severity.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="是否启用">
+              <el-switch v-model="ruleForm.enabled" />
+            </el-form-item>
+            <el-form-item label="规则描述">
+              <el-input
+                v-model="ruleForm.description"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入规则描述"
+              />
+            </el-form-item>
+          </el-form>
+          <div style="text-align: right; margin-top: 20px">
+            <el-button @click="ruleDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="saveAlertRule">保存</el-button>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-dialog>
   </div>
 </template>
 
@@ -596,20 +708,127 @@ const batchAcknowledge = async () => {
   }
 }
 
-// 创建告警规则
-const createAlertRule = () => {
-  ElMessageBox.prompt('请输入告警规则名称', '创建告警规则', {
-    confirmButtonText: '创建',
-    cancelButtonText: '取消',
-    inputPlaceholder: '例如：车辆故障告警'
-  }).then(({ value }) => {
-    if (value) {
-      ElMessage.success(`告警规则"${value}"创建成功`)
-      // TODO: 调用后端API创建告警规则
+// 告警规则管理
+const ruleDialogVisible = ref(false)
+const alertRules = ref<any[]>([])
+const ruleForm = ref({
+  id: undefined as number | undefined,
+  ruleName: '',
+  ruleType: 'vehicle_fault',
+  conditionType: '大于',
+  conditionValue: '',
+  severity: 'medium',
+  enabled: true,
+  description: ''
+})
+
+const ruleTypes = [
+  { label: '车辆故障', value: 'vehicle_fault' },
+  { label: '任务超时', value: 'task_timeout' },
+  { label: '系统错误', value: 'system_error' },
+  { label: '安全告警', value: 'safety_alert' },
+  { label: '油量低', value: 'fuel_low' },
+  { label: '速度超限', value: 'speed_exceed' }
+]
+
+const conditionTypes = [
+  { label: '大于', value: '大于' },
+  { label: '小于', value: '小于' },
+  { label: '等于', value: '等于' },
+  { label: '范围', value: '范围' }
+]
+
+const severities = [
+  { label: '高优先级', value: 'high' },
+  { label: '中优先级', value: 'medium' },
+  { label: '低优先级', value: 'low' }
+]
+
+// 创建/编辑告警规则
+const createAlertRule = async () => {
+  ruleForm.value = {
+    id: undefined,
+    ruleName: '',
+    ruleType: 'vehicle_fault',
+    conditionType: '大于',
+    conditionValue: '',
+    severity: 'medium',
+    enabled: true,
+    description: ''
+  }
+  ruleDialogVisible.value = true
+  await loadAlertRules()
+}
+
+// 加载告警规则列表
+const loadAlertRules = async () => {
+  try {
+    const { getAlertRulesApi } = await import('@/api/alertRules')
+    const response = await getAlertRulesApi()
+    if (response.data && Array.isArray(response.data)) {
+      alertRules.value = response.data
+    } else if (response.data?.code === 200) {
+      alertRules.value = response.data.data || []
     }
-  }).catch(() => {
-    // 用户取消
-  })
+  } catch (error) {
+    console.error('Load alert rules failed:', error)
+  }
+}
+
+// 编辑告警规则
+const editAlertRule = (rule: any) => {
+  ruleForm.value = { ...rule }
+  ruleDialogVisible.value = true
+}
+
+// 删除告警规则
+const deleteAlertRule = async (id: number) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该告警规则吗？', '确认删除', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const { deleteAlertRuleApi } = await import('@/api/alertRules')
+    await deleteAlertRuleApi(id)
+    ElMessage.success('告警规则删除成功')
+    await loadAlertRules()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '删除失败')
+    }
+  }
+}
+
+// 保存告警规则
+const saveAlertRule = async () => {
+  try {
+    const { createAlertRuleApi, updateAlertRuleApi } = await import('@/api/alertRules')
+    if (ruleForm.value.id) {
+      await updateAlertRuleApi(ruleForm.value.id, ruleForm.value)
+      ElMessage.success('告警规则更新成功')
+    } else {
+      await createAlertRuleApi(ruleForm.value)
+      ElMessage.success('告警规则创建成功')
+    }
+    ruleDialogVisible.value = false
+    await loadAlertRules()
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || '保存失败')
+  }
+}
+
+// 切换告警规则状态
+const toggleAlertRule = async (id: number) => {
+  try {
+    const { toggleAlertRuleApi } = await import('@/api/alertRules')
+    await toggleAlertRuleApi(id)
+    ElMessage.success('告警规则状态更新成功')
+    await loadAlertRules()
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || '更新失败')
+  }
 }
 
 // 导出告警

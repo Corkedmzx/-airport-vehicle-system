@@ -612,7 +612,19 @@ const confirmAssign = async () => {
     if (response.data.code === 200) {
       ElMessage.success('任务分配成功')
       assignDialogVisible.value = false
-      await loadData()
+      // 刷新所有数据，包括车辆状态
+      loading.value = true
+      try {
+        await Promise.all([
+          loadPendingTasks(),
+          loadAvailableVehicles(),
+          loadDispatchStats()
+        ])
+        // 延迟一下确保数据刷新完成
+        await new Promise(resolve => setTimeout(resolve, 500))
+      } finally {
+        loading.value = false
+      }
     } else {
       ElMessage.error(response.data.message || '分配失败')
     }

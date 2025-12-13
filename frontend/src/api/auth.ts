@@ -21,3 +21,13 @@ export const logoutApi = () => {
 export const getUserInfoApi = () => {
   return request.get('/auth/info')
 }
+
+// 账户找回
+export const forgotPasswordApi = (data: { phone: string }) => {
+  return request.post('/auth/forgot-password', { phone: data.phone })
+}
+
+// 设置新密码
+export const resetPasswordApi = (data: { username: string; password: string }) => {
+  return request.post('/auth/reset-password', data)
+}

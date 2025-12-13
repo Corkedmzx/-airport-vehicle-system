@@ -36,7 +36,11 @@
       </div>
       
       <div class="toolbar-right">
-        <el-button type="primary" @click="handleAdd">
+        <el-button 
+          v-if="hasPermission('vehicle:create')"
+          type="primary" 
+          @click="handleAdd"
+        >
           <el-icon><Plus /></el-icon>
           添加车辆
         </el-button>
@@ -49,7 +53,6 @@
         v-loading="loading"
         :data="vehicleList"
         stripe
-        @row-click="handleRowClick"
       >
         <el-table-column prop="vehicleNo" label="车牌号" width="120" />
         <el-table-column prop="brand" label="品牌型号" width="150">
@@ -80,10 +83,20 @@
             <el-button type="primary" link @click.stop="viewVehicleDetail(row)">
               查看详情
             </el-button>
-            <el-button type="primary" link @click.stop="handleEdit(row)">
+            <el-button 
+              v-if="hasPermission('vehicle:update')"
+              type="primary" 
+              link 
+              @click.stop="handleEdit(row)"
+            >
               编辑
             </el-button>
-            <el-button type="danger" link @click.stop="handleDelete(row)">
+            <el-button 
+              v-if="hasPermission('vehicle:delete')"
+              type="danger" 
+              link 
+              @click.stop="handleDelete(row)"
+            >
               删除
             </el-button>
           </template>
@@ -114,6 +127,7 @@ import { Search, Plus } from '@element-plus/icons-vue'
 import { getVehiclesApi, deleteVehicleApi } from '@/api/vehicles'
 import type { Vehicle } from '@/api/types'
 import { formatDate, timeAgo } from '@/utils'
+import { hasPermission } from '@/utils/permission'
 
 const router = useRouter()
 
@@ -248,11 +262,6 @@ const handleDelete = async (row: Vehicle) => {
       ElMessage.error(error?.response?.data?.message || '删除失败')
     }
   }
-}
-
-// 行点击
-const handleRowClick = (row: Vehicle) => {
-  router.push(`/vehicles/${row.id}`)
 }
 
 // 分页变化

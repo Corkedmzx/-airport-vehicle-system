@@ -96,7 +96,7 @@
                 查看详情
               </el-button>
               <el-button
-                v-if="row.status === 1"
+                v-if="row.status === 1 && hasPermission('task:assign')"
                 type="primary"
                 link
                 @click.stop="handleAssign(row)"
@@ -104,7 +104,7 @@
                 分配
               </el-button>
               <el-button
-                v-if="row.status === 2"
+                v-if="row.status === 2 && hasPermission('task:update')"
                 type="success"
                 link
                 @click.stop="handleStart(row)"
@@ -112,17 +112,27 @@
                 开始
               </el-button>
               <el-button
-                v-if="row.status === 3"
+                v-if="row.status === 3 && hasPermission('task:update')"
                 type="warning"
                 link
                 @click.stop="handleComplete(row)"
               >
                 完成
               </el-button>
-              <el-button type="primary" link @click.stop="handleEdit(row)">
+              <el-button 
+                v-if="hasPermission('task:update')"
+                type="primary" 
+                link 
+                @click.stop="handleEdit(row)"
+              >
                 编辑
               </el-button>
-              <el-button type="danger" link @click.stop="handleDelete(row)">
+              <el-button 
+                v-if="hasPermission('task:delete')"
+                type="danger" 
+                link 
+                @click.stop="handleDelete(row)"
+              >
                 删除
               </el-button>
             </div>
@@ -149,13 +159,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-
-const router = useRouter()
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
 import { getTasksApi, assignTaskApi, startTaskApi, completeTaskApi, deleteTaskApi } from '@/api/tasks'
 import type { DispatchTask } from '@/api/types'
 import { timeAgo } from '@/utils'
+import { hasPermission } from '@/utils/permission'
 
 const router = useRouter()
 

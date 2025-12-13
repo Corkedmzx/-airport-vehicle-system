@@ -105,4 +105,28 @@ public interface SysUserService {
      * @return 用户列表
      */
     List<SysUser> getAllUsers();
+
+    /**
+     * 根据手机号查找用户
+     * 
+     * @param phone 手机号
+     * @return 用户信息
+     */
+    SysUser findByPhone(String phone);
+
+    /**
+     * 重置密码（用于账户找回）
+     * 
+     * @param userId 用户ID
+     * @param newPassword 新密码
+     */
+    void resetPassword(Long userId, String newPassword);
+
+    /**
+     * 更新用户角色
+     * 
+     * @param userId 用户ID
+     * @param roleCode 角色代码
+     */
+    void updateUserRole(Long userId, String roleCode);
 }

@@ -38,5 +38,6 @@ public class LoginResponse {
         private String email;
         private String avatar;
         private java.util.List<String> roles;
+        private java.util.List<String> permissions;
     }
 }

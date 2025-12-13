@@ -40,6 +40,11 @@
         </el-form-item>
         
         <el-form-item>
+          <div class="forgot-password-link">
+            <el-link type="primary" @click="$router.push('/forgot-password')">
+              忘记密码？
+            </el-link>
+          </div>
           <el-button
             type="primary"
             class="login-button"
@@ -245,6 +250,12 @@ const goToRegister = () => {
           box-shadow: 0 0 0 1px #409eff inset;
         }
       }
+    }
+    
+    .forgot-password-link {
+      text-align: right;
+      margin-bottom: 12px;
+      font-size: 14px;
     }
     
     .login-button {

@@ -40,9 +40,34 @@ export const useUserStore = defineStore('user', () => {
         ElMessage.error(response.data.message || '登录失败')
         return false
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error)
-      ElMessage.error('登录失败，请稍后重试')
+      console.error('Login error details:', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message
+      })
+      
+      // 根据错误信息显示友好的提示
+      let errorMessage = '登录失败，请稍后重试'
+      
+      if (error?.response) {
+        const status = error.response.status
+        const data = error.response.data
+        
+        if (status === 401) {
+          // 401错误，优先使用后端返回的消息
+          errorMessage = data?.message || data?.data || '用户未注册或账号/密码错误'
+        } else if (status === 500) {
+          errorMessage = data?.message || '服务器错误，请稍后重试'
+        } else {
+          errorMessage = data?.message || `请求失败 (${status})`
+        }
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+      
+      ElMessage.error(errorMessage)
       return false
     }
   }
