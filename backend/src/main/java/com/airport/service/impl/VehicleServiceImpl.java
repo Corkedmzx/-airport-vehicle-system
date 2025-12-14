@@ -83,6 +83,21 @@ public class VehicleServiceImpl implements VehicleService {
         existingVehicle.setFuelCapacity(vehicle.getFuelCapacity());
         existingVehicle.setCurrentFuel(vehicle.getCurrentFuel());
         existingVehicle.setStatus(vehicle.getStatus());
+        
+        // 更新位置信息
+        if (vehicle.getLocationLongitude() != null) {
+            existingVehicle.setLocationLongitude(vehicle.getLocationLongitude());
+        }
+        if (vehicle.getLocationLatitude() != null) {
+            existingVehicle.setLocationLatitude(vehicle.getLocationLatitude());
+        }
+        if (vehicle.getLocationAddress() != null) {
+            existingVehicle.setLocationAddress(vehicle.getLocationAddress());
+        }
+        // 更新位置时，更新最后位置更新时间
+        if (vehicle.getLocationLongitude() != null || vehicle.getLocationLatitude() != null) {
+            existingVehicle.setLastUpdateTime(LocalDateTime.now());
+        }
 
         return vehicleRepository.save(existingVehicle);
     }

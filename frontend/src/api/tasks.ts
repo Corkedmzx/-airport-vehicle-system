@@ -72,3 +72,8 @@ export const getTasksByTimeRangeApi = (startTime: string, endTime: string) => {
 export const getTaskStatisticsApi = () => {
   return request.get<TaskStatistics>('/tasks/statistics')
 }
+
+// 重新发送任务（复制已完成任务）
+export const resendTaskApi = (id: number) => {
+  return request.post<DispatchTask>(`/tasks/${id}/resend`)
+}

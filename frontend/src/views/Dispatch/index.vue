@@ -136,6 +136,14 @@
                 >
                   编辑
                 </el-button>
+                <el-button 
+                  v-if="row.status === 4"
+                  type="success" 
+                  size="small" 
+                  @click="resendTask(row)"
+                >
+                  重新发送
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -145,7 +153,7 @@
       <!-- 车辆状态 -->
       <div class="dispatch-section">
         <div class="section-header">
-          <h3 class="section-title">车辆状态 ({{ availableVehicles.length }})</h3>
+          <h3 class="section-title">车辆状态 ({{ filteredVehicles.length }})</h3>
           <div class="section-actions">
             <el-select 
               v-model="vehicleFilter" 
@@ -156,6 +164,7 @@
             >
               <el-option label="全部" value="" />
               <el-option label="空闲" value="idle" />
+              <el-option label="已分配" value="assigned" />
               <el-option label="执行中" value="running" />
               <el-option label="维修中" value="maintenance" />
             </el-select>
@@ -176,8 +185,8 @@
                 <div class="vehicle-type">{{ vehicle.vehicleType }}</div>
               </div>
               <div class="vehicle-status">
-                <el-tag :type="getVehicleStatusType(vehicle.status)" size="small">
-                  {{ getVehicleStatusText(vehicle.status) }}
+                <el-tag :type="getVehicleStatusType(vehicle.status, vehicle)" size="small">
+                  {{ getVehicleStatusText(vehicle.status, vehicle) }}
                 </el-tag>
               </div>
             </div>
@@ -237,8 +246,20 @@
         :rules="assignRules"
         label-width="100px"
       >
-        <el-form-item label="任务">
-          <el-input v-model="assignForm.taskName" disabled />
+        <el-form-item label="任务" prop="taskId">
+          <el-select 
+            v-model="assignForm.taskId" 
+            placeholder="请选择任务"
+            style="width: 100%"
+            @change="handleTaskChange"
+          >
+            <el-option
+              v-for="task in pendingTasks"
+              :key="task.id"
+              :label="`${task.taskName} (${task.taskNo})`"
+              :value="task.id"
+            />
+          </el-select>
         </el-form-item>
         
         <el-form-item label="分配车辆" prop="vehicleId">
@@ -298,6 +319,18 @@ import {
 import type { DispatchTask, Vehicle } from '@/api/types'
 import dayjs from 'dayjs'
 
+// 扩展Vehicle类型，添加任务相关属性和显示属性
+interface VehicleWithTask extends Vehicle {
+  plateNumber?: string
+  vehicleType?: string
+  location?: string
+  distanceToTasks?: number
+  currentLoad?: number
+  efficiencyScore?: number
+  hasTask?: boolean
+  hasRunningTask?: boolean
+}
+
 const router = useRouter()
 
 // 调度统计数据
@@ -314,10 +347,10 @@ const dispatchStats = ref({
 const pendingTasks = ref<DispatchTask[]>([])
 
 // 车辆列表
-const availableVehicles = ref<Vehicle[]>([])
+const availableVehicles = ref<VehicleWithTask[]>([])
 
 // 筛选后的车辆列表
-const filteredVehicles = ref<Vehicle[]>([])
+const filteredVehicles = ref<VehicleWithTask[]>([])
 
 // 车辆筛选条件
 const vehicleFilter = ref('')
@@ -340,6 +373,9 @@ const assignForm = ref({
 
 // 分配表单验证规则
 const assignRules = {
+  taskId: [
+    { required: true, message: '请选择任务', trigger: 'change' }
+  ],
   vehicleId: [
     { required: true, message: '请选择车辆', trigger: 'change' }
   ],
@@ -374,21 +410,43 @@ const getPriorityText = (priority: number) => {
 }
 
 // 获取车辆状态类型
-const getVehicleStatusType = (status: number) => {
+const getVehicleStatusType = (status: number, vehicle?: VehicleWithTask) => {
+  // 如果有车辆对象，根据任务状态来判断
+  if (vehicle) {
+    if (vehicle.hasRunningTask) {
+      return 'primary'  // 执行中 - 蓝色
+    }
+    if (vehicle.hasTask) {
+      return 'warning'  // 已分配 - 黄色
+    }
+  }
+  
+  // 否则根据车辆状态判断
   const statusMap: Record<number, string> = {
-    1: 'success',   // 正常
-    2: 'warning',   // 维修中
-    3: 'danger',    // 故障
-    0: 'info'       // 停用
+    1: 'success',   // 正常/空闲 - 绿色
+    2: 'warning',   // 已分配（后端分配任务时设置为2）
+    3: 'danger',    // 故障 - 红色
+    0: 'info'       // 停用 - 灰色
   }
   return statusMap[status] || 'info'
 }
 
 // 获取车辆状态文本
-const getVehicleStatusText = (status: number) => {
+const getVehicleStatusText = (status: number, vehicle?: VehicleWithTask) => {
+  // 如果有车辆对象，根据任务状态来判断
+  if (vehicle) {
+    if (vehicle.hasRunningTask) {
+      return '执行中'
+    }
+    if (vehicle.hasTask) {
+      return '已分配'
+    }
+  }
+  
+  // 否则根据车辆状态判断
   const statusMap: Record<number, string> = {
     1: '空闲',
-    2: '维修中',
+    2: '已分配',  // 后端分配任务时设置为2，但如果有任务关联则显示"已分配"，否则可能是"维修中"
     3: '故障',
     0: '停用'
   }
@@ -419,6 +477,7 @@ const handleTaskSelection = (selection: DispatchTask[]) => {
 // 车辆筛选
 const filterVehicles = () => {
   if (!vehicleFilter.value) {
+    // 显示全部车辆
     filteredVehicles.value = availableVehicles.value
     return
   }
@@ -426,14 +485,34 @@ const filterVehicles = () => {
   filteredVehicles.value = availableVehicles.value.filter(vehicle => {
     switch (vehicleFilter.value) {
       case 'idle':
-        return vehicle.status === 1
+        // 空闲：状态为1且没有任务
+        return vehicle.status === 1 && !vehicle.hasTask
+      case 'assigned':
+        // 已分配：有已分配的任务（任务状态为2）且没有正在执行的任务
+        // 注意：现在车辆状态不再改变，完全通过hasTask来判断
+        return vehicle.hasTask && !vehicle.hasRunningTask
       case 'running':
-        return vehicle.status === 3 && vehicle.currentTask
+        // 执行中：有正在执行的任务（任务状态为3）
+        return vehicle.hasRunningTask === true
       case 'maintenance':
+        // 维修中：状态为2（数据库定义中2是维修中）
         return vehicle.status === 2
       default:
         return true
     }
+  })
+  
+  console.log('筛选车辆:', {
+    filter: vehicleFilter.value,
+    total: availableVehicles.value.length,
+    filtered: filteredVehicles.value.length,
+    vehicles: filteredVehicles.value.map(v => ({
+      id: v.id,
+      plateNumber: v.plateNumber,
+      status: v.status,
+      hasTask: v.hasTask,
+      hasRunningTask: v.hasRunningTask
+    }))
   })
 }
 
@@ -444,7 +523,39 @@ const viewVehicleDetail = (vehicleId: string) => {
 
 // 编辑任务
 const editTask = (task: DispatchTask) => {
-  router.push(`/tasks/${task.id}`)
+  router.push(`/tasks/${task.id}/edit`)
+}
+
+// 重新发送任务
+const resendTask = async (task: DispatchTask) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要重新发送任务 "${task.taskName}" 吗？将创建一个新的任务副本。`,
+      '确认重新发送',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    const { resendTaskApi } = await import('@/api/tasks')
+    const response = await resendTaskApi(task.id)
+    
+    if (response.data.code === 200) {
+      ElMessage.success({
+        message: `任务重新发送成功，新任务编号: ${response.data.data.taskNo}`,
+        duration: 5000
+      })
+      await loadData()
+    } else {
+      ElMessage.error(response.data.message || '重新发送失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '重新发送失败')
+    }
+  }
 }
 
 // 智能调度
@@ -555,15 +666,24 @@ const autoAssignAll = async () => {
 }
 
 // 手动分配
-const manualAssign = (task: DispatchTask) => {
+const manualAssign = (task?: DispatchTask) => {
   assignForm.value = {
-    taskId: task.id,
-    taskName: task.taskName,
+    taskId: task ? task.id : '',
+    taskName: task ? task.taskName : '',
     vehicleId: '',
-    estimatedDuration: task.estimatedDuration || 60,
+    estimatedDuration: task?.estimatedDuration || 60,
     notes: ''
   }
   assignDialogVisible.value = true
+}
+
+// 任务选择变化
+const handleTaskChange = (taskId: number) => {
+  const task = pendingTasks.value.find(t => t.id === taskId)
+  if (task) {
+    assignForm.value.taskName = task.taskName
+    assignForm.value.estimatedDuration = task.estimatedDuration || 60
+  }
 }
 
 // 分配任务给车辆
@@ -573,9 +693,8 @@ const assignTaskToVehicle = async (vehicle: Vehicle) => {
     return
   }
   
-  // 选择第一个待分配任务进行分配
-  const task = pendingTasks.value[0]
-  manualAssign(task)
+  // 打开分配对话框，让用户选择任务
+  manualAssign()
   assignForm.value.vehicleId = vehicle.id.toString()
 }
 
@@ -615,13 +734,17 @@ const confirmAssign = async () => {
       // 刷新所有数据，包括车辆状态
       loading.value = true
       try {
-        await Promise.all([
-          loadPendingTasks(),
-          loadAvailableVehicles(),
-          loadDispatchStats()
-        ])
-        // 延迟一下确保数据刷新完成
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // 先刷新任务列表，再刷新车辆列表（车辆列表需要任务数据）
+        await loadPendingTasks()
+        await loadAvailableVehicles()  // 这个函数会重新加载任务数据
+        await loadDispatchStats()
+        
+        // 确保筛选逻辑重新执行
+        filterVehicles()
+        
+        console.log('分配任务后刷新完成，车辆列表:', availableVehicles.value.length)
+      } catch (error) {
+        console.error('刷新数据失败:', error)
       } finally {
         loading.value = false
       }
@@ -645,12 +768,15 @@ const refreshData = async () => {
 const loadData = async () => {
   loading.value = true
   try {
+    // 先加载任务数据，再加载车辆数据（车辆数据需要任务数据来标记hasTask）
     await Promise.all([
       loadDispatchStats(),
-      loadPendingTasks(),
-      loadAvailableVehicles()
+      loadPendingTasks()
     ])
+    // 车辆数据加载会使用任务数据，所以单独加载
+    await loadAvailableVehicles()
   } catch (error) {
+    console.error('加载数据失败:', error)
     ElMessage.error('加载数据失败')
   } finally {
     loading.value = false
@@ -724,20 +850,91 @@ const loadAvailableVehiclesOld = async () => {
 const loadAvailableVehicles = async () => {
   try {
     const { getActiveVehiclesApi } = await import('@/api/vehicles')
-    const response = await getActiveVehiclesApi()
-    if (response.data.code === 200) {
-      const vehicles = Array.isArray(response.data.data) ? response.data.data : []
-      availableVehicles.value = vehicles.map(v => ({
-        id: v.id.toString(),
-        plateNumber: v.vehicleNo,
-        vehicleType: `类型${v.vehicleTypeId}`,
-        status: v.status,
-        location: v.locationAddress || '未知',
-        distanceToTasks: 0,
-        currentLoad: 0,
-        efficiencyScore: 90
-      }))
-      filteredVehicles.value = availableVehicles.value
+    const { getTasksApi } = await import('@/api/tasks')
+    
+    // 同时加载车辆和任务数据
+    const [vehiclesResponse, tasksResponse] = await Promise.all([
+      getActiveVehiclesApi(),
+      getTasksApi()
+    ])
+    
+    if (vehiclesResponse.data.code === 200) {
+      const vehicles = Array.isArray(vehiclesResponse.data.data) ? vehiclesResponse.data.data : []
+      const allTasks = tasksResponse.data.code === 200 && Array.isArray(tasksResponse.data.data) 
+        ? tasksResponse.data.data 
+        : []
+      
+      // 为每个车辆查找关联的任务
+      availableVehicles.value = vehicles.map(v => {
+        // 查找该车辆的任务（状态为2-已分配或3-执行中）
+        // 注意：确保ID类型匹配（都转换为number进行比较）
+        const vehicleTasks = allTasks.filter((t: DispatchTask) => {
+          if (!t.assignedVehicleId) return false
+          
+          const taskVehicleId = typeof t.assignedVehicleId === 'string' 
+            ? Number(t.assignedVehicleId) 
+            : t.assignedVehicleId
+          const vehicleId = typeof v.id === 'string' ? Number(v.id) : v.id
+          
+          const matches = taskVehicleId === vehicleId && (t.status === 2 || t.status === 3)
+          
+          if (matches) {
+            console.log('找到车辆任务匹配:', {
+              vehicleId: v.id,
+              vehicleNo: v.vehicleNo,
+              taskId: t.id,
+              taskName: t.taskName,
+              taskStatus: t.status,
+              assignedVehicleId: t.assignedVehicleId
+            })
+          }
+          
+          return matches
+        })
+        const hasRunningTask = vehicleTasks.some((t: DispatchTask) => t.status === 3)
+        
+        const vehicleData = {
+          ...v,
+          id: v.id.toString(),
+          plateNumber: v.vehicleNo,
+          vehicleType: `类型${v.vehicleTypeId}`,
+          status: v.status,
+          location: v.locationAddress || '未知',
+          distanceToTasks: 0,
+          currentLoad: 0,
+          efficiencyScore: 90,
+          hasTask: vehicleTasks.length > 0,
+          hasRunningTask: hasRunningTask
+        } as VehicleWithTask
+        
+        if (vehicleData.hasTask) {
+          console.log('车辆有任务:', {
+            vehicleId: vehicleData.id,
+            plateNumber: vehicleData.plateNumber,
+            status: vehicleData.status,
+            hasTask: vehicleData.hasTask,
+            hasRunningTask: vehicleData.hasRunningTask,
+            tasks: vehicleTasks.map(t => ({ id: t.id, name: t.taskName, status: t.status }))
+          })
+        }
+        
+        return vehicleData
+      })
+      
+      console.log('加载车辆数据完成:', {
+        totalVehicles: availableVehicles.value.length,
+        vehiclesWithTasks: availableVehicles.value.filter(v => v.hasTask).length,
+        allTasks: allTasks.length,
+        tasksWithVehicles: allTasks.filter(t => t.assignedVehicleId).map(t => ({
+          taskId: t.id,
+          taskName: t.taskName,
+          assignedVehicleId: t.assignedVehicleId,
+          status: t.status
+        }))
+      })
+      
+      // 应用当前筛选（确保筛选逻辑正确执行）
+      filterVehicles()
     }
   } catch (error) {
     console.error('Load available vehicles failed:', error)

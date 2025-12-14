@@ -209,6 +209,20 @@ public class DispatchTaskController {
         }
     }
 
+    @PostMapping("/{id}/resend")
+    @Operation(summary = "重新发送任务", description = "复制已完成的任务并生成新任务编号")
+    public Result<DispatchTask> resendTask(
+            @Parameter(description = "任务ID", required = true) 
+            @PathVariable Long id) {
+        try {
+            DispatchTask newTask = taskService.resendTask(id);
+            return Result.success("任务重新发送成功", newTask);
+        } catch (Exception e) {
+            log.error("重新发送任务失败", e);
+            return Result.error(e.getMessage());
+        }
+    }
+
     @GetMapping("/statistics")
     @Operation(summary = "获取任务统计", description = "获取任务统计信息")
     public Result<TaskStatistics> getTaskStatistics() {

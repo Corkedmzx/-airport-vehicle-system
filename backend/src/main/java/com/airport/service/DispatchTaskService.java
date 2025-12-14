@@ -142,4 +142,12 @@ public interface DispatchTaskService {
      * @return 统计数据
      */
     TaskStatistics getTaskStatistics();
+
+    /**
+     * 重新发送已完成的任务（复制任务并生成新任务编号）
+     * 
+     * @param taskId 原任务ID
+     * @return 新创建的任务
+     */
+    DispatchTask resendTask(Long taskId);
 }

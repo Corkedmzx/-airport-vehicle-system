@@ -4,6 +4,14 @@
       <div class="page-header">
         <h1 class="page-title">{{ isEdit ? '编辑任务' : '创建任务' }}</h1>
         <div class="page-actions">
+          <el-button 
+            v-if="isEdit && taskStatus === 4" 
+            type="success" 
+            @click="handleResend"
+            :loading="resending"
+          >
+            重新发送
+          </el-button>
           <el-button @click="$router.back()">取消</el-button>
           <el-button type="primary" @click="handleSubmit" :loading="loading">
             保存
@@ -98,8 +106,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { getTaskApi, createTaskApi, updateTaskApi } from '@/api/tasks'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { getTaskApi, createTaskApi, updateTaskApi, resendTaskApi } from '@/api/tasks'
 import type { DispatchTask } from '@/api/types'
 import dayjs from 'dayjs'
 
@@ -108,7 +116,9 @@ const router = useRouter()
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const resending = ref(false)
 const isEdit = ref(false)
+const taskStatus = ref<number | undefined>(undefined)
 
 const form = reactive<Partial<DispatchTask>>({
   taskName: '',
@@ -153,6 +163,7 @@ const loadTaskData = async () => {
       const response = await getTaskApi(Number(id))
       if (response.data.code === 200) {
         Object.assign(form, response.data.data)
+        taskStatus.value = response.data.data.status
         if (form.startTime) {
           form.startTime = dayjs(form.startTime).format('YYYY-MM-DD HH:mm:ss')
         }
@@ -166,6 +177,44 @@ const loadTaskData = async () => {
     } finally {
       loading.value = false
     }
+  }
+}
+
+// 重新发送任务
+const handleResend = async () => {
+  const id = route.params.id as string
+  if (!id || id === 'add') return
+  
+  try {
+    await ElMessageBox.confirm(
+      '确定要重新发送此任务吗？将创建一个新的任务副本。',
+      '确认重新发送',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    resending.value = true
+    const response = await resendTaskApi(Number(id))
+    
+    if (response.data.code === 200) {
+      ElMessage.success({
+        message: `任务重新发送成功，新任务编号: ${response.data.data.taskNo}`,
+        duration: 5000
+      })
+      // 跳转到新任务编辑页面
+      router.push(`/tasks/${response.data.data.id}/edit`)
+    } else {
+      ElMessage.error(response.data.message || '重新发送失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '重新发送失败')
+    }
+  } finally {
+    resending.value = false
   }
 }
 

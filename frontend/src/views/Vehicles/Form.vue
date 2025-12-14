@@ -137,6 +137,46 @@
               </el-form-item>
             </el-col>
           </el-row>
+          
+          <el-divider content-position="left">当前位置信息</el-divider>
+          
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="经度" prop="locationLongitude">
+                <el-input-number 
+                  v-model="form.locationLongitude" 
+                  :min="-180" 
+                  :max="180"
+                  :precision="6"
+                  style="width: 100%"
+                  placeholder="请输入经度"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="纬度" prop="locationLatitude">
+                <el-input-number 
+                  v-model="form.locationLatitude" 
+                  :min="-90" 
+                  :max="90"
+                  :precision="6"
+                  style="width: 100%"
+                  placeholder="请输入纬度"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          
+          <el-row :gutter="20">
+            <el-col :span="24">
+              <el-form-item label="位置地址" prop="locationAddress">
+                <el-input 
+                  v-model="form.locationAddress" 
+                  placeholder="请输入位置地址"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
         </el-form>
       </el-card>
     </div>
@@ -170,7 +210,10 @@ const form = reactive<Partial<Vehicle>>({
   fuelCapacity: undefined,
   currentFuel: undefined,
   gpsDeviceId: '',
-  status: 1
+  status: 1,
+  locationLongitude: undefined,
+  locationLatitude: undefined,
+  locationAddress: ''
 })
 
 const rules: FormRules = {
