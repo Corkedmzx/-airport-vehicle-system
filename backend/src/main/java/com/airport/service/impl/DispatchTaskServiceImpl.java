@@ -164,11 +164,18 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
             throw new RuntimeException("只能分配待分配状态的任务");
         }
 
-        // 更新车辆状态为已分配（2）
+        // 检查车辆是否存在，但不改变车辆状态
+        // 车辆状态应该保持为1（正常），任务分配通过任务表的assignedVehicleId来关联
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new RuntimeException("车辆不存在"));
-        vehicle.setStatus(2); // 2-已分配
-        vehicleRepository.save(vehicle);
+        
+        // 检查车辆状态是否为正常（1），只有正常状态的车辆才能分配任务
+        if (vehicle.getStatus() != 1) {
+            throw new RuntimeException("只能为正常状态的车辆分配任务");
+        }
+        
+        // 不改变车辆状态，保持为1（正常）
+        // 任务分配通过任务表的assignedVehicleId字段来关联
 
         task.setAssignedVehicleId(vehicleId);
         task.setAssignedDriverId(driverId);
@@ -310,12 +317,55 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
         return statistics;
     }
 
+    @Override
+    public DispatchTask resendTask(Long taskId) {
+        DispatchTask originalTask = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("任务不存在"));
+
+        // 只有已完成的任务才能重新发送
+        if (originalTask.getStatus() != 4) {
+            throw new RuntimeException("只能重新发送已完成的任务");
+        }
+
+        // 创建新任务，复制原任务的信息
+        DispatchTask newTask = new DispatchTask();
+        newTask.setTaskName(originalTask.getTaskName());
+        newTask.setTaskType(originalTask.getTaskType());
+        newTask.setPriority(originalTask.getPriority());
+        newTask.setDescription(originalTask.getDescription());
+        newTask.setStartLocation(originalTask.getStartLocation());
+        newTask.setEndLocation(originalTask.getEndLocation());
+        newTask.setStartTime(LocalDateTime.now()); // 使用当前时间作为开始时间
+        newTask.setStatus(1); // 待分配
+        newTask.setProgress(java.math.BigDecimal.ZERO);
+        newTask.setRemark("重新发送自任务: " + originalTask.getTaskNo());
+
+        // 生成新的任务编号
+        String newTaskNo = generateTaskNo();
+        // 确保任务编号唯一
+        while (taskRepository.findByTaskNo(newTaskNo) != null) {
+            newTaskNo = generateTaskNo();
+        }
+        newTask.setTaskNo(newTaskNo);
+
+        DispatchTask savedTask = taskRepository.save(newTask);
+        
+        log.info("任务 {} 已重新发送，新任务编号: {}", originalTask.getTaskNo(), newTaskNo);
+        
+        return savedTask;
+    }
+
     /**
      * 生成任务编号
      */
     private String generateTaskNo() {
         String dateStr = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
-        // 这里可以添加序号生成的逻辑
-        return "TASK" + dateStr + System.currentTimeMillis() % 10000;
+        // 获取当天任务数量作为序号
+        Long todayCount = taskRepository.countTodayTasks(
+            LocalDateTime.now().toLocalDate().atStartOfDay(),
+            LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1)
+        );
+        String sequence = String.format("%04d", (todayCount + 1) % 10000);
+        return "TASK" + dateStr + sequence;
     }
 }

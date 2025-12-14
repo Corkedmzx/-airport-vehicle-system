@@ -128,6 +128,14 @@
                 编辑
               </el-button>
               <el-button 
+                v-if="row.status === 4 && hasPermission('task:create')"
+                type="success" 
+                link 
+                @click.stop="handleResend(row)"
+              >
+                重新发送
+              </el-button>
+              <el-button 
                 v-if="hasPermission('task:delete')"
                 type="danger" 
                 link 
@@ -161,7 +169,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
-import { getTasksApi, assignTaskApi, startTaskApi, completeTaskApi, deleteTaskApi } from '@/api/tasks'
+import { getTasksApi, assignTaskApi, startTaskApi, completeTaskApi, deleteTaskApi, resendTaskApi } from '@/api/tasks'
 import type { DispatchTask } from '@/api/types'
 import { timeAgo } from '@/utils'
 import { hasPermission } from '@/utils/permission'
@@ -312,6 +320,37 @@ const viewTaskDetail = (row: DispatchTask) => {
 // 编辑任务
 const handleEdit = (row: DispatchTask) => {
   router.push(`/tasks/${row.id}/edit`)
+}
+
+// 重新发送任务
+const handleResend = async (row: DispatchTask) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要重新发送任务 "${row.taskName}" 吗？将创建一个新的任务副本。`,
+      '确认重新发送',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    const response = await resendTaskApi(row.id)
+    
+    if (response.data.code === 200) {
+      ElMessage.success({
+        message: `任务重新发送成功，新任务编号: ${response.data.data.taskNo}`,
+        duration: 5000
+      })
+      loadTasks()
+    } else {
+      ElMessage.error(response.data.message || '重新发送失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '重新发送失败')
+    }
+  }
 }
 
 // 删除任务
