@@ -4,6 +4,7 @@ com\airport\config\WebConfig.class
 com\airport\dto\LoginRequest.class
 com\airport\entity\SysUserRole.class
 com\airport\config\JacksonConfig.class
+com\airport\entity\SystemConfigEntity.class
 com\airport\entity\SysPermission.class
 com\airport\service\DispatchTaskService.class
 com\airport\entity\BaseEntity.class
@@ -24,6 +25,7 @@ com\airport\dto\VehicleStatistics.class
 com\airport\entity\SystemLog.class
 com\airport\dto\Result.class
 com\airport\controller\RolePermissionController.class
+com\airport\repository\SystemConfigRepository.class
 com\airport\repository\AlertRepository.class
 com\airport\dto\LoginResponse$UserInfo.class
 com\airport\dto\DispatchTaskDTO.class
@@ -40,6 +42,7 @@ com\airport\repository\SysPermissionRepository.class
 com\airport\dto\VehicleDTO.class
 com\airport\config\Knife4jConfiguration.class
 com\airport\entity\Alert.class
+com\airport\controller\SystemConfigController.class
 com\airport\config\OpenApiConfig.class
 com\airport\entity\AlertRule.class
 com\airport\entity\DispatchTask.class

@@ -6,7 +6,9 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SysRole
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\common\exception\BusinessException.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\DispatchTaskDTO.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\ForgotPasswordResponse.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SystemConfigRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\SystemConfig.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\SystemConfigController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\AlertRule.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SysRoleRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SystemLogRepository.java
@@ -53,6 +55,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\Rol
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleStatistics.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\VehicleRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\StatisticsController.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SystemConfigEntity.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\DispatchTaskController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\AlertController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SysPermissionRepository.java

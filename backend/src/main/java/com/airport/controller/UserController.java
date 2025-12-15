@@ -284,20 +284,96 @@ public class UserController {
     }
 
     @PutMapping("/{id}/password")
-    @Operation(summary = "重置密码", description = "重置用户密码")
+    @Operation(summary = "重置密码", description = "重置用户密码（管理员重置用户密码，不需要验证旧密码）")
     public Result<String> resetPassword(
             @Parameter(description = "用户ID", required = true) 
             @PathVariable Long id,
             @Parameter(description = "新密码", required = true) 
-            @RequestParam String newPassword) {
+            @RequestParam String newPassword,
+            HttpServletRequest request) {
         try {
-            SysUser user = userService.getUserById(id);
-            user.setPassword(newPassword);
-            userService.updateUser(user);
+            // 检查权限：只有admin可以重置其他用户的密码
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null) {
+                return Result.error("未认证或认证已过期");
+            }
+            
+            SysUser currentUser = userService.findByUsername(currentUsername);
+            SysUser targetUser = userService.getUserById(id);
+            
+            // 如果不是admin，只能修改自己的密码，且需要通过changePassword接口（需要验证旧密码）
+            boolean isAdmin = "admin".equals(currentUsername);
+            boolean isSelf = currentUser.getId().equals(id);
+            
+            if (!isAdmin && !isSelf) {
+                log.warn("用户 {} 尝试重置其他用户 {} 的密码，但无权限", currentUsername, targetUser.getUsername());
+                return Result.error("只能重置自己的密码");
+            }
+            
+            // 使用服务层方法，会自动加密密码
+            userService.resetPassword(id, newPassword);
             return Result.success("密码重置成功");
         } catch (Exception e) {
             log.error("重置密码失败", e);
             return Result.error(e.getMessage());
+        }
+    }
+
+    @PutMapping("/me/password")
+    @Operation(summary = "修改密码", description = "修改当前用户密码（需要验证旧密码）")
+    public Result<String> changePassword(
+            @RequestBody java.util.Map<String, String> passwordData,
+            HttpServletRequest request) {
+        try {
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null) {
+                return Result.error("未认证或认证已过期");
+            }
+            
+            String oldPassword = passwordData.get("oldPassword");
+            String newPassword = passwordData.get("newPassword");
+            
+            if (oldPassword == null || newPassword == null) {
+                return Result.error("旧密码和新密码不能为空");
+            }
+            
+            SysUser user = userService.findByUsername(currentUsername);
+            
+            // 验证旧密码
+            if (!userService.verifyPassword(user.getId(), oldPassword)) {
+                log.warn("用户 {} 修改密码时旧密码验证失败", currentUsername);
+                return Result.error("旧密码错误");
+            }
+            
+            // 使用服务层方法，会自动加密密码
+            userService.resetPassword(user.getId(), newPassword);
+            return Result.success("密码修改成功");
+        } catch (Exception e) {
+            log.error("修改密码失败", e);
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息")
+    public Result<UserDTO> getCurrentUser(HttpServletRequest request) {
+        try {
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null) {
+                return Result.error("未认证或认证已过期");
+            }
+            
+            SysUser user = userService.findByUsername(currentUsername);
+            List<String> roleCodes = userRoleRepository.findByUserId(user.getId()).stream()
+                    .map(userRole -> roleRepository.findById(userRole.getRoleId()))
+                    .filter(java.util.Optional::isPresent)
+                    .map(opt -> opt.get().getRoleCode())
+                    .collect(Collectors.toList());
+            UserDTO userDTO = UserDTO.fromEntity(user, roleCodes);
+            return Result.success(userDTO);
+        } catch (Exception e) {
+            log.error("获取当前用户信息失败", e);
+            return Result.error("获取当前用户信息失败: " + e.getMessage());
         }
     }
 

@@ -300,6 +300,7 @@ import { getAllRolesApi, getRolePermissionsApi, updateRolePermissionsApi, getAll
 import type { Role, Permission, RolePermissionDTO } from '@/api/rolePermissions'
 import { isAdmin } from '@/utils/permission'
 import { useUserStore } from '@/store/user'
+import { getSystemConfigsApi, saveSystemConfigsApi } from '@/api/system'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -523,10 +524,54 @@ const getPermissionName = (permissionCode: string) => {
   return permission?.label || permissionCode
 }
 
+// 加载系统配置
+const loadSystemConfig = async () => {
+  try {
+    const response = await getSystemConfigsApi()
+    if (response.data.code === 200) {
+      const configs = response.data.data
+      if (configs['vehicle.location.update.interval']) {
+        systemConfig.locationUpdateInterval = parseInt(configs['vehicle.location.update.interval']) || 30
+      }
+      if (configs['task.auto.assign.enabled']) {
+        systemConfig.autoAssignEnabled = configs['task.auto.assign.enabled'] === 'true'
+      }
+      if (configs['system.maintenance.reminder.days']) {
+        systemConfig.maintenanceReminderDays = parseInt(configs['system.maintenance.reminder.days']) || 7
+      }
+      if (configs['map.provider']) {
+        systemConfig.mapProvider = configs['map.provider']
+      }
+      if (configs['location.tracking.enabled']) {
+        systemConfig.locationTrackingEnabled = configs['location.tracking.enabled'] === 'true'
+      }
+    }
+  } catch (error: any) {
+    console.error('加载系统配置失败:', error)
+  }
+}
+
 // 保存系统配置
-const saveSystemConfig = () => {
-  // TODO: 调用API保存系统配置
-  ElMessage.success('系统配置已保存')
+const saveSystemConfig = async () => {
+  try {
+    const configs: Record<string, string> = {
+      'vehicle.location.update.interval': systemConfig.locationUpdateInterval.toString(),
+      'task.auto.assign.enabled': systemConfig.autoAssignEnabled.toString(),
+      'system.maintenance.reminder.days': systemConfig.maintenanceReminderDays.toString(),
+      'map.provider': systemConfig.mapProvider,
+      'location.tracking.enabled': systemConfig.locationTrackingEnabled.toString()
+    }
+    
+    const response = await saveSystemConfigsApi(configs)
+    if (response.data.code === 200) {
+      ElMessage.success('系统配置已保存')
+    } else {
+      ElMessage.error(response.data.message || '保存失败')
+    }
+  } catch (error: any) {
+    console.error('保存系统配置失败:', error)
+    ElMessage.error(error?.response?.data?.message || '保存系统配置失败')
+  }
 }
 
 // 重置系统配置
@@ -555,6 +600,8 @@ onMounted(() => {
     }).catch(error => {
       console.error('加载权限列表失败:', error)
     })
+  } else if (activeTab.value === 'config') {
+    loadSystemConfig()
   }
 })
 
@@ -576,6 +623,8 @@ const handleTabChange = (tabName: string) => {
         console.error('加载权限列表失败:', error)
       })
     }
+  } else if (tabName === 'config') {
+    loadSystemConfig()
   }
 }
 </script>
