@@ -42,3 +42,21 @@ export const getUserStatisticsApi = () => {
   return request.get('/users/statistics')
 }
 
+// 获取当前用户信息
+export const getCurrentUserApi = () => {
+  return request.get('/users/me')
+}
+
+// 更新当前用户信息
+export const updateCurrentUserApi = (data: Partial<User>) => {
+  return request.put('/users/me', data)
+}
+
+// 修改当前用户密码（需要验证旧密码）
+export const changePasswordApi = (oldPassword: string, newPassword: string) => {
+  return request.put('/users/me/password', {
+    oldPassword,
+    newPassword
+  })
+}
+

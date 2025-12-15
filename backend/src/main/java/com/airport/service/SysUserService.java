@@ -129,4 +129,13 @@ public interface SysUserService {
      * @param roleCode 角色代码
      */
     void updateUserRole(Long userId, String roleCode);
+
+    /**
+     * 验证密码
+     * 
+     * @param userId 用户ID
+     * @param password 密码
+     * @return 是否匹配
+     */
+    boolean verifyPassword(Long userId, String password);
 }

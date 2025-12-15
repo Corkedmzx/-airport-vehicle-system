@@ -364,4 +364,11 @@ public class SysUserServiceImpl implements SysUserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
+    @Override
+    public boolean verifyPassword(Long userId, String password) {
+        SysUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        return passwordEncoder.matches(password, user.getPassword());
+    }
 }

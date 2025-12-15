@@ -150,6 +150,13 @@ const router = createRouter({
           // @ts-ignore: ignore missing module/type declaration for .vue files
           component: () => import('@/views/Settings/index.vue'),
           meta: { title: '系统设置' }
+        },
+        {
+          path: 'profile',
+          name: 'Profile',
+          // @ts-ignore: ignore missing module/type declaration for .vue files
+          component: () => import('@/views/Profile/index.vue'),
+          meta: { title: '个人资料' }
         }
       ]
     },

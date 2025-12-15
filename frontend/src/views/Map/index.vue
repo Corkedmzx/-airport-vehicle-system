@@ -93,10 +93,10 @@
         <div class="map-placeholder">
           <div class="baidu-map-link">
             <h3>地图监控</h3>
-            <p>点击下方按钮打开百度地图查看车辆位置</p>
-            <el-button type="primary" @click="openBaiduMap">
+            <p>点击下方按钮打开地图查看车辆位置</p>
+            <el-button type="primary" @click="openMap">
               <el-icon><MapLocation /></el-icon>
-              打开百度地图
+              打开地图
             </el-button>
             <el-button @click="showMapScreenshot">
               <el-icon><Picture /></el-icon>
@@ -246,6 +246,7 @@ import {
 } from '@element-plus/icons-vue'
 import type { Vehicle } from '@/api/types'
 import dayjs from 'dayjs'
+import { getSystemConfigApi } from '@/api/system'
 
 const router = useRouter()
 
@@ -393,14 +394,56 @@ const updateMapMarkers = () => {
   console.log('Updating map markers:', filteredVehicles.value.length)
 }
 
-// 打开百度地图
-const openBaiduMap = () => {
-  // 构建百度地图URL，使用首都机场的坐标
+// 地图供应商配置
+const mapProvider = ref('baidu')
+
+// 加载地图供应商配置
+const loadMapProvider = async () => {
+  try {
+    const response = await getSystemConfigApi('map.provider')
+    if (response.data.code === 200) {
+      mapProvider.value = response.data.data || 'baidu'
+    }
+  } catch (error: any) {
+    console.error('加载地图供应商配置失败:', error)
+    mapProvider.value = 'baidu' // 默认使用百度地图
+  }
+}
+
+// 打开地图（根据配置动态切换）
+const openMap = () => {
+  // 构建地图URL，使用首都机场的坐标
+  // 注意：百度地图使用BD-09坐标系，高德和腾讯使用GCJ-02坐标系
+  // 这里使用GCJ-02坐标（高德/腾讯标准），百度地图会自动转换
   const lat = 40.0801
   const lng = 116.5842
-  const url = `https://map.baidu.com/?q=${lat},${lng}&mode=normal&zoom=15`
+  const locationName = '首都机场'
+  let url = ''
+  let providerName = ''
+  
+  switch (mapProvider.value) {
+    case 'baidu':
+      // 百度地图：使用marker API格式，经纬度顺序为 lat,lng
+      url = `https://api.map.baidu.com/marker?location=${lat},${lng}&title=${encodeURIComponent(locationName)}&content=${encodeURIComponent(locationName)}&output=html&src=airport-vehicle-system`
+      providerName = '百度地图'
+      break
+    case 'gaode':
+      // 高德地图：使用URI Scheme，经纬度顺序为 lng,lat
+      url = `https://uri.amap.com/marker?position=${lng},${lat}&name=${encodeURIComponent(locationName)}`
+      providerName = '高德地图'
+      break
+    case 'tencent':
+      // 腾讯地图：使用URI API，经纬度顺序为 lat,lng
+      url = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${lat},${lng};title:${encodeURIComponent(locationName)}&referer=airport-vehicle-system`
+      providerName = '腾讯地图'
+      break
+    default:
+      url = `https://api.map.baidu.com/marker?location=${lat},${lng}&title=${encodeURIComponent(locationName)}&content=${encodeURIComponent(locationName)}&output=html&src=airport-vehicle-system`
+      providerName = '百度地图'
+  }
+  
   window.open(url, '_blank')
-  ElMessage.success('已在新窗口打开百度地图')
+  ElMessage.success(`已在新窗口打开${providerName}`)
 }
 
 // 显示地图截图
@@ -415,7 +458,9 @@ const initMap = async () => {
   if (!mapContainer.value) return
   
   try {
-    // 地图使用百度地图链接，不需要初始化
+    // 加载地图供应商配置
+    await loadMapProvider()
+    // 地图使用外部链接，不需要初始化
     mapStatus.value = '正常'
   } catch (error) {
     console.error('Map initialization failed:', error)
