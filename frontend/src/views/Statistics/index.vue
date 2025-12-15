@@ -149,6 +149,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { Van, List, Odometer, TrendCharts } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { getVehicleStatisticsApi } from '@/api/vehicles'
 import { getTaskStatisticsApi } from '@/api/tasks'
@@ -191,54 +192,10 @@ const activeTaskRate = computed(() => {
 })
 
 // 车辆使用情况数据
-const vehicleUsageList = ref([
-  {
-    vehicleNo: '京A12345',
-    totalTasks: 45,
-    completedTasks: 42,
-    totalDistance: 1250,
-    usageRate: 93
-  },
-  {
-    vehicleNo: '京B67890',
-    totalTasks: 38,
-    completedTasks: 35,
-    totalDistance: 980,
-    usageRate: 92
-  },
-  {
-    vehicleNo: '京C11111',
-    totalTasks: 52,
-    completedTasks: 48,
-    totalDistance: 1580,
-    usageRate: 92
-  }
-])
+const vehicleUsageList = ref<any[]>([])
 
 // 任务效率数据
-const taskEfficiencyList = ref([
-  {
-    taskType: '常规调度',
-    totalCount: 120,
-    avgDuration: 2.5,
-    completionRate: 95,
-    efficiency: '优秀'
-  },
-  {
-    taskType: '紧急调度',
-    totalCount: 25,
-    avgDuration: 1.2,
-    completionRate: 88,
-    efficiency: '良好'
-  },
-  {
-    taskType: '维护调度',
-    totalCount: 15,
-    avgDuration: 4.5,
-    completionRate: 93,
-    efficiency: '优秀'
-  }
-])
+const taskEfficiencyList = ref<any[]>([])
 
 // 获取使用率颜色
 const getUsageRateColor = (rate: number) => {
@@ -264,9 +221,12 @@ const getEfficiencyClass = (efficiency: string) => {
 // 加载统计数据
 const loadStatistics = async () => {
   try {
-    const [vehicleRes, taskRes] = await Promise.all([
+    const { getVehicleUsageRankingApi, getTaskEfficiencyApi } = await import('@/api/statistics')
+    const [vehicleRes, taskRes, usageRes, efficiencyRes] = await Promise.all([
       getVehicleStatisticsApi(),
-      getTaskStatisticsApi()
+      getTaskStatisticsApi(),
+      getVehicleUsageRankingApi(),
+      getTaskEfficiencyApi()
     ])
     
     if (vehicleRes.data.code === 200) {
@@ -277,6 +237,14 @@ const loadStatistics = async () => {
       taskStats.value = taskRes.data.data
     }
     
+    if (usageRes.data.code === 200) {
+      vehicleUsageList.value = usageRes.data.data || []
+    }
+    
+    if (efficiencyRes.data.code === 200) {
+      taskEfficiencyList.value = efficiencyRes.data.data || []
+    }
+    
     // 更新图表数据
     setTimeout(() => {
       initVehicleChart()
@@ -284,6 +252,7 @@ const loadStatistics = async () => {
     }, 100)
   } catch (error) {
     console.error('Load statistics failed:', error)
+    ElMessage.error('加载统计数据失败')
   }
 }
 

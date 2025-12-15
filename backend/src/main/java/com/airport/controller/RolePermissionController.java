@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +38,9 @@ public class RolePermissionController {
     private final SysPermissionRepository permissionRepository;
     private final SysRolePermissionRepository rolePermissionRepository;
     private final JwtUtils jwtUtils;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Data
     public static class RolePermissionDTO {
@@ -88,10 +93,11 @@ public class RolePermissionController {
 
     @PutMapping("/roles/{roleId}/permissions")
     @Operation(summary = "更新角色权限", description = "更新指定角色的权限配置（仅admin用户可操作）")
+    @org.springframework.transaction.annotation.Transactional
     public Result<String> updateRolePermissions(
             @Parameter(description = "角色ID", required = true)
             @PathVariable Long roleId,
-            @RequestBody List<String> permissionCodes,
+            @RequestBody(required = false) List<String> permissionCodes,
             HttpServletRequest request) {
         try {
             // 验证是否是admin用户
@@ -110,7 +116,12 @@ public class RolePermissionController {
                 return Result.error("系统管理员（ADMIN）角色的权限不可修改，以防止误操作");
             }
 
-            // 删除原有权限
+            // 如果未传权限列表，使用空列表避免 NPE
+            if (permissionCodes == null) {
+                permissionCodes = java.util.Collections.emptyList();
+            }
+
+            // 删除原有权限（需要在事务中执行）
             rolePermissionRepository.deleteByRoleId(roleId);
 
             // 添加新权限

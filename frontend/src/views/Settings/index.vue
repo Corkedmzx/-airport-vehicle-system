@@ -76,42 +76,21 @@
                         系统管理员权限不可修改，以防止误操作
                       </p>
                     </div>
-                    <!-- 其他角色：默认显示权限标签，编辑模式下显示复选框 -->
+                    <!-- 其他角色：显示权限标签（小方框+权限名样式） -->
                     <div v-else>
-                      <!-- 显示模式：显示权限标签 -->
-                      <div v-if="!row.editing">
-                        <el-tag
+                      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <div
                           v-for="permission in getPermissionLabels(row.permissions || [])"
                           :key="permission.code"
-                          type="success"
-                          style="margin-right: 8px; margin-bottom: 8px;"
+                          style="display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #f5f7fa;"
                         >
-                          {{ permission.name }}
-                        </el-tag>
-                        <span v-if="!row.permissions || row.permissions.length === 0" style="color: #909399;">
-                          暂无权限
-                        </span>
-                      </div>
-                      <!-- 编辑模式：显示复选框 -->
-                      <div v-else>
-                        <el-checkbox-group v-model="row.permissions" style="display: flex; flex-wrap: wrap; gap: 12px;">
-                          <el-checkbox 
-                            v-for="permission in allPermissions" 
-                            :key="permission.value"
-                            :label="permission.value"
-                          >
-                            {{ permission.label }}
-                          </el-checkbox>
-                        </el-checkbox-group>
-                        <div style="margin-top: 12px;">
-                          <el-button type="primary" size="small" @click="saveRolePermissions(row)">
-                            保存
-                          </el-button>
-                          <el-button size="small" @click="cancelEditPermissions(row)">
-                            取消
-                          </el-button>
+                          <span style="display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center; border: 1px solid #67c23a; border-radius: 2px; background-color: #67c23a; color: white; margin-right: 6px; font-size: 12px;">√</span>
+                          <span>{{ permission.name }}</span>
                         </div>
                       </div>
+                      <span v-if="!row.permissions || row.permissions.length === 0" style="color: #909399;">
+                        暂无权限
+                      </span>
                     </div>
                   </template>
                 </el-table-column>
@@ -127,13 +106,13 @@
                       >
                         查看权限内容
                       </el-button>
-                      <!-- 修改权限按钮（ADMIN角色不显示，编辑模式下显示"保存"） -->
+                      <!-- 修改权限按钮（ADMIN角色不显示） -->
                       <el-button 
-                        v-if="row.roleCode !== 'ADMIN' && !row.editing"
+                        v-if="row.roleCode !== 'ADMIN'"
                         type="primary" 
                         link 
                         size="small"
-                        @click="startEditPermissions(row)"
+                        @click="openEditPermissionsDialog(row)"
                       >
                         修改权限
                       </el-button>
@@ -257,13 +236,66 @@
         </el-tab-pane>
       </el-tabs>
     </div>
+
+    <!-- 修改权限对话框 -->
+    <el-dialog
+      v-model="editPermissionsDialogVisible"
+      :title="`修改权限 - ${currentEditRole?.roleName || ''}`"
+      width="700px"
+      @close="closeEditPermissionsDialog"
+      class="permission-edit-dialog"
+      :close-on-click-modal="false"
+    >
+      <div class="permission-edit-header">
+        <el-icon style="color: #409eff; margin-right: 8px;"><InfoFilled /></el-icon>
+        <span style="color: #606266; font-size: 14px;">请勾选该角色需要拥有的权限：</span>
+      </div>
+      <div class="permission-checkbox-container" v-if="allPermissions.length > 0">
+        <el-checkbox-group 
+          v-model="editingPermissions" 
+          class="permission-checkbox-group"
+        >
+          <div 
+            v-for="permission in allPermissions" 
+            :key="permission.value"
+            class="permission-checkbox-item"
+          >
+            <el-checkbox 
+              :label="permission.value"
+              class="permission-checkbox"
+            >
+              <span class="permission-label">{{ permission.label }}</span>
+            </el-checkbox>
+          </div>
+        </el-checkbox-group>
+      </div>
+      <div v-else style="text-align: center; padding: 40px; color: #909399;">
+        <el-icon style="font-size: 48px; margin-bottom: 16px;"><Loading /></el-icon>
+        <p>正在加载权限列表...</p>
+      </div>
+      <template #footer>
+        <div class="dialog-footer" style="text-align: right; padding: 10px 0;">
+          <el-button @click="closeEditPermissionsDialog" size="default">取消</el-button>
+          <el-button 
+            type="primary" 
+            @click="saveRolePermissionsFromDialog"
+            :loading="savingPermissions"
+            size="default"
+            style="margin-left: 10px;"
+          >
+            保存
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { InfoFilled, Loading } from '@element-plus/icons-vue'
 import { getAllRolesApi, getRolePermissionsApi, updateRolePermissionsApi, getAllPermissionsApi } from '@/api/rolePermissions'
 import type { Role, Permission, RolePermissionDTO } from '@/api/rolePermissions'
 import { isAdmin } from '@/utils/permission'
@@ -285,6 +317,12 @@ const rolePermissions = ref<Array<RolePermissionDTO & { id?: number }>>([])
 
 // 所有权限列表
 const allPermissions = ref<Array<{ label: string; value: string }>>([])
+
+// 修改权限对话框
+const editPermissionsDialogVisible = ref(false)
+const currentEditRole = ref<RolePermissionDTO & { id?: number; saving?: boolean } | null>(null)
+const editingPermissions = ref<string[]>([])
+const savingPermissions = ref(false)
 
 // 加载角色和权限数据
 const loadRolePermissions = async () => {
@@ -313,8 +351,7 @@ const loadRolePermissions = async () => {
             if (permResponse.data.code === 200) {
               return {
                 ...permResponse.data.data,
-                saving: false,
-                editing: false // 默认不在编辑模式
+                saving: false
               }
             }
             return {
@@ -322,8 +359,7 @@ const loadRolePermissions = async () => {
               roleName: role.roleName,
               roleCode: role.roleCode,
               permissions: [],
-              saving: false,
-              editing: false
+              saving: false
             }
           } catch (error) {
             console.error(`加载角色 ${role.roleName} 的权限失败:`, error)
@@ -332,8 +368,7 @@ const loadRolePermissions = async () => {
               roleName: role.roleName,
               roleCode: role.roleCode,
               permissions: [],
-              saving: false,
-              editing: false
+              saving: false
             }
           }
         })
@@ -371,64 +406,59 @@ const goToLogs = () => {
 // 查看角色权限
 const viewRolePermissions = (row: RolePermissionDTO & { id?: number }) => {
   const permissions = getPermissionLabels(row.permissions || [])
+  // 使用小方框+权限名的样式显示，如：√车辆管理
   const permissionList = permissions.length > 0 
-    ? permissions.map(p => `<li style="margin: 8px 0;">${p.name}</li>`).join('')
-    : '<li style="color: #909399;">暂无权限</li>'
+    ? permissions.map(p => `
+        <div style="display: inline-block; margin: 6px 8px 6px 0; padding: 4px 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #f5f7fa;">
+          <span style="display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center; border: 1px solid #67c23a; border-radius: 2px; background-color: #67c23a; color: white; margin-right: 6px; font-size: 12px;">√</span>
+          <span>${p.name}</span>
+        </div>
+      `).join('')
+    : '<div style="color: #909399; padding: 10px;">暂无权限</div>'
   
   ElMessageBox.alert(
     `<div style="text-align: left; padding: 10px;">
       <p style="margin-bottom: 12px;"><strong style="font-size: 16px;">角色：</strong><span style="font-size: 16px;">${row.roleName}</span></p>
       <p style="margin-bottom: 8px;"><strong>权限列表：</strong></p>
-      <ul style="margin: 0; padding-left: 20px; max-height: 400px; overflow-y: auto;">
+      <div style="max-height: 400px; overflow-y: auto; padding: 8px 0;">
         ${permissionList}
-      </ul>
+      </div>
       <p style="margin-top: 12px; color: #909399; font-size: 12px;">共 ${permissions.length} 项权限</p>
     </div>`,
     '权限详情',
     {
       dangerouslyUseHTMLString: true,
       confirmButtonText: '关闭',
-      width: '500px'
+      width: '600px'
     }
   )
 }
 
-// 开始编辑权限
-const startEditPermissions = (row: RolePermissionDTO & { id?: number; editing?: boolean; originalPermissions?: string[] }) => {
-  // 保存原始权限，用于取消时恢复
-  row.originalPermissions = [...(row.permissions || [])]
-  // 进入编辑模式
-  row.editing = true
+// 打开修改权限对话框
+const openEditPermissionsDialog = (row: RolePermissionDTO & { id?: number }) => {
+  currentEditRole.value = row
+  editingPermissions.value = [...(row.permissions || [])]
+  editPermissionsDialogVisible.value = true
 }
 
-// 取消编辑权限
-const cancelEditPermissions = (row: RolePermissionDTO & { id?: number; editing?: boolean; originalPermissions?: string[] }) => {
-  // 恢复原始权限
-  if (row.originalPermissions) {
-    row.permissions = [...row.originalPermissions]
+// 关闭修改权限对话框
+const closeEditPermissionsDialog = () => {
+  editPermissionsDialogVisible.value = false
+  currentEditRole.value = null
+  editingPermissions.value = []
+}
+
+// 从对话框保存角色权限
+const saveRolePermissionsFromDialog = async () => {
+  if (!currentEditRole.value || !currentEditRole.value.roleId) {
+    ElMessage.error('角色ID不存在')
+    return
   }
-  // 退出编辑模式
-  row.editing = false
-  row.originalPermissions = undefined
-}
-
-// 保存角色权限
-const saveRolePermissions = async (row: RolePermissionDTO & { id?: number; saving?: boolean; editing?: boolean; originalPermissions?: string[] }) => {
+  
   try {
-    if (!row.roleId) {
-      ElMessage.error('角色ID不存在')
-      return
-    }
-    
-    // 防止修改ADMIN角色权限
-    if (row.roleCode === 'ADMIN') {
-      ElMessage.warning('系统管理员权限不可修改')
-      return
-    }
-    
     // 确认保存
     await ElMessageBox.confirm(
-      `确定要保存角色 "${row.roleName}" 的权限配置吗？`,
+      `确定要保存角色 "${currentEditRole.value.roleName}" 的权限配置吗？`,
       '确认保存',
       {
         confirmButtonText: '确定',
@@ -437,17 +467,16 @@ const saveRolePermissions = async (row: RolePermissionDTO & { id?: number; savin
       }
     )
     
-    row.saving = true
-    const response = await updateRolePermissionsApi(row.roleId, row.permissions || [])
+    savingPermissions.value = true
+    const response = await updateRolePermissionsApi(currentEditRole.value.roleId, editingPermissions.value)
     
     if (response.data.code === 200) {
       ElMessage.success({
-        message: `角色 ${row.roleName} 的权限已保存`,
+        message: `角色 ${currentEditRole.value.roleName} 的权限已保存`,
         duration: 3000
       })
-      // 退出编辑模式
-      row.editing = false
-      row.originalPermissions = undefined
+      // 关闭对话框
+      closeEditPermissionsDialog()
       // 重新加载数据
       await loadRolePermissions()
     } else {
@@ -459,9 +488,7 @@ const saveRolePermissions = async (row: RolePermissionDTO & { id?: number; savin
       ElMessage.error(error?.response?.data?.message || '保存角色权限失败')
     }
   } finally {
-    if (row) {
-      row.saving = false
-    }
+    savingPermissions.value = false
   }
 }
 
@@ -555,12 +582,28 @@ const handleTabChange = (tabName: string) => {
 
 <style scoped lang="scss">
 .settings-page {
+  width: 100%;
+  max-width: var(--content-max-width, 1600px);
+  margin: 0 auto;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 var(--content-padding, 24px);
+  
   .page-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px 0;
+    
     .page-header {
       margin-bottom: 24px;
+      flex-shrink: 0;
       
       .page-title {
-        font-size: 24px;
+        font-size: clamp(20px, 2vw, 24px); // 响应式字体大小
         font-weight: 600;
         color: var(--text-primary-color);
         margin-bottom: 8px;
@@ -568,7 +611,55 @@ const handleTabChange = (tabName: string) => {
       
       .page-description {
         color: var(--text-regular-color);
-        font-size: 14px;
+        font-size: clamp(12px, 1.2vw, 14px);
+      }
+    }
+    
+    :deep(.el-tabs) {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      
+      .el-tabs__content {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .el-tab-pane {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+    }
+  }
+  
+  // 响应式调整
+  @media (max-width: 1600px) {
+    max-width: 100%;
+    padding: 0 20px;
+  }
+  
+  @media (max-width: 1200px) {
+    padding: 0 16px;
+    
+    .page-container {
+      padding: 16px 0;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0 12px;
+    
+    .page-container {
+      padding: 12px 0;
+      
+      .page-header {
+        margin-bottom: 16px;
       }
     }
   }
@@ -576,12 +667,18 @@ const handleTabChange = (tabName: string) => {
 
 .tab-content {
   padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    flex-shrink: 0;
     
     h3 {
       font-size: 18px;
@@ -594,12 +691,34 @@ const handleTabChange = (tabName: string) => {
   .section-description {
     color: var(--text-regular-color);
     margin-bottom: 24px;
+    flex-shrink: 0;
   }
 }
 
 .permission-card,
 .config-card {
   margin-top: 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 300px);
+  
+  :deep(.el-card__body) {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  :deep(.el-table) {
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  :deep(.el-table__body-wrapper) {
+    max-height: calc(100vh - 450px);
+    overflow-y: auto;
+  }
 }
 
 :deep(.el-checkbox-group) {
@@ -634,6 +753,136 @@ const handleTabChange = (tabName: string) => {
     display: flex;
     flex-wrap: wrap;
     margin-top: 8px;
+  }
+}
+
+// 权限编辑对话框样式
+:deep(.permission-edit-dialog) {
+  .el-dialog {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    margin-top: 5vh !important;
+  }
+  
+  .el-dialog__body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    min-height: 0;
+  }
+  
+  .el-dialog__footer {
+    padding: 20px !important;
+    border-top: 1px solid #e4e7ed;
+    display: block !important;
+    visibility: visible !important;
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 10;
+  }
+  
+  .dialog-footer {
+    display: flex !important;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .dialog-footer .el-button {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .permission-edit-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    flex-shrink: 0;
+    
+    .el-icon {
+      font-size: 18px;
+    }
+  }
+  
+  .permission-checkbox-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid #e4e7ed;
+    border-radius: 8px;
+    background: #fafafa;
+    min-height: 0;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+      
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
+  }
+  
+  .permission-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .permission-checkbox-item {
+    padding: 12px 16px;
+    background: white;
+    border: 1px solid #e4e7ed;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      border-color: #409eff;
+      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+      transform: translateX(4px);
+    }
+    
+    .permission-checkbox {
+      width: 100%;
+      
+      :deep(.el-checkbox__label) {
+        font-size: 14px;
+        color: #303133;
+        font-weight: 500;
+        padding-left: 8px;
+      }
+      
+      :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+        background-color: #409eff;
+        border-color: #409eff;
+      }
+      
+      :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
+        color: #409eff;
+      }
+    }
   }
 }
 </style>

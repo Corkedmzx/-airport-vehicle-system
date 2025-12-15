@@ -210,14 +210,34 @@
               </div>
             </div>
             
+            <div class="vehicle-task-info" v-if="vehicle.currentTask">
+              <div class="task-name">当前任务: {{ vehicle.currentTask.taskName }}</div>
+              <div class="task-status">
+                <el-tag 
+                  :type="vehicle.currentTask.status === 3 ? 'primary' : 'warning'" 
+                  size="small"
+                >
+                  {{ vehicle.currentTask.status === 3 ? '执行中' : '已分配' }}
+                </el-tag>
+              </div>
+            </div>
+            
             <div class="vehicle-actions">
               <el-button 
-                v-if="vehicle.status === 1" 
+                v-if="vehicle.status === 1 && !vehicle.hasTask" 
                 type="primary" 
                 size="small" 
                 @click.stop="assignTaskToVehicle(vehicle)"
               >
                 分配任务
+              </el-button>
+              <el-button 
+                v-if="vehicle.hasTask && !vehicle.hasRunningTask && vehicle.currentTask"
+                type="danger" 
+                size="small" 
+                @click.stop="unassignTask(vehicle.currentTask)"
+              >
+                取消分配
               </el-button>
               <el-button 
                 v-else-if="vehicle.status === 3" 
@@ -329,6 +349,7 @@ interface VehicleWithTask extends Vehicle {
   efficiencyScore?: number
   hasTask?: boolean
   hasRunningTask?: boolean
+  currentTask?: DispatchTask  // 当前任务（已分配或执行中）
 }
 
 const router = useRouter()
@@ -411,7 +432,18 @@ const getPriorityText = (priority: number) => {
 
 // 获取车辆状态类型
 const getVehicleStatusType = (status: number, vehicle?: VehicleWithTask) => {
-  // 如果有车辆对象，根据任务状态来判断
+  // 优先检查车辆状态是否为维修中(2)或故障(3)，这些状态应该直接显示
+  if (status === 2) {
+    return 'warning'  // 维修中 - 黄色
+  }
+  if (status === 3) {
+    return 'danger'   // 故障 - 红色
+  }
+  if (status === 0) {
+    return 'info'    // 停用 - 灰色
+  }
+  
+  // 对于正常状态(1)的车辆，根据任务状态来判断
   if (vehicle) {
     if (vehicle.hasRunningTask) {
       return 'primary'  // 执行中 - 蓝色
@@ -421,19 +453,24 @@ const getVehicleStatusType = (status: number, vehicle?: VehicleWithTask) => {
     }
   }
   
-  // 否则根据车辆状态判断
-  const statusMap: Record<number, string> = {
-    1: 'success',   // 正常/空闲 - 绿色
-    2: 'warning',   // 已分配（后端分配任务时设置为2）
-    3: 'danger',    // 故障 - 红色
-    0: 'info'       // 停用 - 灰色
-  }
-  return statusMap[status] || 'info'
+  // 正常状态且没有任务，显示空闲
+  return 'success'   // 空闲 - 绿色
 }
 
 // 获取车辆状态文本
 const getVehicleStatusText = (status: number, vehicle?: VehicleWithTask) => {
-  // 如果有车辆对象，根据任务状态来判断
+  // 优先检查车辆状态是否为维修中(2)或故障(3)，这些状态应该直接显示
+  if (status === 2) {
+    return '维修中'
+  }
+  if (status === 3) {
+    return '故障'
+  }
+  if (status === 0) {
+    return '停用'
+  }
+  
+  // 对于正常状态(1)的车辆，根据任务状态来判断
   if (vehicle) {
     if (vehicle.hasRunningTask) {
       return '执行中'
@@ -443,14 +480,8 @@ const getVehicleStatusText = (status: number, vehicle?: VehicleWithTask) => {
     }
   }
   
-  // 否则根据车辆状态判断
-  const statusMap: Record<number, string> = {
-    1: '空闲',
-    2: '已分配',  // 后端分配任务时设置为2，但如果有任务关联则显示"已分配"，否则可能是"维修中"
-    3: '故障',
-    0: '停用'
-  }
-  return statusMap[status] || '未知'
+  // 正常状态且没有任务，显示空闲
+  return '空闲'
 }
 
 // 获取车辆状态样式类
@@ -703,6 +734,46 @@ const requestMaintenance = (vehicle: Vehicle) => {
   ElMessage.info(`为车辆 ${vehicle.plateNumber} 提交维修申请功能开发中`)
 }
 
+// 取消分配任务
+const unassignTask = async (task: DispatchTask) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要取消分配任务 "${task.taskName}" 吗？任务将恢复为待分配状态。`,
+      '确认取消分配',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    const { unassignTaskApi } = await import('@/api/tasks')
+    const response = await unassignTaskApi(task.id)
+    
+    if (response.data.code === 200) {
+      ElMessage.success('取消分配成功')
+      // 刷新所有数据
+      loading.value = true
+      try {
+        await loadPendingTasks()
+        await loadAvailableVehicles()
+        await loadDispatchStats()
+        filterVehicles()
+      } catch (error) {
+        console.error('刷新数据失败:', error)
+      } finally {
+        loading.value = false
+      }
+    } else {
+      ElMessage.error(response.data.message || '取消分配失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '取消分配失败')
+    }
+  }
+}
+
 // 重置分配表单
 const resetAssignForm = () => {
   assignForm.value = {
@@ -786,18 +857,23 @@ const loadData = async () => {
 // 加载调度统计数据
 const loadDispatchStats = async () => {
   try {
-    // TODO: 调用API获取统计数据
-    // 模拟数据
-    dispatchStats.value = {
-      pendingTasks: 8,
-      availableVehicles: 12,
-      idleRate: 75,
-      dispatchEfficiency: 92,
-      efficiencyChange: 5,
-      avgResponseTime: 3.2
+    const { getDispatchStatsApi } = await import('@/api/statistics')
+    const response = await getDispatchStatsApi()
+    
+    if (response.data.code === 200) {
+      const data = response.data.data
+      dispatchStats.value = {
+        pendingTasks: data.pendingTasks || 0,
+        availableVehicles: data.availableVehicles || 0,
+        idleRate: data.idleRate || 0,
+        dispatchEfficiency: data.dispatchEfficiency || 0,
+        efficiencyChange: data.efficiencyChange || 0,
+        avgResponseTime: data.avgResponseTime || 0
+      }
     }
   } catch (error) {
     console.error('Load dispatch stats failed:', error)
+    ElMessage.error('加载调度统计数据失败')
   }
 }
 
@@ -849,23 +925,33 @@ const loadAvailableVehiclesOld = async () => {
 // 加载可用车辆
 const loadAvailableVehicles = async () => {
   try {
-    const { getActiveVehiclesApi } = await import('@/api/vehicles')
+    const { getVehiclesApi } = await import('@/api/vehicles')
     const { getTasksApi } = await import('@/api/tasks')
     
     // 同时加载车辆和任务数据
+    // 注意：使用getVehiclesApi获取所有车辆，而不是只获取正常状态的车辆
     const [vehiclesResponse, tasksResponse] = await Promise.all([
-      getActiveVehiclesApi(),
+      getVehiclesApi(),  // 获取所有车辆，包括维修中、故障等状态
       getTasksApi()
     ])
     
+    // 处理车辆数据（支持多种响应格式）
+    let vehicles: any[] = []
     if (vehiclesResponse.data.code === 200) {
-      const vehicles = Array.isArray(vehiclesResponse.data.data) ? vehiclesResponse.data.data : []
-      const allTasks = tasksResponse.data.code === 200 && Array.isArray(tasksResponse.data.data) 
-        ? tasksResponse.data.data 
-        : []
-      
-      // 为每个车辆查找关联的任务
-      availableVehicles.value = vehicles.map(v => {
+      if (Array.isArray(vehiclesResponse.data.data)) {
+        vehicles = vehiclesResponse.data.data
+      } else if (vehiclesResponse.data.data?.content) {
+        vehicles = vehiclesResponse.data.data.content
+      }
+    }
+    
+    // 处理任务数据
+    const allTasks = tasksResponse.data?.code === 200 && Array.isArray(tasksResponse.data.data) 
+      ? tasksResponse.data.data 
+      : (tasksResponse.data?.data?.content || [])
+    
+    // 为每个车辆查找关联的任务
+    availableVehicles.value = vehicles.map(v => {
         // 查找该车辆的任务（状态为2-已分配或3-执行中）
         // 注意：确保ID类型匹配（都转换为number进行比较）
         const vehicleTasks = allTasks.filter((t: DispatchTask) => {
@@ -892,6 +978,10 @@ const loadAvailableVehicles = async () => {
           return matches
         })
         const hasRunningTask = vehicleTasks.some((t: DispatchTask) => t.status === 3)
+        // 获取当前任务（优先显示执行中的任务，否则显示已分配的任务）
+        const currentTask = vehicleTasks.find((t: DispatchTask) => t.status === 3) 
+          || vehicleTasks.find((t: DispatchTask) => t.status === 2)
+          || null
         
         const vehicleData = {
           ...v,
@@ -904,7 +994,8 @@ const loadAvailableVehicles = async () => {
           currentLoad: 0,
           efficiencyScore: 90,
           hasTask: vehicleTasks.length > 0,
-          hasRunningTask: hasRunningTask
+          hasRunningTask: hasRunningTask,
+          currentTask: currentTask || undefined
         } as VehicleWithTask
         
         if (vehicleData.hasTask) {
@@ -935,7 +1026,6 @@ const loadAvailableVehicles = async () => {
       
       // 应用当前筛选（确保筛选逻辑正确执行）
       filterVehicles()
-    }
   } catch (error) {
     console.error('Load available vehicles failed:', error)
     availableVehicles.value = []

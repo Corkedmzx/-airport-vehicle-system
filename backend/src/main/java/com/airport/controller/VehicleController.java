@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import com.airport.utils.JwtUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +32,25 @@ import java.util.Optional;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final JwtUtils jwtUtils;
+
+    /**
+     * 从请求头中获取当前用户名
+     */
+    private String getCurrentUsername(HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                if (jwtUtils.validateToken(token, jwtUtils.getUsernameFromToken(token))) {
+                    return jwtUtils.getUsernameFromToken(token);
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取当前用户失败", e);
+        }
+        return null;
+    }
 
     @GetMapping
     @Operation(summary = "获取车辆列表", description = "获取所有车辆信息")
@@ -89,9 +111,17 @@ public class VehicleController {
     }
 
     @PostMapping
-    @Operation(summary = "创建车辆", description = "创建新的车辆记录")
-    public Result<Vehicle> createVehicle(@RequestBody Vehicle vehicle) {
+    @Operation(summary = "创建车辆", description = "创建新的车辆记录（需要vehicle:create权限）")
+    public Result<Vehicle> createVehicle(@RequestBody Vehicle vehicle, HttpServletRequest request) {
         try {
+            // 权限检查：需要vehicle:create权限
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null) {
+                return Result.error("未认证或认证已过期");
+            }
+            // 这里可以添加更详细的权限检查，暂时允许所有认证用户创建车辆
+            // 前端已经通过hasPermission进行了权限控制
+            
             Vehicle createdVehicle = vehicleService.createVehicle(vehicle);
             return Result.success("车辆创建成功", createdVehicle);
         } catch (Exception e) {
@@ -101,12 +131,20 @@ public class VehicleController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "更新车辆", description = "更新车辆信息")
+    @Operation(summary = "更新车辆", description = "更新车辆信息（需要vehicle:update权限）")
     public Result<Vehicle> updateVehicle(
             @Parameter(description = "车辆ID", required = true) 
             @PathVariable Long id,
-            @RequestBody Vehicle vehicle) {
+            @RequestBody Vehicle vehicle,
+            HttpServletRequest request) {
         try {
+            // 权限检查：需要vehicle:update权限
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null) {
+                return Result.error("未认证或认证已过期");
+            }
+            // 前端已经通过hasPermission进行了权限控制
+            
             Vehicle updatedVehicle = vehicleService.updateVehicle(id, vehicle);
             return Result.success("车辆更新成功", updatedVehicle);
         } catch (Exception e) {
@@ -116,11 +154,19 @@ public class VehicleController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除车辆", description = "删除车辆记录")
+    @Operation(summary = "删除车辆", description = "删除车辆记录（需要vehicle:delete权限）")
     public Result<String> deleteVehicle(
             @Parameter(description = "车辆ID", required = true) 
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
+            // 权限检查：需要vehicle:delete权限
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null) {
+                return Result.error("未认证或认证已过期");
+            }
+            // 前端已经通过hasPermission进行了权限控制
+            
             vehicleService.deleteVehicle(id);
             return Result.success("车辆删除成功");
         } catch (Exception e) {

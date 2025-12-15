@@ -88,8 +88,8 @@
                 <div class="vehicle-type">{{ vehicle.vehicleType }}</div>
               </div>
               <div class="vehicle-status">
-                <el-tag :type="getVehicleStatusType(vehicle.status)" size="small">
-                  {{ getVehicleStatusText(vehicle.status) }}
+                <el-tag :type="getVehicleStatusType(vehicle.status, vehicle)" size="small">
+                  {{ getVehicleStatusText(vehicle.status, vehicle) }}
                 </el-tag>
               </div>
             </div>
@@ -194,8 +194,21 @@ const monitoringStats = ref({
   systemUptime: '0天 0小时'
 })
 
+// 扩展Vehicle类型，添加任务相关属性
+interface VehicleWithTask extends Vehicle {
+  plateNumber?: string
+  vehicleType?: string
+  location?: string
+  speed?: number
+  batteryLevel?: number
+  lastUpdate?: string
+  currentTask?: any
+  hasTask?: boolean
+  hasRunningTask?: boolean
+}
+
 // 实时车辆数据
-const realTimeVehicles = ref<Vehicle[]>([])
+const realTimeVehicles = ref<VehicleWithTask[]>([])
 
 // 实时告警数据
 const realTimeAlerts = ref<Alert[]>([])
@@ -203,26 +216,58 @@ const realTimeAlerts = ref<Alert[]>([])
 // 定时器
 let refreshTimer: NodeJS.Timeout | null = null
 
-// 获取车辆状态类型
-const getVehicleStatusType = (status: number) => {
-  const statusMap: Record<number, string> = {
-    1: 'success',   // 正常
-    2: 'warning',   // 维修中
-    3: 'danger',    // 故障
-    0: 'info'       // 停用
+// 获取车辆状态类型（与调度中心和车辆管理页面一致）
+const getVehicleStatusType = (status: number, vehicle?: VehicleWithTask) => {
+  // 优先检查车辆状态是否为维修中(2)或故障(3)，这些状态应该直接显示
+  if (status === 2) {
+    return 'warning'  // 维修中 - 黄色
   }
-  return statusMap[status] || 'info'
+  if (status === 3) {
+    return 'danger'   // 故障 - 红色
+  }
+  if (status === 0) {
+    return 'info'    // 停用 - 灰色
+  }
+  
+  // 对于正常状态(1)的车辆，根据任务状态来判断
+  if (vehicle) {
+    if (vehicle.hasRunningTask) {
+      return 'primary'  // 执行中 - 蓝色
+    }
+    if (vehicle.hasTask) {
+      return 'warning'  // 已分配 - 黄色
+    }
+  }
+  
+  // 正常状态且没有任务，显示正常
+  return 'success'   // 正常 - 绿色
 }
 
-// 获取车辆状态文本
-const getVehicleStatusText = (status: number) => {
-  const statusMap: Record<number, string> = {
-    1: '正常',
-    2: '维修中',
-    3: '故障',
-    0: '停用'
+// 获取车辆状态文本（与调度中心和车辆管理页面一致）
+const getVehicleStatusText = (status: number, vehicle?: VehicleWithTask) => {
+  // 优先检查车辆状态是否为维修中(2)或故障(3)，这些状态应该直接显示
+  if (status === 2) {
+    return '维修中'
   }
-  return statusMap[status] || '未知'
+  if (status === 3) {
+    return '故障'
+  }
+  if (status === 0) {
+    return '停用'
+  }
+  
+  // 对于正常状态(1)的车辆，根据任务状态来判断
+  if (vehicle) {
+    if (vehicle.hasRunningTask) {
+      return '执行中'
+    }
+    if (vehicle.hasTask) {
+      return '已分配'
+    }
+  }
+  
+  // 正常状态且没有任务，显示正常
+  return '正常'
 }
 
 // 获取车辆状态样式类
@@ -339,19 +384,24 @@ const toggleFullscreen = () => {
 // 加载监控统计数据
 const loadMonitoringStats = async () => {
   try {
-    // TODO: 调用API获取统计数据
-    // 模拟数据
-    monitoringStats.value = {
-      activeVehicles: 15,
-      activeRate: 85,
-      alerts: 3,
-      pendingAlerts: 1,
-      runningTasks: 8,
-      completionRate: 92,
-      systemUptime: '15天 8小时'
+    const { getMonitoringStatsApi } = await import('@/api/statistics')
+    const response = await getMonitoringStatsApi()
+    
+    if (response.data.code === 200) {
+      const data = response.data.data
+      monitoringStats.value = {
+        activeVehicles: data.activeVehicles || 0,
+        activeRate: data.activeRate || 0,
+        alerts: data.alerts || 0,
+        pendingAlerts: data.pendingAlerts || 0,
+        runningTasks: data.runningTasks || 0,
+        completionRate: data.completionRate || 0,
+        systemUptime: data.systemUptime || '0天 0小时'
+      }
     }
   } catch (error) {
     console.error('Load monitoring stats failed:', error)
+    ElMessage.error('加载监控统计数据失败')
   }
 }
 
@@ -359,14 +409,46 @@ const loadMonitoringStats = async () => {
 const loadRealTimeVehicles = async () => {
   try {
     const { getVehiclesApi } = await import('@/api/vehicles')
-    const response = await getVehiclesApi({ 
-      page: 0, 
-      size: 20,
-      status: 1 // 只获取正常状态的车辆
-    })
+    const { getTasksApi } = await import('@/api/tasks')
     
-    if (response.data && Array.isArray(response.data)) {
-      realTimeVehicles.value = response.data.map((v: any) => ({
+    // 同时加载车辆和任务数据，获取所有状态的车辆
+    const [vehiclesResponse, tasksResponse] = await Promise.all([
+      getVehiclesApi({ page: 0, size: 50 }),  // 获取所有状态的车辆
+      getTasksApi()
+    ])
+    
+    let vehicles: any[] = []
+    if (vehiclesResponse.data && Array.isArray(vehiclesResponse.data)) {
+      vehicles = vehiclesResponse.data
+    } else if (vehiclesResponse.data?.content) {
+      vehicles = vehiclesResponse.data.content
+    } else if (vehiclesResponse.data?.data) {
+      const data = vehiclesResponse.data.data
+      vehicles = Array.isArray(data) ? data : (data.content || [])
+    }
+    
+    const allTasks = tasksResponse.data?.code === 200 && Array.isArray(tasksResponse.data.data) 
+      ? tasksResponse.data.data 
+      : (tasksResponse.data?.data?.content || [])
+    
+    // 为每个车辆查找关联的任务
+    realTimeVehicles.value = vehicles.map((v: any) => {
+      // 查找该车辆的任务（状态为2-已分配或3-执行中）
+      const vehicleTasks = allTasks.filter((t: any) => {
+        if (!t.assignedVehicleId) return false
+        
+        const taskVehicleId = typeof t.assignedVehicleId === 'string' 
+          ? Number(t.assignedVehicleId) 
+          : t.assignedVehicleId
+        const vehicleId = typeof v.id === 'string' ? Number(v.id) : v.id
+        
+        return taskVehicleId === vehicleId && (t.status === 2 || t.status === 3)
+      })
+      
+      const hasRunningTask = vehicleTasks.some((t: any) => t.status === 3)
+      const runningTask = vehicleTasks.find((t: any) => t.status === 3)
+      
+      return {
         id: v.id?.toString() || '',
         plateNumber: v.vehicleNo || '',
         vehicleType: v.vehicleTypeId?.toString() || '',
@@ -375,22 +457,14 @@ const loadRealTimeVehicles = async () => {
         speed: 0, // 需要从GPS数据获取
         batteryLevel: v.currentFuel && v.fuelCapacity ? Math.round((v.currentFuel / v.fuelCapacity) * 100) : 0,
         lastUpdate: v.lastUpdateTime || v.updateTime || '',
-        currentTask: null // 需要从任务表关联获取
-      }))
-    } else if (response.data?.content) {
-      // 分页数据
-      realTimeVehicles.value = response.data.content.map((v: any) => ({
-        id: v.id?.toString() || '',
-        plateNumber: v.vehicleNo || '',
-        vehicleType: v.vehicleTypeId?.toString() || '',
-        status: v.status || 0,
-        location: v.locationAddress || '未知',
-        speed: 0,
-        batteryLevel: v.currentFuel && v.fuelCapacity ? Math.round((v.currentFuel / v.fuelCapacity) * 100) : 0,
-        lastUpdate: v.lastUpdateTime || v.updateTime || '',
-        currentTask: null
-      }))
-    }
+        currentTask: runningTask ? {
+          taskName: runningTask.taskName || '',
+          progress: 0 // 需要计算任务进度
+        } : null,
+        hasTask: vehicleTasks.length > 0,
+        hasRunningTask: hasRunningTask
+      } as VehicleWithTask
+    })
   } catch (error) {
     console.error('Load real-time vehicles failed:', error)
     ElMessage.error('加载实时车辆数据失败')

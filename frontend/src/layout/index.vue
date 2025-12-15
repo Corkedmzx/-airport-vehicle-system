@@ -276,6 +276,10 @@ watch(isCollapsed, (newVal) => {
   display: flex;
   flex-direction: column;
   transition: margin-left 0.3s ease;
+  overflow: hidden;
+  max-width: 1920px;
+  margin: 0 auto;
+  width: 100%;
   
   &.collapsed {
     margin-left: 0;
@@ -290,6 +294,7 @@ watch(isCollapsed, (newVal) => {
     justify-content: space-between;
     padding: 0 20px;
     box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+    flex-shrink: 0;
     
     .navbar-left {
       display: flex;
@@ -322,6 +327,10 @@ watch(isCollapsed, (newVal) => {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    overflow-x: hidden;
+    max-width: 1920px;
+    margin: 0 auto;
+    width: 100%;
   }
 }
 

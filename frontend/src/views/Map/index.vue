@@ -10,7 +10,7 @@
           定位全部
         </el-button>
         <el-button @click="toggleTraffic">
-          <el-icon><Road /></el-icon>
+          <el-icon><Connection /></el-icon>
           {{ showTraffic ? '关闭路况' : '显示路况' }}
         </el-button>
         <el-button @click="exportMap">
@@ -241,7 +241,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
-  Location, Road, Download, Search, Refresh, Close,
+  Location, Download, Search, Refresh, Close,
   Connection, Odometer, Clock, MapLocation, Picture
 } from '@element-plus/icons-vue'
 import type { Vehicle } from '@/api/types'
