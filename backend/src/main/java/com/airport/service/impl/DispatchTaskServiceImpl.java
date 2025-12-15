@@ -191,6 +191,28 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
     }
 
     @Override
+    public DispatchTask unassignTask(Long taskId) {
+        DispatchTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("任务不存在"));
+
+        if (task.getStatus() != 2) {
+            throw new RuntimeException("只能取消分配已分配状态的任务");
+        }
+
+        // 清除分配信息
+        task.setAssignedVehicleId(null);
+        task.setAssignedDriverId(null);
+        task.setStatus(1); // 恢复为待分配状态
+        task.setActualStartTime(null);
+
+        DispatchTask updatedTask = taskRepository.save(task);
+        
+        log.info("任务 {} 已取消分配，恢复为待分配状态", task.getTaskNo());
+
+        return updatedTask;
+    }
+
+    @Override
     public DispatchTask startTask(Long taskId) {
         DispatchTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("任务不存在"));

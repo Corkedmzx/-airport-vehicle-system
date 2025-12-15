@@ -89,6 +89,14 @@ public interface DispatchTaskService {
     DispatchTask assignTask(Long taskId, Long vehicleId, Long driverId);
 
     /**
+     * 取消分配任务（将已分配的任务恢复为待分配状态）
+     * 
+     * @param taskId 任务ID
+     * @return 更新后的任务
+     */
+    DispatchTask unassignTask(Long taskId);
+
+    /**
      * 开始执行任务
      * 
      * @param taskId 任务ID

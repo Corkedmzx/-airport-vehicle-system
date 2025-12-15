@@ -220,7 +220,20 @@ const loadDashboardData = async () => {
     const tasksRes = await getTasksApi()
     if (tasksRes.data.code === 200) {
       const allTasks = Array.isArray(tasksRes.data.data) ? tasksRes.data.data : []
-      recentTasks.value = allTasks.slice(0, 5)
+      // 按状态优先级排序：执行中(3) > 已分配(2) > 待分配(1) > 已完成(4)
+      const sortedTasks = allTasks.sort((a, b) => {
+        const statusPriority = (status: number) => {
+          switch (status) {
+            case 3: return 1  // 执行中 - 最高优先级
+            case 2: return 2  // 已分配
+            case 1: return 3  // 待分配
+            case 4: return 4  // 已完成
+            default: return 5 // 其他状态
+          }
+        }
+        return statusPriority(a.status) - statusPriority(b.status)
+      })
+      recentTasks.value = sortedTasks.slice(0, 5)
     }
   } catch (error) {
     console.error('Load dashboard data failed:', error)
@@ -235,11 +248,17 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .dashboard-page {
+  width: 100%;
+  max-width: var(--content-max-width, 1600px);
+  margin: 0 auto;
+  padding: 0 var(--content-padding, 24px);
+  
   .page-header {
-    margin-bottom: 24px;
+    margin-bottom: clamp(20px, 2.5vw, 24px);
+    flex-shrink: 0;
     
     .page-title {
-      font-size: 28px;
+      font-size: clamp(22px, 2.5vw, 28px);
       font-weight: 700;
       color: var(--text-primary-color);
       margin-bottom: 8px;
@@ -247,16 +266,40 @@ onMounted(() => {
     
     .page-description {
       color: var(--text-regular-color);
-      font-size: 16px;
+      font-size: clamp(14px, 1.5vw, 16px);
     }
+  }
+  
+  // 响应式调整
+  @media (max-width: 1600px) {
+    max-width: 100%;
+    padding: 0 20px;
+  }
+  
+  @media (max-width: 1200px) {
+    padding: 0 16px;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0 12px;
   }
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 20vw, 250px), 1fr));
+  gap: clamp(16px, 2vw, 20px);
+  margin-bottom: clamp(24px, 3vw, 32px);
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 .stat-card {
@@ -274,30 +317,43 @@ onMounted(() => {
   }
   
   .stat-icon {
-    font-size: 36px;
+    font-size: clamp(28px, 3.5vw, 36px);
     color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 16px;
+    margin-bottom: clamp(12px, 1.5vw, 16px);
   }
   
   .stat-value {
-    font-size: 32px;
+    font-size: clamp(24px, 3vw, 32px);
     font-weight: 700;
     color: white;
     margin-bottom: 8px;
   }
   
   .stat-label {
-    font-size: 14px;
+    font-size: clamp(12px, 1.2vw, 14px);
     color: rgba(255, 255, 255, 0.8);
     margin-bottom: 12px;
   }
   
   .stat-trend {
-    font-size: 12px;
+    font-size: clamp(11px, 1.1vw, 12px);
     color: rgba(255, 255, 255, 0.7);
     
     .trend-up {
       color: rgba(255, 255, 255, 0.9);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+    
+    .stat-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    
+    .stat-value {
+      font-size: 20px;
     }
   }
 }
@@ -305,7 +361,16 @@ onMounted(() => {
 .dashboard-content {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 24px;
+  gap: clamp(16px, 2vw, 24px);
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    gap: 16px;
+  }
 }
 
 .dashboard-section {

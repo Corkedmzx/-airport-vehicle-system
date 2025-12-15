@@ -1,12 +1,22 @@
-// 系统统计相关API
+// 统计相关API
 import request from '@/utils/request'
 
-// 获取系统概览统计
-export const getSystemOverviewApi = () => {
-  return request.get('/statistics/system')
+// 获取实时监控统计数据
+export const getMonitoringStatsApi = () => {
+  return request.get('/statistics/monitoring')
 }
 
-// 获取仪表盘数据
-export const getDashboardDataApi = () => {
-  return request.get('/statistics/dashboard')
+// 获取调度中心统计数据
+export const getDispatchStatsApi = () => {
+  return request.get('/statistics/dispatch')
+}
+
+// 获取车辆使用情况排行
+export const getVehicleUsageRankingApi = () => {
+  return request.get('/statistics/vehicle-usage')
+}
+
+// 获取任务效率统计
+export const getTaskEfficiencyApi = () => {
+  return request.get('/statistics/task-efficiency')
 }

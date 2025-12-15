@@ -37,7 +37,11 @@
       </div>
       
       <div class="toolbar-right">
-        <el-button type="primary" @click="handleAdd">
+        <el-button 
+          v-if="hasPermission('task:create')"
+          type="primary" 
+          @click="handleAdd"
+        >
           <el-icon><Plus /></el-icon>
           创建任务
         </el-button>
@@ -292,6 +296,22 @@ const loadTasks = async () => {
       if (searchForm.status !== undefined) {
         filteredTasks = filteredTasks.filter(task => task.status === searchForm.status)
       }
+      
+      // 按优先级排序：未分配任务（status=1）按优先级降序在顶部，已分配任务（status=2,3）在未完成和已完成之间按优先级排序
+      filteredTasks.sort((a, b) => {
+        // 未分配任务（status=1）排在前面，按优先级降序
+        if (a.status === 1 && b.status !== 1) return -1
+        if (a.status !== 1 && b.status === 1) return 1
+        
+        // 已完成任务（status=4）排在最后
+        if (a.status === 4 && b.status !== 4) return 1
+        if (a.status !== 4 && b.status === 4) return -1
+        
+        // 同状态的任务按优先级降序排序
+        const priorityA = a.priority || 2
+        const priorityB = b.priority || 2
+        return priorityB - priorityA
+      })
       
       // 分页
       const start = (pagination.page - 1) * pagination.size

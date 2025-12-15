@@ -34,6 +34,11 @@ export const assignTaskApi = (id: number, vehicleId: number, driverId?: number) 
   })
 }
 
+// 取消分配任务
+export const unassignTaskApi = (id: number) => {
+  return request.put<DispatchTask>(`/tasks/${id}/unassign`)
+}
+
 // 开始任务
 export const startTaskApi = (id: number) => {
   return request.put<DispatchTask>(`/tasks/${id}/start`)

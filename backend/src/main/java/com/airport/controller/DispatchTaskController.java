@@ -3,7 +3,13 @@ package com.airport.controller;
 import com.airport.dto.Result;
 import com.airport.dto.TaskStatistics;
 import com.airport.entity.DispatchTask;
+import com.airport.entity.SysRolePermission;
+import com.airport.entity.SysUserRole;
+import com.airport.repository.SysPermissionRepository;
+import com.airport.repository.SysRolePermissionRepository;
+import com.airport.repository.SysUserRoleRepository;
 import com.airport.service.DispatchTaskService;
+import com.airport.utils.JwtUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,10 +17,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 调度任务管理控制器
@@ -29,6 +38,10 @@ import java.util.Optional;
 public class DispatchTaskController {
 
     private final DispatchTaskService taskService;
+    private final SysUserRoleRepository userRoleRepository;
+    private final SysRolePermissionRepository rolePermissionRepository;
+    private final SysPermissionRepository permissionRepository;
+    private final JwtUtils jwtUtils;
 
     @GetMapping
     @Operation(summary = "获取任务列表", description = "获取所有调度任务")
@@ -107,9 +120,13 @@ public class DispatchTaskController {
     }
 
     @PostMapping
-    @Operation(summary = "创建任务", description = "创建新的调度任务")
-    public Result<DispatchTask> createTask(@RequestBody DispatchTask task) {
+    @Operation(summary = "创建任务", description = "创建新的调度任务（需要task:create权限）")
+    public Result<DispatchTask> createTask(@RequestBody DispatchTask task, HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:create")) {
+                return Result.forbidden("无权限创建任务");
+            }
+            
             DispatchTask createdTask = taskService.createTask(task);
             return Result.success("任务创建成功", createdTask);
         } catch (Exception e) {
@@ -119,12 +136,17 @@ public class DispatchTaskController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "更新任务", description = "更新任务信息")
+    @Operation(summary = "更新任务", description = "更新任务信息（需要task:update权限）")
     public Result<DispatchTask> updateTask(
             @Parameter(description = "任务ID", required = true) 
             @PathVariable Long id,
-            @RequestBody DispatchTask task) {
+            @RequestBody DispatchTask task,
+            HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:update")) {
+                return Result.forbidden("无权限更新任务");
+            }
+            
             DispatchTask updatedTask = taskService.updateTask(id, task);
             return Result.success("任务更新成功", updatedTask);
         } catch (Exception e) {
@@ -134,11 +156,16 @@ public class DispatchTaskController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除任务", description = "删除任务记录")
+    @Operation(summary = "删除任务", description = "删除任务记录（需要task:delete权限）")
     public Result<String> deleteTask(
             @Parameter(description = "任务ID", required = true) 
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:delete")) {
+                return Result.forbidden("无权限删除任务");
+            }
+            
             taskService.deleteTask(id);
             return Result.success("任务删除成功");
         } catch (Exception e) {
@@ -155,8 +182,13 @@ public class DispatchTaskController {
             @Parameter(description = "车辆ID", required = true) 
             @RequestParam Long vehicleId,
             @Parameter(description = "司机ID", required = false) 
-            @RequestParam(required = false) Long driverId) {
+            @RequestParam(required = false) Long driverId,
+            HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:assign")) {
+                return Result.forbidden("无权限分配任务");
+            }
+
             DispatchTask updatedTask = taskService.assignTask(id, vehicleId, driverId);
             return Result.success("任务分配成功", updatedTask);
         } catch (Exception e) {
@@ -165,12 +197,36 @@ public class DispatchTaskController {
         }
     }
 
+    @PutMapping("/{id}/unassign")
+    @Operation(summary = "取消分配任务", description = "将已分配的任务恢复为待分配状态")
+    public Result<DispatchTask> unassignTask(
+            @Parameter(description = "任务ID", required = true) 
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        try {
+            if (!hasPermission(request, "task:assign")) {
+                return Result.forbidden("无权限取消分配");
+            }
+
+            DispatchTask updatedTask = taskService.unassignTask(id);
+            return Result.success("取消分配成功", updatedTask);
+        } catch (Exception e) {
+            log.error("取消分配失败", e);
+            return Result.error(e.getMessage());
+        }
+    }
+
     @PutMapping("/{id}/start")
     @Operation(summary = "开始任务", description = "开始执行任务")
     public Result<DispatchTask> startTask(
             @Parameter(description = "任务ID", required = true) 
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:update")) {
+                return Result.forbidden("无权限开始任务");
+            }
+
             DispatchTask updatedTask = taskService.startTask(id);
             return Result.success("任务开始成功", updatedTask);
         } catch (Exception e) {
@@ -183,8 +239,13 @@ public class DispatchTaskController {
     @Operation(summary = "完成任务", description = "标记任务为已完成")
     public Result<DispatchTask> completeTask(
             @Parameter(description = "任务ID", required = true) 
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:update")) {
+                return Result.forbidden("无权限完成任务");
+            }
+
             DispatchTask updatedTask = taskService.completeTask(id);
             return Result.success("任务完成成功", updatedTask);
         } catch (Exception e) {
@@ -199,8 +260,13 @@ public class DispatchTaskController {
             @Parameter(description = "任务ID", required = true) 
             @PathVariable Long id,
             @Parameter(description = "取消原因", required = false) 
-            @RequestParam(required = false) String reason) {
+            @RequestParam(required = false) String reason,
+            HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:update")) {
+                return Result.forbidden("无权限取消任务");
+            }
+
             DispatchTask updatedTask = taskService.cancelTask(id, reason);
             return Result.success("任务取消成功", updatedTask);
         } catch (Exception e) {
@@ -213,8 +279,13 @@ public class DispatchTaskController {
     @Operation(summary = "重新发送任务", description = "复制已完成的任务并生成新任务编号")
     public Result<DispatchTask> resendTask(
             @Parameter(description = "任务ID", required = true) 
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
+            if (!hasPermission(request, "task:update")) {
+                return Result.forbidden("无权限重新发送任务");
+            }
+
             DispatchTask newTask = taskService.resendTask(id);
             return Result.success("任务重新发送成功", newTask);
         } catch (Exception e) {
@@ -228,5 +299,43 @@ public class DispatchTaskController {
     public Result<TaskStatistics> getTaskStatistics() {
         TaskStatistics statistics = taskService.getTaskStatistics();
         return Result.success(statistics);
+    }
+
+    /**
+     * 简单的权限校验：admin 拥有全部权限，否则需具备指定权限码
+     */
+    private boolean hasPermission(HttpServletRequest request, String permissionCode) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return false;
+            }
+            String token = authHeader.substring(7);
+            String username = jwtUtils.getUsernameFromToken(token);
+            if (username == null) {
+                return false;
+            }
+            if ("admin".equals(username)) {
+                return true;
+            }
+            Long userId = jwtUtils.getUserIdFromToken(token);
+            if (userId == null) {
+                return false;
+            }
+
+            Set<String> codes = new HashSet<>();
+            List<SysUserRole> roles = userRoleRepository.findByUserId(userId);
+            for (SysUserRole role : roles) {
+                List<SysRolePermission> rps = rolePermissionRepository.findByRoleId(role.getRoleId());
+                for (SysRolePermission rp : rps) {
+                    permissionRepository.findById(rp.getPermissionId())
+                            .ifPresent(p -> codes.add(p.getPermissionCode()));
+                }
+            }
+            return codes.contains(permissionCode);
+        } catch (Exception e) {
+            log.warn("权限校验失败: {}", e.getMessage());
+            return false;
+        }
     }
 }

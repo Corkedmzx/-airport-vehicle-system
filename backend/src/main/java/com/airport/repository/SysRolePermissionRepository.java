@@ -2,6 +2,9 @@ package com.airport.repository;
 
 import com.airport.entity.SysRolePermission;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,6 +30,9 @@ public interface SysRolePermissionRepository extends JpaRepository<SysRolePermis
      * 
      * @param roleId 角色ID
      */
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from SysRolePermission rp where rp.roleId = :roleId")
     void deleteByRoleId(Long roleId);
 }
 

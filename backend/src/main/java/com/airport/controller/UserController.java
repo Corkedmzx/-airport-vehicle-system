@@ -18,6 +18,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import com.airport.utils.JwtUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +40,25 @@ public class UserController {
     private final SysUserService userService;
     private final SysUserRoleRepository userRoleRepository;
     private final SysRoleRepository roleRepository;
+    private final com.airport.utils.JwtUtils jwtUtils;
+
+    /**
+     * 从请求头中获取当前用户名
+     */
+    private String getCurrentUsername(HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (org.springframework.util.StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                if (jwtUtils.validateToken(token, jwtUtils.getUsernameFromToken(token))) {
+                    return jwtUtils.getUsernameFromToken(token);
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取当前用户失败", e);
+        }
+        return null;
+    }
 
     @GetMapping
     @Operation(summary = "获取用户列表", description = "分页获取用户列表")
@@ -94,9 +116,16 @@ public class UserController {
     }
 
     @PostMapping
-    @Operation(summary = "创建用户", description = "创建新用户")
-    public Result<SysUser> createUser(@RequestBody SysUser user) {
+    @Operation(summary = "创建用户", description = "创建新用户（仅admin可操作）")
+    public Result<SysUser> createUser(@RequestBody SysUser user, HttpServletRequest request) {
         try {
+            // 检查权限：只有admin可以创建用户
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null || !"admin".equals(currentUsername)) {
+                log.warn("用户 {} 尝试创建用户，但无权限", currentUsername);
+                return Result.error("只有系统管理员可以创建用户");
+            }
+            
             SysUser createdUser = userService.createUser(user);
             return Result.success("用户创建成功", createdUser);
         } catch (Exception e) {
@@ -110,9 +139,49 @@ public class UserController {
     public Result<SysUser> updateUser(
             @Parameter(description = "用户ID", required = true) 
             @PathVariable Long id,
-            @RequestBody java.util.Map<String, Object> userData) {
+            @RequestBody java.util.Map<String, Object> userData,
+            HttpServletRequest request) {
         try {
+            // 获取当前登录用户
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null) {
+                return Result.error("未认证或认证已过期");
+            }
+            
+            SysUser currentUser = userService.findByUsername(currentUsername);
             SysUser user = userService.getUserById(id);
+            
+            // 检查权限：只有admin可以修改其他用户，普通用户只能修改自己的基本信息
+            boolean isAdmin = currentUser.getUsername().equals("admin");
+            boolean isSelf = currentUser.getId().equals(id);
+            
+            // 如果修改角色，必须要有user:update权限且是admin
+            if (userData.containsKey("role")) {
+                if (!isAdmin) {
+                    log.warn("用户 {} 尝试修改用户 {} 的角色，但无权限", currentUsername, user.getUsername());
+                    return Result.error("只有系统管理员可以修改用户角色");
+                }
+                
+                // 防止修改admin用户的角色
+                if ("admin".equals(user.getUsername())) {
+                    log.warn("用户 {} 尝试修改admin用户的角色，已阻止", currentUsername);
+                    return Result.error("不能修改系统管理员（admin）的角色");
+                }
+            }
+            
+            // 如果修改状态，必须要有user:update权限且是admin
+            if (userData.containsKey("status")) {
+                if (!isAdmin) {
+                    log.warn("用户 {} 尝试修改用户 {} 的状态，但无权限", currentUsername, user.getUsername());
+                    return Result.error("只有系统管理员可以修改用户状态");
+                }
+            }
+            
+            // 普通用户只能修改自己的基本信息（姓名、邮箱、手机号、头像）
+            if (!isAdmin && !isSelf) {
+                log.warn("用户 {} 尝试修改其他用户 {} 的信息，但无权限", currentUsername, user.getUsername());
+                return Result.error("只能修改自己的信息");
+            }
             
             // 更新基本信息
             if (userData.containsKey("realName")) {
@@ -127,7 +196,7 @@ public class UserController {
             if (userData.containsKey("avatar")) {
                 user.setAvatar((String) userData.get("avatar"));
             }
-            if (userData.containsKey("status")) {
+            if (userData.containsKey("status") && isAdmin) {
                 Object statusObj = userData.get("status");
                 if (statusObj instanceof Number) {
                     user.setStatus(((Number) statusObj).intValue());
@@ -136,8 +205,8 @@ public class UserController {
             
             SysUser updatedUser = userService.updateUser(user);
             
-            // 更新角色（如果提供了role字段）
-            if (userData.containsKey("role")) {
+            // 更新角色（如果提供了role字段且是admin）
+            if (userData.containsKey("role") && isAdmin) {
                 String roleCode = (String) userData.get("role");
                 // 将前端的小写角色代码转换为大写的角色代码
                 String upperRoleCode = roleCode.toUpperCase();
@@ -168,11 +237,26 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除用户", description = "删除用户")
+    @Operation(summary = "删除用户", description = "删除用户（仅admin可操作）")
     public Result<String> deleteUser(
             @Parameter(description = "用户ID", required = true) 
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpServletRequest request) {
         try {
+            // 检查权限：只有admin可以删除用户
+            String currentUsername = getCurrentUsername(request);
+            if (currentUsername == null || !"admin".equals(currentUsername)) {
+                log.warn("用户 {} 尝试删除用户，但无权限", currentUsername);
+                return Result.error("只有系统管理员可以删除用户");
+            }
+            
+            SysUser user = userService.getUserById(id);
+            // 防止删除admin用户
+            if ("admin".equals(user.getUsername())) {
+                log.warn("用户 {} 尝试删除admin用户，已阻止", currentUsername);
+                return Result.error("不能删除系统管理员（admin）");
+            }
+            
             userService.deleteUser(id);
             return Result.success("用户删除成功");
         } catch (Exception e) {

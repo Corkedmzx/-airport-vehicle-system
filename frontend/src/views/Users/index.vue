@@ -293,6 +293,7 @@
                 v-model="userForm.role" 
                 placeholder="请选择角色"
                 style="width: 100%"
+                :disabled="dialogMode === 'edit' && !hasPermission('user:update')"
               >
                 <el-option
                   v-for="role in roleOptions"
@@ -301,6 +302,9 @@
                   :value="role.value"
                 />
               </el-select>
+              <div v-if="dialogMode === 'edit' && !hasPermission('user:update')" style="color: #909399; font-size: 12px; margin-top: 4px;">
+                只有系统管理员可以修改用户角色
+              </div>
             </el-form-item>
           </el-col>
         </el-row>

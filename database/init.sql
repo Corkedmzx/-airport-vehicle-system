@@ -387,6 +387,56 @@ ON DUPLICATE KEY UPDATE `password` = new.`password`;
 INSERT INTO `sys_user_role` (`user_id`, `role_id`) VALUES (1, 1) AS new
 ON DUPLICATE KEY UPDATE `user_id` = new.`user_id`;
 
+-- 插入权限数据
+INSERT INTO `sys_permission` (`permission_name`, `permission_code`, `permission_type`, `description`, `status`) VALUES
+('用户管理', 'user:view', 'menu', '查看用户列表', 1),
+('创建用户', 'user:create', 'button', '创建新用户', 1),
+('编辑用户', 'user:update', 'button', '编辑用户信息', 1),
+('删除用户', 'user:delete', 'button', '删除用户', 1),
+('车辆管理', 'vehicle:view', 'menu', '查看车辆列表', 1),
+('创建车辆', 'vehicle:create', 'button', '创建新车辆', 1),
+('编辑车辆', 'vehicle:update', 'button', '编辑车辆信息', 1),
+('删除车辆', 'vehicle:delete', 'button', '删除车辆', 1),
+('任务管理', 'task:view', 'menu', '查看任务列表', 1),
+('创建任务', 'task:create', 'button', '创建新任务', 1),
+('编辑任务', 'task:update', 'button', '编辑任务信息', 1),
+('删除任务', 'task:delete', 'button', '删除任务', 1),
+('分配任务', 'task:assign', 'button', '分配任务给车辆', 1),
+('调度中心', 'dispatch:view', 'menu', '查看调度中心', 1),
+('实时监控', 'monitoring:view', 'menu', '查看实时监控', 1),
+('统计分析', 'statistics:view', 'menu', '查看统计分析', 1),
+('告警管理', 'alert:view', 'menu', '查看告警信息', 1),
+('系统设置', 'system:view', 'menu', '查看系统设置', 1),
+('权限管理', 'permission:manage', 'button', '管理角色权限', 1) AS new
+ON DUPLICATE KEY UPDATE `permission_name` = new.`permission_name`;
+
+-- 为ADMIN角色分配所有权限
+INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
+SELECT 1, id FROM `sys_permission`
+ON DUPLICATE KEY UPDATE `role_id` = 1;
+
+-- 为DISPATCHER角色分配权限
+INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
+SELECT 2, id FROM `sys_permission` WHERE `permission_code` IN ('task:view', 'task:create', 'task:update', 'task:assign', 'dispatch:view', 'monitoring:view')
+ON DUPLICATE KEY UPDATE `role_id` = 2;
+
+-- 为OPERATOR角色分配权限
+INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
+SELECT 7, id FROM `sys_permission` WHERE `permission_code` IN ('task:view', 'task:create', 'task:update', 'vehicle:view', 'vehicle:create', 'vehicle:update', 'monitoring:view')
+ON DUPLICATE KEY UPDATE `role_id` = 7;
+
+-- 为MAINTENANCE角色分配权限
+INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
+SELECT 4, id FROM `sys_permission` WHERE `permission_code` IN ('alert:view', 'monitoring:view', 'vehicle:view')
+ON DUPLICATE KEY UPDATE `role_id` = 4;
+
+-- 为MONITOR角色分配权限
+INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
+SELECT 5, id FROM `sys_permission` WHERE `permission_code` IN ('monitoring:view', 'statistics:view')
+ON DUPLICATE KEY UPDATE `role_id` = 5;
+
+-- VIEWER角色不分配任何权限（只读）
+
 -- 创建示例车辆
 INSERT INTO `vehicle` (`vehicle_no`, `vehicle_type_id`, `brand`, `model`, `color`, `purchase_date`, `status`, `location_longitude`, `location_latitude`, `location_address`) VALUES
 ('京A12345', 1, '福田', 'BJ5040XYZ', '白色', '2023-01-15', 1, 116.4074, 39.9042, '首都机场T3航站楼'),
@@ -409,6 +459,7 @@ ON DUPLICATE KEY UPDATE `task_name` = new.`task_name`;
 -- 创建存储过程：安全创建索引（如果不存在）
 DELIMITER $$
 
+-- 先删除存储过程（如果存在），避免警告
 DROP PROCEDURE IF EXISTS create_index_if_not_exists$$
 
 CREATE PROCEDURE create_index_if_not_exists(
@@ -446,8 +497,9 @@ CALL create_index_if_not_exists('operation_log', 'idx_operation_log_user_time', 
 CALL create_index_if_not_exists('operation_log', 'idx_operation_log_operation_time', 'operation_time');
 
 -- 删除临时存储过程
--- 注意：如果存储过程不存在，会产生警告但不影响执行
--- MySQL 不允许在存储过程内部删除其他存储过程，所以直接使用 DROP PROCEDURE IF EXISTS
+-- 注意：第一次执行时如果存储过程不存在会产生警告，这是正常的，不影响功能
+-- 使用变量抑制警告（MySQL 5.7+）
+SET @suppress_warning = 0;
 DROP PROCEDURE IF EXISTS create_index_if_not_exists;
 
 COMMIT;
