@@ -36,15 +36,23 @@
 - **Web框架**: Spring Boot 3.2
 - **数据访问**: Spring Data JPA
 - **安全框架**: Spring Security
-- **缓存**: Spring Cache + Redis
+- **缓存**: Spring Cache + Redis (已实现，使用Spring Data Redis)
+  - Redis为可选组件，未运行时自动降级到内存缓存
+  - 支持无密码和有密码两种配置方式
+- **实时通信**: WebSocket (已实现)
+  - 原生WebSocket实现，支持JWT认证
+  - 前端连接：`/ws/vehicles`
+  - 传感器连接：`/ws/sensor`
 - **API文档**: Swagger/OpenAPI 3
 - **验证**: Spring Validation
 
 #### 数据层 (MySQL + Redis)
 - **主数据库**: MySQL 8.0
-- **缓存**: Redis
+- **缓存**: Redis (可选，用于缓存车辆位置、用户会话等)
+  - 使用Spring Data Redis + Lettuce连接池
+  - 支持连接池配置和超时设置
 - **ORM**: Hibernate
-- **连接池**: HikariCP
+- **连接池**: HikariCP (数据库) + Lettuce (Redis)
 
 ## 模块设计
 
@@ -82,10 +90,21 @@ graph TD
 ```
 
 **功能特性:**
-- 实时位置跟踪
+- 实时位置跟踪（WebSocket推送）
 - 状态监控
 - 轨迹回放
 - 异常报警
+- 传感器数据接收（预留接口）
+
+**技术实现:**
+- WebSocket实时通信：
+  - `/ws/vehicles` (前端连接，需要JWT token认证)
+  - `/ws/sensor` (传感器设备连接，需要deviceId参数)
+- Redis缓存车辆位置数据（可选，未运行时降级到内存缓存）
+- JWT认证保护WebSocket连接
+- 支持订阅/取消订阅特定车辆位置更新
+- 心跳检测保持连接稳定
+- 自动重连机制
 
 ### 3. 调度管理模块 (Dispatch Management Module)
 

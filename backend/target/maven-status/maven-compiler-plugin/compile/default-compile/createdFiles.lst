@@ -1,12 +1,15 @@
 com\airport\controller\AlertController.class
 com\airport\common\exception\BusinessException.class
+com\airport\config\WebSocketHandlerConfig.class
 com\airport\config\WebConfig.class
 com\airport\dto\LoginRequest.class
 com\airport\entity\SysUserRole.class
 com\airport\config\JacksonConfig.class
 com\airport\entity\SystemConfigEntity.class
+com\airport\websocket\VehicleLocationWebSocketHandler.class
 com\airport\entity\SysPermission.class
 com\airport\service\DispatchTaskService.class
+com\airport\websocket\SensorWebSocketHandler.class
 com\airport\entity\BaseEntity.class
 com\airport\dto\ForgotPasswordResponse.class
 com\airport\repository\SysRolePermissionRepository.class
@@ -31,6 +34,7 @@ com\airport\dto\LoginResponse$UserInfo.class
 com\airport\dto\DispatchTaskDTO.class
 com\airport\controller\VehicleController.class
 com\airport\controller\StatisticsController.class
+com\airport\config\RedisConfig.class
 com\airport\repository\SystemLogRepository.class
 com\airport\repository\AlertRuleRepository.class
 com\airport\dto\VehicleLocationDTO.class
@@ -42,6 +46,7 @@ com\airport\repository\SysPermissionRepository.class
 com\airport\dto\VehicleDTO.class
 com\airport\config\Knife4jConfiguration.class
 com\airport\entity\Alert.class
+com\airport\websocket\VehicleLocationServiceImpl.class
 com\airport\controller\SystemConfigController.class
 com\airport\config\OpenApiConfig.class
 com\airport\entity\AlertRule.class
@@ -62,4 +67,5 @@ com\airport\entity\SysUser.class
 com\airport\AirportVehicleSystemApplication.class
 com\airport\utils\PasswordUtils.class
 com\airport\controller\StatisticsController$VehicleUsageData.class
+com\airport\websocket\VehicleLocationService.class
 com\airport\controller\UserController.class

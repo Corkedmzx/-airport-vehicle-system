@@ -7,10 +7,11 @@
 ## 技术栈
 
 - **后端**: Java 17 + SpringBoot 3.2 + Spring Security + Spring Data JPA + JWT
-- **数据库**: MySQL 8.0
+- **数据库**: MySQL 8.0 + Redis (缓存)
 - **前端**: Vue.js 3 + TypeScript + Element Plus + Vite + Pinia + ECharts
 - **构建工具**: Maven (后端) + npm (前端)
 - **API文档**: Swagger/OpenAPI 3 (Knife4j)
+- **实时通信**: WebSocket (实时定位、消息推送)
 - **其他**: BCrypt密码加密、响应式设计
 
 ## 项目结构
@@ -34,6 +35,12 @@ airport-vehicle-system/
 │   │       ├── entity/      # 实体类
 │   │       ├── dto/         # 数据传输对象
 │   │       ├── config/      # 配置类
+│   │       │   ├── RedisConfig.java          # Redis配置
+│   │       │   └── WebSocketHandlerConfig.java  # WebSocket配置
+│   │       ├── websocket/   # WebSocket处理器
+│   │       │   ├── VehicleLocationWebSocketHandler.java  # 车辆位置WebSocket
+│   │       │   ├── SensorWebSocketHandler.java           # 传感器WebSocket
+│   │       │   └── VehicleLocationService.java           # 位置服务
 │   │       └── utils/       # 工具类
 │   ├── src/main/resources/
 │   │   ├── application.yml  # 应用配置
@@ -109,6 +116,15 @@ airport-vehicle-system/
 
 ### 4. 实时监控模块
 - ✅ **车辆实时监控**: 实时显示车辆位置、状态、速度等信息
+- ✅ **WebSocket实时定位**: 
+  - 前端通过WebSocket连接接收实时位置更新
+  - 车辆位置变更时自动推送给订阅用户
+  - 支持订阅/取消订阅特定车辆
+  - 心跳检测保持连接稳定
+- ✅ **传感器接口预留**: 
+  - 提供WebSocket端点供传感器设备连接
+  - 接收传感器发送的位置数据
+  - 自动更新车辆位置并广播
 - ✅ **监控统计**: 在线车辆数、运行中任务数、实时数据刷新
 - ✅ **车辆筛选**: 按状态、任务筛选车辆
 - ✅ **数据可视化**: 实时数据图表展示
@@ -139,6 +155,10 @@ airport-vehicle-system/
 - ✅ **告警处理**: 告警确认和处理
 
 ### 8. 系统管理模块
+- ✅ **Redis缓存**: 
+  - 使用Redis作为缓存层，提升系统性能
+  - 缓存车辆位置、用户会话等热点数据
+  - 支持缓存过期时间配置
 - ✅ **系统配置**: 
   - 车辆位置更新间隔
   - 自动任务分配开关
@@ -194,18 +214,38 @@ CREATE DATABASE airport_vehicle_system CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 mysql -u root -p airport_vehicle_system < database/init.sql
 ```
 
-### 2. 后端启动
+### 2. Redis启动 (可选，推荐)
+
+```bash
+# 安装Redis (Ubuntu/Debian)
+sudo apt install redis-server
+
+# 启动Redis
+sudo systemctl start redis-server
+
+# 验证Redis运行
+redis-cli ping
+# 应返回: PONG
+```
+
+**注意**: Redis是可选的。如果Redis未运行，系统会自动降级到内存缓存，应用仍可正常启动，但缓存性能会降低。
+
+### 3. 后端启动
 
 ```bash
 cd backend
-# 修改 application.yml 中的数据库配置
+# 修改 application.yml 中的数据库和Redis配置
 mvn clean package
 java -jar target/airport-vehicle-system-1.0.0.jar
 ```
 
 后端默认运行在：http://localhost:8080/api
 
-### 3. 前端启动
+**配置说明**:
+- 如果Redis设置了密码，需要在`application.yml`中取消注释`password`字段并填写密码
+- 如果Redis未运行，系统会自动使用内存缓存，不影响应用启动
+
+### 4. 前端启动
 
 ```bash
 cd frontend
@@ -215,7 +255,7 @@ npm run dev
 
 前端默认运行在：http://localhost:3000
 
-### 4. 默认账号
+### 5. 默认账号
 
 - **用户名**: admin
 - **密码**: admin123
@@ -246,17 +286,34 @@ npm run dev
 ## 主要特性
 
 1. **完整的RBAC权限控制**: 前后端双重验证，细粒度权限管理
-2. **实时数据监控**: 车辆状态、任务进度实时更新
-3. **智能任务调度**: 优先级排序、自动分配建议
-4. **多地图支持**: 支持百度、高德、腾讯三种地图供应商
-5. **响应式设计**: 适配不同屏幕尺寸
-6. **完善的用户管理**: 个人资料、密码修改、权限查看
-7. **系统配置管理**: 灵活的配置项管理
-8. **数据统计分析**: 多维度数据统计和可视化
+2. **WebSocket实时定位**: 
+   - 车辆位置实时推送，支持订阅/取消订阅
+   - 传感器数据接入接口（预留）
+   - JWT认证保护，心跳检测，自动重连
+3. **Redis缓存** (可选): 
+   - 提升系统性能，缓存热点数据
+   - 自动降级机制，Redis不可用时使用内存缓存
+   - 支持无密码和有密码两种配置
+4. **实时数据监控**: 车辆状态、任务进度实时更新
+5. **智能任务调度**: 优先级排序、自动分配建议
+6. **多地图支持**: 支持百度、高德、腾讯三种地图供应商
+7. **响应式设计**: 适配不同屏幕尺寸
+8. **完善的用户管理**: 个人资料、密码修改、权限查看
+9. **系统配置管理**: 灵活的配置项管理
+10. **数据统计分析**: 多维度数据统计和可视化
 
 ## 技术亮点
 
 - **前后端分离**: RESTful API设计，职责清晰
+- **WebSocket实时通信**: 
+  - 原生WebSocket实现，支持JWT认证
+  - 车辆位置实时推送，支持订阅机制
+  - 传感器数据接入接口（预留）
+  - 心跳检测和自动重连
+- **Redis缓存** (可选): 
+  - 使用Spring Data Redis + Lettuce连接池
+  - 自动降级机制，Redis不可用时不影响应用启动
+  - 支持无密码和有密码配置
 - **JWT认证**: 无状态认证，支持分布式部署
 - **权限控制**: 基于角色的访问控制，前后端双重验证
 - **响应式设计**: 使用CSS变量、clamp()、媒体查询实现自适应
