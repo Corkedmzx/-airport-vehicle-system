@@ -203,7 +203,58 @@ airport-vehicle-system/
 
 ## 快速开始
 
-### 1. 数据库初始化
+> 💡 **推荐**: 首次使用请查看 [QUICK_START.md](QUICK_START.md) 快速启动指南，包含详细的配置说明和常见问题解答。
+
+### 方式一：使用启动脚本（推荐，最简单）
+
+#### 1. 配置数据库
+
+编辑 `backend/src/main/resources/application.yml`，修改以下配置：
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/airport_vehicle_system?...
+    username: root          # 修改为您的MySQL用户名
+    password: your_password # 修改为您的MySQL密码
+```
+
+#### 2. 初始化数据库
+
+```bash
+# 创建数据库
+mysql -u root -p
+CREATE DATABASE airport_vehicle_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+EXIT;
+
+# 导入初始化脚本
+mysql -u root -p airport_vehicle_system < database/init.sql
+```
+
+#### 3. 启动应用
+
+**Windows:**
+```bash
+# 双击运行或在命令行执行
+start-backend.bat
+start-frontend.bat
+```
+
+**Linux/macOS:**
+```bash
+# 先添加执行权限
+chmod +x start-backend.sh start-frontend.sh
+
+# 运行启动脚本
+./start-backend.sh
+./start-frontend.sh
+```
+
+启动脚本会自动检查环境、编译项目并启动服务。
+
+### 方式二：手动启动
+
+#### 1. 数据库初始化
 
 ```bash
 # 创建数据库
@@ -214,38 +265,21 @@ CREATE DATABASE airport_vehicle_system CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 mysql -u root -p airport_vehicle_system < database/init.sql
 ```
 
-### 2. Redis启动 (可选，推荐)
+#### 2. 配置数据库连接
 
-```bash
-# 安装Redis (Ubuntu/Debian)
-sudo apt install redis-server
+编辑 `backend/src/main/resources/application.yml`，修改数据库配置。
 
-# 启动Redis
-sudo systemctl start redis-server
-
-# 验证Redis运行
-redis-cli ping
-# 应返回: PONG
-```
-
-**注意**: Redis是可选的。如果Redis未运行，系统会自动降级到内存缓存，应用仍可正常启动，但缓存性能会降低。
-
-### 3. 后端启动
+#### 3. 启动后端
 
 ```bash
 cd backend
-# 修改 application.yml 中的数据库和Redis配置
 mvn clean package
 java -jar target/airport-vehicle-system-1.0.0.jar
 ```
 
 后端默认运行在：http://localhost:8080/api
 
-**配置说明**:
-- 如果Redis设置了密码，需要在`application.yml`中取消注释`password`字段并填写密码
-- 如果Redis未运行，系统会自动使用内存缓存，不影响应用启动
-
-### 4. 前端启动
+#### 4. 启动前端
 
 ```bash
 cd frontend
@@ -253,7 +287,34 @@ npm install
 npm run dev
 ```
 
-前端默认运行在：http://localhost:3000
+前端默认运行在：http://localhost:5173
+
+### 配置说明
+
+**数据库配置方式:**
+
+1. **直接修改配置文件**（推荐）:
+   - 编辑 `backend/src/main/resources/application.yml`
+   - 修改 `spring.datasource` 下的 `url`、`username`、`password`
+
+2. **使用环境变量**（高级）:
+   ```bash
+   # Windows
+   set DB_USERNAME=root
+   set DB_PASSWORD=your_password
+   
+   # Linux/macOS
+   export DB_USERNAME=root
+   export DB_PASSWORD=your_password
+   ```
+
+**默认登录账号:**
+- 用户名: `admin`
+- 密码: `admin123`
+
+**Redis配置**（可选）:
+- Redis是可选的，未安装时系统会自动降级到内存缓存
+- 如需使用Redis，请安装并启动Redis服务
 
 ### 5. 默认账号
 
