@@ -171,11 +171,36 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         
-  redis:
-    host: localhost
-    port: 6379
-    timeout: 3000ms
-    password:
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password: # 如果Redis设置了密码，取消注释并填写密码
+      timeout: 3000ms
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+  
+  # 缓存配置 - 使用Redis（如果Redis不可用，会自动降级到simple缓存）
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10分钟
+      cache-null-values: false
+  
+  # 禁用Redisson自动配置（使用Spring Data Redis即可）
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfiguration
+  
+  # WebSocket配置
+  websocket:
+    path: /ws
 ```
 
 ### 启动应用
@@ -394,9 +419,9 @@ query_cache_size = 256M
 sudo systemctl restart mysql
 ```
 
-### Redis配置 (可选)
+### Redis配置 (推荐)
 
-如果使用Redis缓存，安装并配置:
+系统已集成Redis缓存，建议安装并配置Redis以提升系统性能:
 
 ```bash
 # 安装Redis
@@ -404,11 +429,35 @@ sudo apt install redis-server
 
 # 配置Redis (可选)
 sudo nano /etc/redis/redis.conf
+# 建议配置：
+# - bind 127.0.0.1 (仅本地访问，生产环境可配置IP白名单)
+# - requirepass your_password (设置密码，可选，如果设置了密码，需要在application.yml中配置)
+# - maxmemory 256mb (根据服务器内存调整)
+# - maxmemory-policy allkeys-lru (内存满时的淘汰策略)
 
 # 启动Redis
 sudo systemctl enable redis-server
 sudo systemctl start redis-server
+
+# 验证Redis运行状态
+redis-cli ping
+# 应返回: PONG
 ```
+
+**重要说明:**
+- Redis是可选的，如果Redis未运行，系统会自动降级到内存缓存（simple），应用仍可正常启动
+- 如果Redis设置了密码，需要在`application.yml`中取消注释`password`字段并填写密码
+- 系统使用Spring Data Redis（Lettuce连接池），无需额外配置
+
+**Redis用途:**
+- 缓存车辆位置数据，减少数据库查询压力
+- 缓存用户会话信息
+- 支持WebSocket会话管理
+- 提升系统响应速度
+
+**WebSocket端点:**
+- `/ws/vehicles` - 前端WebSocket连接（用于实时位置更新，需要JWT认证）
+- `/ws/sensor` - 传感器设备连接（用于接收GPS定位数据，需要deviceId参数）
 
 ## 监控与日志
 

@@ -1,5 +1,6 @@
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SysPermission.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\SysUserService.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\websocket\VehicleLocationService.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\TaskStatistics.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\VehicleServiceImpl.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SysRolePermission.java
@@ -14,6 +15,8 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\Sys
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SystemLogRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\JacksonConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\WebConfig.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\WebSocketHandlerConfig.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\RedisConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SysRolePermissionRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\Alert.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\OpenApiConfig.java
@@ -33,9 +36,11 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\Vehicl
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\security\JwtAuthenticationFilter.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SysRole.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\UserDTO.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\websocket\SensorWebSocketHandler.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SysUserRoleRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\DispatchTaskRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\AlertRepository.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\websocket\VehicleLocationServiceImpl.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\AuthController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\BaseEntity.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\SystemLogController.java
@@ -51,6 +56,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\Vehicle
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\SysUserServiceImpl.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\LoginResponse.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\common\exception\GlobalExceptionHandler.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\websocket\VehicleLocationWebSocketHandler.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\RolePermissionController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleStatistics.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\VehicleRepository.java

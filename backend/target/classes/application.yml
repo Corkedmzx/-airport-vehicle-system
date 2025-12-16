@@ -56,11 +56,31 @@ spring:
         format_sql: true
     defer-datasource-initialization: false
   
-  # 缓存配置
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+  
+  # 缓存配置 - 使用Redis（如果Redis不可用，会自动降级到simple缓存）
   cache:
-    type: simple
-    simple:
-      time-to-live: 60000
+    type: redis
+    redis:
+      time-to-live: 600000 # 10分钟
+      cache-null-values: false
+  
+  # 禁用Redisson自动配置（使用Spring Data Redis即可）
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfiguration
   
   # WebSocket配置 - 移除端口配置，使用与HTTP相同端口
   websocket:

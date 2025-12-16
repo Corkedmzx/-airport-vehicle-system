@@ -5,6 +5,7 @@ import com.airport.dto.VehicleLocationDTO;
 import com.airport.dto.VehicleStatistics;
 import com.airport.repository.VehicleRepository;
 import com.airport.service.VehicleService;
+import com.airport.websocket.VehicleLocationWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -26,6 +28,7 @@ import java.util.Optional;
 public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final VehicleLocationWebSocketHandler webSocketHandler;
 
     @Override
     @Transactional(readOnly = true)
@@ -120,7 +123,20 @@ public class VehicleServiceImpl implements VehicleService {
 
         Vehicle updatedVehicle = vehicleRepository.save(vehicle);
 
-        // TODO: 这里可以发送WebSocket消息给前端，实时更新车辆位置
+        // 通过WebSocket发送位置更新消息给前端
+        try {
+            Map<String, Object> locationData = Map.of(
+                "vehicleId", updatedVehicle.getId(),
+                "vehicleNo", updatedVehicle.getVehicleNo(),
+                "longitude", locationDTO.getLongitude(),
+                "latitude", locationDTO.getLatitude(),
+                "address", locationDTO.getAddress() != null ? locationDTO.getAddress() : "",
+                "timestamp", System.currentTimeMillis()
+            );
+            webSocketHandler.broadcastVehicleLocationUpdate(updatedVehicle.getId(), locationData);
+        } catch (Exception e) {
+            log.error("发送WebSocket位置更新消息失败", e);
+        }
         
         log.info("车辆 {} 位置更新: ({}, {})", 
                 updatedVehicle.getVehicleNo(), 
