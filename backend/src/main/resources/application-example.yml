@@ -1,0 +1,113 @@
+# 应用配置示例文件
+# 复制此文件为 application.yml 并修改数据库配置
+
+spring:
+  application:
+    name: airport-vehicle-system
+  
+  # 环境配置
+  profiles:
+    active: dev
+  
+  # Bean定义覆盖配置（解决jpaAuditingHandler冲突）
+  main:
+    allow-bean-definition-overriding: true
+  
+  # 数据源配置 - 使用MySQL数据库
+  # ⚠️ 重要：请根据您的实际数据库配置修改以下参数
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 数据库连接URL - 请修改为您的数据库地址
+    url: jdbc:mysql://localhost:3306/airport_vehicle_system?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    # 数据库用户名 - 请修改为您的数据库用户名
+    username: root
+    # 数据库密码 - 请修改为您的数据库密码
+    password: your_password_here
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      use-global-data-source-stat: true
+      # 监控配置
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: admin
+        login-password: admin123
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    defer-datasource-initialization: false
+  
+  # Redis配置（可选）
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password: # 如果Redis设置了密码，取消注释并填写密码
+      timeout: 3000ms
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+  
+  # 缓存配置 - 使用Redis（如果Redis不可用，会自动降级到simple缓存）
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10分钟
+      cache-null-values: false
+  
+  # 禁用Redisson自动配置（使用Spring Data Redis即可）
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfiguration
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 200
+    min-spare-threads: 30
+
+# JWT配置
+jwt:
+  secret: airport-vehicle-system-secret-key-2024
+  expiration: 86400 # 24小时
+  header: Authorization
+  prefix: "Bearer "
+
+# 其他配置保持不变...
