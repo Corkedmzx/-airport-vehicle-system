@@ -1,0 +1,73 @@
+# 编译输出
+backend/target/
+backend/out/
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.idea/
+
+# 日志文件
+backend/logs/
+*.log
+*.log.*
+
+# 环境变量和敏感配置
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-prod.yml
+backend/src/main/resources/application-*.yml
+!backend/src/main/resources/application.yml
+!backend/src/main/resources/application-example.yml
+.env
+.env.local
+.env.*.local
+
+# 前端构建输出
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+frontend/.cache/
+
+# IDE配置
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时文件
+*.tmp
+*.bak
+*.backup
+*.orig
+
+# 数据库备份
+*.sql.backup
+*.dump
+
+# 密钥和证书
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+**/设备密钥/
+**/secrets/
+
+# 上传文件
+backend/uploads/
+frontend/public/uploads/
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 其他
+*.pid
+*.seed
+*.pid.lock

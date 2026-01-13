@@ -166,6 +166,7 @@ export interface User {
   username: string
   realName: string
   email: string
+  emailAuthCode?: string // 邮箱授权码（仅用于前端输入，不返回给前端）
   phone: string
   role: string
   department: string

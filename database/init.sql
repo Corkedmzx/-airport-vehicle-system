@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
     `username` varchar(50) NOT NULL COMMENT '用户名',
     `password` varchar(100) NOT NULL COMMENT '密码(加密)',
     `email` varchar(100) DEFAULT NULL COMMENT '邮箱',
+    `email_auth_code` varchar(100) DEFAULT NULL COMMENT '邮箱授权码（用于SMTP发送邮件）',
     `phone` varchar(20) DEFAULT NULL COMMENT '手机号',
     `real_name` varchar(50) DEFAULT NULL COMMENT '真实姓名',
     `avatar` varchar(255) DEFAULT NULL COMMENT '头像',
@@ -30,6 +31,10 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
     UNIQUE KEY `uk_username` (`username`),
     UNIQUE KEY `uk_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+
+-- 为已存在的表添加email_auth_code字段（如果字段不存在）
+ALTER TABLE `sys_user` 
+ADD COLUMN IF NOT EXISTS `email_auth_code` varchar(100) DEFAULT NULL COMMENT '邮箱授权码（用于SMTP发送邮件）' AFTER `email`;
 
 -- 角色表
 CREATE TABLE IF NOT EXISTS `sys_role` (
@@ -442,7 +447,7 @@ INSERT INTO `vehicle` (`vehicle_no`, `vehicle_type_id`, `brand`, `model`, `color
 ('京A12345', 1, '福田', 'BJ5040XYZ', '白色', '2023-01-15', 1, 116.4074, 39.9042, '首都机场T3航站楼'),
 ('京B67890', 2, '金龙', 'XMQ6127G', '蓝色', '2023-03-20', 1, 116.4134, 39.9109, '首都机场T2航站楼'),
 ('京C11111', 3, '解放', 'CA1165PK2L2T4E', '黄色', '2022-11-10', 1, 116.4200, 39.8968, '货运区'),
-('京D22222', 4, '比亚迪', 'T4A', '绿色', '2024-01-08', 1, 116.4334, 39.9156, '清洁区') AS new
+('京D22222', 4, '比亚迪', 'T4A', '绿色', '2026-01-08', 1, 116.4334, 39.9156, '清洁区') AS new
 ON DUPLICATE KEY UPDATE `vehicle_no` = new.`vehicle_no`;
 
 -- 创建示例调度任务

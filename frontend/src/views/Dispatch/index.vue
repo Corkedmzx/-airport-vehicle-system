@@ -297,6 +297,27 @@
           </el-select>
         </el-form-item>
         
+        <el-form-item label="分配司机" prop="driverUsername">
+          <el-select 
+            v-model="assignForm.driverUsername" 
+            placeholder="请选择司机"
+            style="width: 100%"
+            filterable
+            @focus="loadDrivers"
+          >
+            <el-option
+              v-for="driver in availableDrivers"
+              :key="driver.id"
+              :label="`${driver.realName || driver.username} (${driver.username})`"
+              :value="driver.username"
+            >
+              <span>{{ driver.realName || driver.username }}</span>
+              <span style="color: #8492a6; font-size: 13px; margin-left: 8px;">{{ driver.username }}</span>
+              <span v-if="driver.email" style="color: #8492a6; font-size: 12px; margin-left: 8px;">{{ driver.email }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        
         <el-form-item label="预计时长" prop="estimatedDuration">
           <el-input-number 
             v-model="assignForm.estimatedDuration" 
@@ -388,9 +409,14 @@ const assignForm = ref({
   taskId: '',
   taskName: '',
   vehicleId: '',
+  driverUsername: '',
   estimatedDuration: 0,
   notes: ''
 })
+
+// 可用司机列表
+const availableDrivers = ref<any[]>([])
+const driversLoaded = ref(false)
 
 // 分配表单验证规则
 const assignRules = {
@@ -399,6 +425,9 @@ const assignRules = {
   ],
   vehicleId: [
     { required: true, message: '请选择车辆', trigger: 'change' }
+  ],
+  driverUsername: [
+    { required: true, message: '请选择司机', trigger: 'change' }
   ],
   estimatedDuration: [
     { required: true, message: '请输入预计时长', trigger: 'blur' }
@@ -697,11 +726,15 @@ const autoAssignAll = async () => {
 }
 
 // 手动分配
+// 手动分配任务
 const manualAssign = (task?: DispatchTask) => {
+  // 打开对话框时加载司机列表
+  loadDrivers()
   assignForm.value = {
-    taskId: task ? task.id : '',
+    taskId: task ? task.id.toString() : '',
     taskName: task ? task.taskName : '',
     vehicleId: '',
+    driverUsername: '',
     estimatedDuration: task?.estimatedDuration || 60,
     notes: ''
   }
@@ -738,7 +771,7 @@ const requestMaintenance = (vehicle: Vehicle) => {
 const unassignTask = async (task: DispatchTask) => {
   try {
     await ElMessageBox.confirm(
-      `确定要取消分配任务 "${task.taskName}" 吗？任务将恢复为待分配状态。`,
+      `确定要取消分配任务 "${task.taskName}" 吗？任务将恢复为待分配状态，司机将收到取消通知邮件。`,
       '确认取消分配',
       {
         confirmButtonText: '确定',
@@ -751,19 +784,42 @@ const unassignTask = async (task: DispatchTask) => {
     const response = await unassignTaskApi(task.id)
     
     if (response.data.code === 200) {
-      ElMessage.success('取消分配成功')
-      // 刷新所有数据
-      loading.value = true
-      try {
-        await loadPendingTasks()
-        await loadAvailableVehicles()
-        await loadDispatchStats()
-        filterVehicles()
-      } catch (error) {
-        console.error('刷新数据失败:', error)
-      } finally {
-        loading.value = false
+      // 乐观更新：立即更新本地状态
+      const taskIndex = pendingTasks.value.findIndex(t => t.id === task.id)
+      if (taskIndex === -1) {
+        // 如果任务不在待分配列表中，添加它（因为取消分配后状态变为待分配）
+        pendingTasks.value.push({
+          ...task,
+          status: 1,
+          assignedVehicleId: null,
+          assignedDriverId: null
+        } as DispatchTask)
       }
+      
+      // 立即更新车辆状态（如果该车辆有任务）
+      const vehicleIndex = availableVehicles.value.findIndex(v => v.id === task.assignedVehicleId?.toString())
+      if (vehicleIndex !== -1) {
+        const vehicle = availableVehicles.value[vehicleIndex]
+        vehicle.hasTask = false
+        vehicle.hasRunningTask = false
+        vehicle.currentTask = undefined
+      }
+      
+      ElMessage.success(response.data.message || '取消分配成功，邮件通知已发送')
+      
+      // 后台刷新完整数据（不阻塞UI）
+      loading.value = true
+      Promise.all([
+        loadPendingTasks(),
+        loadAvailableVehicles(),
+        loadDispatchStats()
+      ]).then(() => {
+        filterVehicles()
+      }).catch((error) => {
+        console.error('后台刷新数据失败:', error)
+      }).finally(() => {
+        loading.value = false
+      })
     } else {
       ElMessage.error(response.data.message || '取消分配失败')
     }
@@ -780,8 +836,71 @@ const resetAssignForm = () => {
     taskId: '',
     taskName: '',
     vehicleId: '',
+    driverUsername: '',
     estimatedDuration: 0,
     notes: ''
+  }
+  // 重置表单验证状态
+  if (assignFormRef.value) {
+    assignFormRef.value.resetFields()
+  }
+}
+
+// 加载司机列表
+const loadDrivers = async () => {
+  if (driversLoaded.value && availableDrivers.value.length > 0) return
+  
+  try {
+    const { getUsersApi } = await import('@/api/users')
+    const response = await getUsersApi({ page: 0, size: 1000 })
+    
+    if (response.data.code === 200) {
+      // 处理分页数据或直接数组数据
+      let users: any[] = []
+      if (response.data.data?.content && Array.isArray(response.data.data.content)) {
+        users = response.data.data.content
+      } else if (Array.isArray(response.data.data)) {
+        users = response.data.data
+      }
+      
+      // 筛选出司机角色的用户
+      availableDrivers.value = users.filter((user: any) => {
+        // 只显示启用的用户
+        if (user.status !== 1 && user.status !== 'active') {
+          return false
+        }
+        
+        // 检查用户角色
+        if (user.roles && Array.isArray(user.roles)) {
+          // 如果 roles 是对象数组（包含 roleCode 或 roleName）
+          if (user.roles.length > 0 && typeof user.roles[0] === 'object') {
+            return user.roles.some((role: any) => 
+              role.roleCode === 'DRIVER' || 
+              role.roleName?.includes('司机') ||
+              role.roleName?.toLowerCase().includes('driver')
+            )
+          } 
+          // 如果 roles 是字符串数组（roleCode列表）
+          else if (typeof user.roles[0] === 'string') {
+            return user.roles.includes('DRIVER') || 
+                   user.roles.some((code: string) => code.toLowerCase().includes('driver'))
+          }
+        }
+        
+        // 检查是否有role字段（单个角色）
+        if (user.role === 'DRIVER' || user.role?.toLowerCase() === 'driver') {
+          return true
+        }
+        
+        return false
+      })
+      
+      driversLoaded.value = true
+      console.log('已加载司机列表:', availableDrivers.value.length, availableDrivers.value)
+    }
+  } catch (error) {
+    console.error('加载司机列表失败:', error)
+    ElMessage.warning('加载司机列表失败，请刷新重试')
   }
 }
 
@@ -792,37 +911,66 @@ const confirmAssign = async () => {
   try {
     await assignFormRef.value.validate()
     
-    // 调用分配API
+    if (!assignForm.value.driverUsername) {
+      ElMessage.warning('请选择司机')
+      return
+    }
+    
+    // 调用分配API，传递司机用户名
     const { assignTaskApi } = await import('@/api/tasks')
     const response = await assignTaskApi(
       Number(assignForm.value.taskId),
-      Number(assignForm.value.vehicleId)
+      Number(assignForm.value.vehicleId),
+      undefined,
+      assignForm.value.driverUsername
     )
     
     if (response.data.code === 200) {
-      ElMessage.success('任务分配成功')
-      assignDialogVisible.value = false
-      // 刷新所有数据，包括车辆状态
-      loading.value = true
-      try {
-        // 先刷新任务列表，再刷新车辆列表（车辆列表需要任务数据）
-        await loadPendingTasks()
-        await loadAvailableVehicles()  // 这个函数会重新加载任务数据
-        await loadDispatchStats()
-        
-        // 确保筛选逻辑重新执行
-        filterVehicles()
-        
-        console.log('分配任务后刷新完成，车辆列表:', availableVehicles.value.length)
-      } catch (error) {
-        console.error('刷新数据失败:', error)
-      } finally {
-        loading.value = false
+      const updatedTask = response.data.data
+      
+      // 乐观更新：立即更新本地状态
+      // 从待分配任务列表中移除该任务
+      const taskIndex = pendingTasks.value.findIndex(t => t.id === updatedTask.id)
+      if (taskIndex !== -1) {
+        pendingTasks.value.splice(taskIndex, 1)
       }
+      
+      // 立即更新车辆状态
+      const vehicleIndex = availableVehicles.value.findIndex(v => v.id === assignForm.value.vehicleId)
+      if (vehicleIndex !== -1) {
+        const vehicle = availableVehicles.value[vehicleIndex]
+        vehicle.hasTask = true
+        vehicle.hasRunningTask = false
+        vehicle.currentTask = updatedTask as DispatchTask
+      }
+      
+      ElMessage.success(response.data.message || '任务分配成功，邮件通知已发送')
+      assignDialogVisible.value = false
+      
+      // 立即更新筛选后的车辆列表
+      filterVehicles()
+      
+      // 后台刷新完整数据（不阻塞UI）
+      loading.value = true
+      Promise.all([
+        loadPendingTasks(),
+        loadAvailableVehicles(),
+        loadDispatchStats()
+      ]).then(() => {
+        filterVehicles()
+      }).catch((error) => {
+        console.error('后台刷新数据失败:', error)
+      }).finally(() => {
+        loading.value = false
+      })
     } else {
       ElMessage.error(response.data.message || '分配失败')
     }
   } catch (error: any) {
+    if (error?.message !== 'cancel' && !error?.response) {
+      // 表单验证失败
+      return
+    }
     if (error !== 'cancel') {
       ElMessage.error(error?.response?.data?.message || '分配失败')
     }
@@ -946,7 +1094,7 @@ const loadAvailableVehicles = async () => {
     }
     
     // 处理任务数据
-    const allTasks = tasksResponse.data?.code === 200 && Array.isArray(tasksResponse.data.data) 
+    const allTasks: DispatchTask[] = tasksResponse.data?.code === 200 && Array.isArray(tasksResponse.data.data) 
       ? tasksResponse.data.data 
       : (tasksResponse.data?.data?.content || [])
     

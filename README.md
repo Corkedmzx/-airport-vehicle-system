@@ -73,7 +73,11 @@ airport-vehicle-system/
 │   ├── architecture.md        # 架构设计文档
 │   ├── deployment-guide.md    # 部署指南
 │   ├── system-integrity-check.md  # 系统完整性检查
-│   └── project-delivery-summary.md # 项目交付总结
+│   ├── project-delivery-summary.md # 项目交付总结
+│   ├── email-configuration.md # 邮件配置指南
+│   ├── git-security-guide.md # Git安全配置指南
+│   ├── mqtt-mobile-location-guide.md # MQTT手机定位指南
+│   └── api-integration-test.md # API接口测试指南
 └── README.md             # 项目说明
 ```
 
@@ -215,9 +219,11 @@ airport-vehicle-system/
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/airport_vehicle_system?...
-    username: root          # 修改为您的MySQL用户名
-    password: your_password # 修改为您的MySQL密码
+    username: ${DB_USERNAME:app_user}  # 使用环境变量或直接修改
+    password: ${DB_PASSWORD:your-database-password}  # 使用环境变量或直接修改
 ```
+
+> 💡 **安全提示**: 推荐使用环境变量配置敏感信息，详见 [Git安全配置指南](docs/git-security-guide.md)
 
 #### 2. 初始化数据库
 
@@ -293,24 +299,24 @@ npm run dev
 
 **数据库配置方式:**
 
-1. **直接修改配置文件**（推荐）:
-   - 编辑 `backend/src/main/resources/application.yml`
-   - 修改 `spring.datasource` 下的 `url`、`username`、`password`
-
-2. **使用环境变量**（高级）:
-   ```bash
-   # Windows
-   set DB_USERNAME=root
-   set DB_PASSWORD=your_password
+1. **使用环境变量**（推荐，安全）:
+   ```powershell
+   # Windows PowerShell
+   $env:DB_USERNAME="app_user"
+   $env:DB_PASSWORD="your-database-password"
    
    # Linux/macOS
-   export DB_USERNAME=root
-   export DB_PASSWORD=your_password
+   export DB_USERNAME=app_user
+   export DB_PASSWORD=your-database-password
    ```
+   然后启动应用，系统会自动读取环境变量。
 
-**默认登录账号:**
-- 用户名: `admin`
-- 密码: `admin123`
+2. **直接修改配置文件**（不推荐提交到Git）:
+   - 编辑 `backend/src/main/resources/application.yml`
+   - 修改 `spring.datasource` 下的 `url`、`username`、`password`
+   - ⚠️ 注意：不要将包含真实密码的配置文件提交到Git
+
+> 💡 **详细说明**: 查看 [Git安全配置指南](docs/git-security-guide.md) 了解如何安全地管理敏感配置
 
 **Redis配置**（可选）:
 - Redis是可选的，未安装时系统会自动降级到内存缓存
@@ -383,10 +389,22 @@ npm run dev
 
 ## 文档
 
-- [架构设计文档](docs/architecture.md)
-- [部署指南](docs/deployment-guide.md)
-- [系统完整性检查](docs/system-integrity-check.md)
-- [项目交付总结](docs/project-delivery-summary.md)
+### 核心文档
+- [架构设计文档](docs/architecture.md) - 系统架构设计和技术选型
+- [部署指南](docs/deployment-guide.md) - 详细的部署步骤和配置说明
+- [快速启动指南](QUICK_START.md) - 快速上手指南
+
+### 功能文档
+- [邮件配置指南](docs/email-configuration.md) - 邮件发送功能配置说明
+- [MQTT手机定位指南](docs/mqtt-mobile-location-guide.md) - 手机定位数据接入方案
+
+### 测试与安全
+- [API接口测试指南](docs/api-integration-test.md) - 前后端API联调测试
+- [Git安全配置指南](docs/git-security-guide.md) - Git提交前的安全检查
+
+### 项目文档
+- [系统完整性检查](docs/system-integrity-check.md) - 系统完整性验证报告
+- [项目交付总结](docs/project-delivery-summary.md) - 项目交付物清单和成果总结
 
 ## 作者
 

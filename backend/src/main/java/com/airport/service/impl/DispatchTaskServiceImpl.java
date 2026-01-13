@@ -2,10 +2,16 @@ package com.airport.service.impl;
 
 import com.airport.dto.TaskStatistics;
 import com.airport.entity.DispatchTask;
+import com.airport.entity.SysUser;
+import com.airport.entity.SysUserRole;
 import com.airport.entity.Vehicle;
 import com.airport.repository.DispatchTaskRepository;
+import com.airport.repository.SysUserRepository;
+import com.airport.repository.SysUserRoleRepository;
+import com.airport.repository.SysRoleRepository;
 import com.airport.repository.VehicleRepository;
 import com.airport.service.DispatchTaskService;
+import com.airport.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +34,10 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
 
     private final DispatchTaskRepository taskRepository;
     private final VehicleRepository vehicleRepository;
+    private final SysUserRepository userRepository;
+    private final SysUserRoleRepository userRoleRepository;
+    private final SysRoleRepository roleRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional(readOnly = true)
@@ -182,10 +192,112 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
         task.setStatus(2); // 已分配
         task.setActualStartTime(LocalDateTime.now());
 
-        DispatchTask updatedTask = taskRepository.save(task);
+        // 先保存数据库，确保事务提交
+        DispatchTask updatedTask = taskRepository.saveAndFlush(task);
         
         log.info("任务 {} 已分配给车辆 {} 和司机 {}，车辆状态已更新为已分配", 
                 task.getTaskNo(), vehicleId, driverId);
+
+        // 如果指定了司机，异步发送邮件通知（不阻塞主流程）
+        if (driverId != null) {
+            SysUser driver = userRepository.findById(driverId).orElse(null);
+            if (driver != null && driver.getEmail() != null && !driver.getEmail().trim().isEmpty()) {
+                // 使用异步方法发送邮件，不阻塞响应
+                emailService.sendDriverTaskAssignmentEmailAsync(
+                    driver.getEmail(),
+                    task.getTaskNo(),
+                    task.getTaskName(),
+                    task.getTaskType(),
+                    task.getPriority(),
+                    task.getStartLocation(),
+                    task.getEndLocation(),
+                    task.getStartTime(),
+                    vehicle.getVehicleNo(),
+                    vehicle.getBrand(),
+                    vehicle.getModel()
+                );
+                log.info("任务分配邮件发送任务已提交，司机邮箱: {}", driver.getEmail());
+            }
+        }
+
+        return updatedTask;
+    }
+
+    @Override
+    public DispatchTask assignTaskWithDriver(Long taskId, Long vehicleId, String driverUsername) {
+        DispatchTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("任务不存在"));
+
+        if (task.getStatus() != 1) {
+            throw new RuntimeException("只能分配待分配状态的任务");
+        }
+
+        // 检查车辆是否存在
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("车辆不存在"));
+        
+        // 检查车辆状态是否为正常（1），只有正常状态的车辆才能分配任务
+        if (vehicle.getStatus() != 1) {
+            throw new RuntimeException("只能为正常状态的车辆分配任务");
+        }
+
+        // 查找司机（通过用户名）
+        SysUser driver = userRepository.findByUsername(driverUsername)
+                .orElseThrow(() -> new RuntimeException("司机不存在: " + driverUsername));
+
+        if (driver.getStatus() == null || driver.getStatus() != 1) {
+            throw new RuntimeException("司机已被禁用，无法分配任务");
+        }
+
+        // 验证司机是否具有司机角色（可选验证，如果需要可以取消注释）
+        // 注意：这里不强制要求必须有DRIVER角色，允许任何用户被分配为司机
+        // 如果需要严格验证，可以取消注释以下代码
+        /*
+        List<SysUserRole> driverRoles = userRoleRepository.findByUserId(driver.getId());
+        boolean isDriver = driverRoles.stream()
+                .anyMatch(ur -> {
+                    Optional<com.airport.entity.SysRole> roleOpt = roleRepository.findById(ur.getRoleId());
+                    return roleOpt.isPresent() && "DRIVER".equals(roleOpt.get().getRoleCode());
+                });
+        
+        if (!isDriver) {
+            log.warn("用户 {} 不是司机角色，但允许分配任务", driverUsername);
+        }
+        */
+
+        // 分配任务
+        task.setAssignedVehicleId(vehicleId);
+        task.setAssignedDriverId(driver.getId());
+        task.setStatus(2); // 已分配
+        task.setActualStartTime(LocalDateTime.now());
+
+        // 先保存数据库，确保事务提交
+        DispatchTask updatedTask = taskRepository.saveAndFlush(task);
+        
+        log.info("任务 {} 已分配给车辆 {} (车牌: {}) 和司机 {} (ID: {})", 
+                task.getTaskNo(), vehicleId, vehicle.getVehicleNo(), driverUsername, driver.getId());
+
+        // 向司机邮箱异步发送任务分配邮件通知（不阻塞主流程）
+        if (driver.getEmail() != null && !driver.getEmail().trim().isEmpty()) {
+            // 使用异步方法发送邮件，不阻塞响应
+            // 注意：使用@Async需要Spring代理，这里直接调用接口方法，Spring会自动使用代理
+            emailService.sendDriverTaskAssignmentEmailAsync(
+                driver.getEmail(),
+                task.getTaskNo(),
+                task.getTaskName(),
+                task.getTaskType(),
+                task.getPriority(),
+                task.getStartLocation(),
+                task.getEndLocation(),
+                task.getStartTime(),
+                vehicle.getVehicleNo(),
+                vehicle.getBrand(),
+                vehicle.getModel()
+            );
+            log.info("任务分配邮件发送任务已提交（异步），司机邮箱: {}", driver.getEmail());
+        } else {
+            log.warn("司机 {} 没有邮箱地址，跳过发送邮件通知", driverUsername);
+        }
 
         return updatedTask;
     }
@@ -199,15 +311,56 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
             throw new RuntimeException("只能取消分配已分配状态的任务");
         }
 
+        // 在清除分配信息前，先获取司机和车辆信息用于发送邮件
+        SysUser driver = null;
+        Vehicle vehicle = null;
+        if (task.getAssignedDriverId() != null) {
+            driver = userRepository.findById(task.getAssignedDriverId()).orElse(null);
+        }
+        if (task.getAssignedVehicleId() != null) {
+            vehicle = vehicleRepository.findById(task.getAssignedVehicleId()).orElse(null);
+        }
+
         // 清除分配信息
         task.setAssignedVehicleId(null);
         task.setAssignedDriverId(null);
         task.setStatus(1); // 恢复为待分配状态
         task.setActualStartTime(null);
 
-        DispatchTask updatedTask = taskRepository.save(task);
+        // 保存任务信息用于邮件发送（在清除分配信息前）
+        String taskNo = task.getTaskNo();
+        String taskName = task.getTaskName();
+        String taskType = task.getTaskType();
+        Integer priority = task.getPriority();
+        String startLocation = task.getStartLocation();
+        String endLocation = task.getEndLocation();
+        java.time.LocalDateTime startTime = task.getStartTime();
+        String vehicleNo = vehicle != null ? vehicle.getVehicleNo() : "未知车辆";
+        String driverEmail = driver != null ? driver.getEmail() : null;
+
+        // 先保存数据库，确保事务提交
+        DispatchTask updatedTask = taskRepository.saveAndFlush(task);
         
-        log.info("任务 {} 已取消分配，恢复为待分配状态", task.getTaskNo());
+        log.info("任务 {} 已取消分配，恢复为待分配状态", taskNo);
+
+        // 如果之前有分配司机，异步发送取消分配邮件通知（不阻塞主流程）
+        if (driverEmail != null && !driverEmail.trim().isEmpty()) {
+            // 使用异步方法发送邮件，不阻塞响应
+            // 注意：使用@Async需要Spring代理，这里直接调用接口方法，Spring会自动使用代理
+            emailService.sendTaskUnassignmentEmailAsync(
+                driverEmail,
+                taskNo,
+                taskName,
+                taskType,
+                priority,
+                startLocation,
+                endLocation,
+                startTime,
+                vehicleNo,
+                "管理员取消了任务分配"
+            );
+            log.info("任务取消分配邮件发送任务已提交（异步），司机邮箱: {}", driverEmail);
+        }
 
         return updatedTask;
     }
@@ -375,6 +528,62 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
         log.info("任务 {} 已重新发送，新任务编号: {}", originalTask.getTaskNo(), newTaskNo);
         
         return savedTask;
+    }
+
+    @Override
+    public DispatchTask assignTaskToUser(Long taskId, String username) {
+        DispatchTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("任务不存在"));
+
+        if (task.getStatus() != 1) {
+            throw new RuntimeException("只能分配待分配状态的任务");
+        }
+
+        // 查找用户
+        SysUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("用户不存在: " + username));
+
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new RuntimeException("用户已被禁用，无法分配任务");
+        }
+
+        // 检查用户邮箱
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            log.warn("用户 {} 没有邮箱，无法发送邮件通知", username);
+        }
+
+        // 分配任务给用户
+        task.setAssignedUserId(user.getId());
+        task.setStatus(2); // 已分配
+        task.setActualStartTime(LocalDateTime.now());
+
+        DispatchTask updatedTask = taskRepository.save(task);
+
+        log.info("任务 {} 已分配给用户 {} (ID: {})", task.getTaskNo(), username, user.getId());
+
+        // 发送邮件通知
+        if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+            try {
+                emailService.sendTaskAssignmentEmail(
+                    user.getEmail(),
+                    task.getTaskNo(),
+                    task.getTaskName(),
+                    task.getTaskType(),
+                    task.getPriority(),
+                    task.getStartLocation(),
+                    task.getEndLocation(),
+                    task.getStartTime()
+                );
+                log.info("任务分配邮件已发送到用户邮箱: {}", user.getEmail());
+            } catch (Exception e) {
+                log.error("发送任务分配邮件失败，用户邮箱: {}", user.getEmail(), e);
+                // 邮件发送失败不影响任务分配，只记录日志
+            }
+        } else {
+            log.warn("用户 {} 没有邮箱地址，跳过发送邮件通知", username);
+        }
+
+        return updatedTask;
     }
 
     /**

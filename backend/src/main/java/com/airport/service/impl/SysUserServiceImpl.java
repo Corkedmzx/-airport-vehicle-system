@@ -183,6 +183,7 @@ public class SysUserServiceImpl implements SysUserService {
     }
 
     @Override
+    @Transactional
     public void updateUserRole(Long userId, String roleCode) {
         SysUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
@@ -191,15 +192,31 @@ public class SysUserServiceImpl implements SysUserService {
         SysRole role = roleRepository.findByRoleCode(roleCode)
                 .orElseThrow(() -> new RuntimeException("角色不存在: " + roleCode));
 
-        // 删除用户原有的所有角色
-        userRoleRepository.deleteByUserId(userId);
+        // 检查用户是否已经有这个角色
+        List<SysUserRole> existingRoles = userRoleRepository.findByUserId(userId);
+        boolean alreadyHasRole = existingRoles.stream()
+                .anyMatch(ur -> ur.getRoleId().equals(role.getId()));
 
-        // 添加新角色
+        // 如果用户已经有这个角色，并且只有这一个角色，就不需要更新
+        if (alreadyHasRole && existingRoles.size() == 1) {
+            log.info("用户 {} 已经有角色 {}，无需更新", user.getUsername(), roleCode);
+            return;
+        }
+
+        // 如果需要更新，先删除用户原有的所有角色（除了要设置的角色）
+        // 如果用户已经有这个角色，且只有一个角色，已经提前返回，不会到这里
+        if (!existingRoles.isEmpty()) {
+            // 删除所有旧角色（包括当前要设置的角色，因为我们会重新添加）
+            userRoleRepository.deleteAll(existingRoles);
+            // 立即刷新，确保删除操作在数据库层面完成
+            userRoleRepository.flush();
+        }
+
+        // 添加新角色（删除后，这里应该不会重复）
         SysUserRole userRole = new SysUserRole();
         userRole.setUserId(userId);
         userRole.setRoleId(role.getId());
-        userRoleRepository.save(userRole);
-
+        userRoleRepository.saveAndFlush(userRole);
         log.info("用户 {} 的角色已更新为 {}", user.getUsername(), roleCode);
     }
 

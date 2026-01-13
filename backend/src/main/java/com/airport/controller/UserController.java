@@ -7,6 +7,7 @@ import com.airport.entity.SysUserRole;
 import com.airport.entity.SysRole;
 import com.airport.repository.SysUserRoleRepository;
 import com.airport.repository.SysRoleRepository;
+import com.airport.repository.SysUserRepository;
 import com.airport.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,6 +41,7 @@ public class UserController {
     private final SysUserService userService;
     private final SysUserRoleRepository userRoleRepository;
     private final SysRoleRepository roleRepository;
+    private final SysUserRepository userRepository;
     private final com.airport.utils.JwtUtils jwtUtils;
 
     /**
@@ -190,6 +192,10 @@ public class UserController {
             if (userData.containsKey("email")) {
                 user.setEmail((String) userData.get("email"));
             }
+            if (userData.containsKey("emailAuthCode")) {
+                // 允许用户更新自己的邮箱授权码
+                user.setEmailAuthCode((String) userData.get("emailAuthCode"));
+            }
             if (userData.containsKey("phone")) {
                 user.setPhone((String) userData.get("phone"));
             }
@@ -208,25 +214,28 @@ public class UserController {
             // 更新角色（如果提供了role字段且是admin）
             if (userData.containsKey("role") && isAdmin) {
                 String roleCode = (String) userData.get("role");
-                // 将前端的小写角色代码转换为大写的角色代码
-                String upperRoleCode = roleCode.toUpperCase();
-                // 处理特殊映射
-                if ("ADMIN".equals(upperRoleCode)) {
-                    upperRoleCode = "ADMIN";
-                } else if ("OPERATOR".equals(upperRoleCode)) {
-                    upperRoleCode = "OPERATOR";
-                } else if ("VIEWER".equals(upperRoleCode)) {
-                    upperRoleCode = "VIEWER";
-                } else if ("DISPATCHER".equals(upperRoleCode)) {
-                    upperRoleCode = "DISPATCHER";
-                } else if ("DRIVER".equals(upperRoleCode)) {
-                    upperRoleCode = "DRIVER";
-                } else if ("MAINTENANCE".equals(upperRoleCode)) {
-                    upperRoleCode = "MAINTENANCE";
-                } else if ("MONITOR".equals(upperRoleCode)) {
-                    upperRoleCode = "MONITOR";
+                if (roleCode != null && !roleCode.trim().isEmpty()) {
+                    // 将前端的小写角色代码转换为大写的角色代码
+                    String upperRoleCode = roleCode.toUpperCase();
+                    
+                    // 检查用户当前是否已经有这个角色，避免不必要的更新
+                    List<SysUserRole> currentUserRoles = userRoleRepository.findByUserId(id);
+                    boolean needsUpdate = true;
+                    
+                    if (!currentUserRoles.isEmpty() && currentUserRoles.size() == 1) {
+                        // 如果用户只有一个角色，检查是否与要设置的角色相同
+                        SysUserRole currentUserRole = currentUserRoles.get(0);
+                        SysRole currentRole = roleRepository.findById(currentUserRole.getRoleId()).orElse(null);
+                        if (currentRole != null && upperRoleCode.equals(currentRole.getRoleCode())) {
+                            needsUpdate = false;
+                            log.debug("用户 {} 已经有角色 {}，跳过更新", user.getUsername(), upperRoleCode);
+                        }
+                    }
+                    
+                    if (needsUpdate) {
+                        userService.updateUserRole(id, upperRoleCode);
+                    }
                 }
-                userService.updateUserRole(id, upperRoleCode);
             }
             
             return Result.success("用户更新成功", updatedUser);
@@ -397,6 +406,28 @@ public class UserController {
         } catch (Exception e) {
             log.error("获取用户统计失败", e);
             return Result.error("获取用户统计失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/with-email")
+    @Operation(summary = "获取所有已填写邮箱的用户", description = "获取所有已填写邮箱的用户列表")
+    public Result<List<UserDTO>> getUsersWithEmail() {
+        try {
+            List<SysUser> users = userRepository.findAllUsersWithEmail();
+            List<UserDTO> userDTOs = users.stream()
+                    .map(user -> {
+                        List<String> roleCodes = userRoleRepository.findByUserId(user.getId()).stream()
+                                .map(userRole -> roleRepository.findById(userRole.getRoleId()))
+                                .filter(java.util.Optional::isPresent)
+                                .map(opt -> opt.get().getRoleCode())
+                                .collect(Collectors.toList());
+                        return UserDTO.fromEntity(user, roleCodes);
+                    })
+                    .collect(Collectors.toList());
+            return Result.success(userDTOs);
+        } catch (Exception e) {
+            log.error("获取已填写邮箱的用户列表失败", e);
+            return Result.error("获取已填写邮箱的用户列表失败: " + e.getMessage());
         }
     }
 }

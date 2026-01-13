@@ -27,10 +27,16 @@ export const deleteTaskApi = (id: number) => {
   return request.delete(`/tasks/${id}`)
 }
 
-// 分配任务
-export const assignTaskApi = (id: number, vehicleId: number, driverId?: number) => {
+// 分配任务（支持司机ID或用户名）
+export const assignTaskApi = (id: number, vehicleId: number, driverId?: number, driverUsername?: string) => {
+  const params: any = { vehicleId }
+  if (driverUsername) {
+    params.driverUsername = driverUsername
+  } else if (driverId) {
+    params.driverId = driverId
+  }
   return request.put<DispatchTask>(`/tasks/${id}/assign`, null, {
-    params: { vehicleId, driverId }
+    params
   })
 }
 

@@ -97,6 +97,12 @@ public class DispatchTask extends BaseEntity {
     private Long assignedDriverId;
 
     /**
+     * 分配用户ID（分配给系统用户）
+     */
+    @Column(name = "assigned_user_id")
+    private Long assignedUserId;
+
+    /**
      * 状态:1-待分配,2-已分配,3-执行中,4-已完成,5-已取消,6-异常
      */
     @Column(name = "status", nullable = false)

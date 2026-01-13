@@ -64,4 +64,12 @@ public interface SysUserRepository extends JpaRepository<SysUser, Long>, JpaSpec
      * @return 用户信息
      */
     Optional<SysUser> findByPhone(String phone);
+
+    /**
+     * 查找所有已填写邮箱的用户
+     * 
+     * @return 用户列表
+     */
+    @Query("SELECT u FROM SysUser u WHERE u.email IS NOT NULL AND u.email != ''")
+    java.util.List<SysUser> findAllUsersWithEmail();
 }

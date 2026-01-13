@@ -36,6 +36,12 @@ public class SysUser extends BaseEntity {
     private String email;
 
     /**
+     * 邮箱授权码（用于SMTP发送邮件）
+     */
+    @Column(name = "email_auth_code", length = 100)
+    private String emailAuthCode;
+
+    /**
      * 手机号
      */
     @Column(name = "phone", length = 20)

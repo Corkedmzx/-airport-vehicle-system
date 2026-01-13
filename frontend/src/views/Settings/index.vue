@@ -180,6 +180,65 @@
           </div>
         </el-tab-pane>
         
+        <!-- 邮件配置 -->
+        <el-tab-pane label="邮件配置" name="email">
+          <div class="tab-content">
+            <div class="section-header">
+              <h3>邮件配置</h3>
+              <el-button type="primary" @click="loadUsersWithEmail" :loading="loadingEmailUsers">
+                刷新
+              </el-button>
+            </div>
+            <p class="section-description">查看已填写邮箱的用户列表，系统会使用配置的SMTP服务器向这些用户发送邮件通知</p>
+            
+            <el-alert
+              type="info"
+              :closable="false"
+              style="margin-bottom: 20px;"
+            >
+              <template #title>
+                <span>说明：</span>
+              </template>
+              <template #default>
+                <div>
+                  <p style="margin: 5px 0;">• SMTP服务器配置由系统管理员在application.yml中维护，用户无需配置</p>
+                  <p style="margin: 5px 0;">• 系统会自动从数据库读取用户邮箱地址，并向指定用户发送邮件通知</p>
+                  <p style="margin: 5px 0;">• 用户可在个人资料中填写邮箱地址，填写后即可接收系统邮件通知</p>
+                </div>
+              </template>
+            </el-alert>
+            
+            <!-- 已填写邮箱的用户列表 -->
+            <el-card class="config-card">
+              <template #header>
+                <span>已填写邮箱的用户列表</span>
+              </template>
+              <el-table v-loading="loadingEmailUsers" :data="usersWithEmail" stripe>
+                <el-table-column prop="id" label="ID" width="80" />
+                <el-table-column prop="username" label="用户名" width="150" />
+                <el-table-column prop="realName" label="真实姓名" width="150" />
+                <el-table-column prop="email" label="邮箱" min-width="200" />
+                <el-table-column prop="phone" label="手机号" width="150" />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === 1 ? 'success' : 'danger'">
+                      {{ row.status === 1 ? '启用' : '禁用' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200">
+                  <template #default="{ row }">
+                    <el-button type="primary" link size="small" @click="testEmail(row)">
+                      测试发送
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-empty v-if="!loadingEmailUsers && usersWithEmail.length === 0" description="暂无已填写邮箱的用户" />
+            </el-card>
+          </div>
+        </el-tab-pane>
+        
         <!-- 系统配置 -->
         <el-tab-pane label="系统配置" name="config">
           <div class="tab-content">
@@ -301,6 +360,8 @@ import type { Role, Permission, RolePermissionDTO } from '@/api/rolePermissions'
 import { isAdmin } from '@/utils/permission'
 import { useUserStore } from '@/store/user'
 import { getSystemConfigsApi, saveSystemConfigsApi } from '@/api/system'
+import { getUsersWithEmailApi } from '@/api/users'
+import type { User } from '@/api/types'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -393,6 +454,40 @@ const systemConfig = reactive({
   mapProvider: 'baidu',
   locationTrackingEnabled: true
 })
+
+// 邮件配置
+const usersWithEmail = ref<User[]>([])
+const loadingEmailUsers = ref(false)
+
+// SMTP邮件配置
+const mailConfig = reactive({
+  host: '',
+  port: 465,
+  username: '',
+  password: '',
+  from: ''
+})
+const savingMailConfig = ref(false)
+const testingMail = ref(false)
+const mailConfigFormRef = ref()
+
+// 邮件配置表单验证规则
+const mailConfigRules = {
+  host: [
+    { required: true, message: '请输入SMTP服务器地址', trigger: 'blur' }
+  ],
+  port: [
+    { required: true, message: '请输入SMTP端口', trigger: 'blur' },
+    { type: 'number', min: 1, max: 65535, message: '端口范围: 1-65535', trigger: 'blur' }
+  ],
+  username: [
+    { required: true, message: '请输入发件人邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入邮箱密码或授权码', trigger: 'blur' }
+  ]
+}
 
 // 前往用户管理页面
 const goToUsers = () => {
@@ -584,6 +679,41 @@ const resetSystemConfig = () => {
   ElMessage.info('配置已重置')
 }
 
+// 加载已填写邮箱的用户列表
+const loadUsersWithEmail = async () => {
+  try {
+    loadingEmailUsers.value = true
+    const response = await getUsersWithEmailApi()
+    if (response.data.code === 200) {
+      usersWithEmail.value = response.data.data || []
+    } else {
+      ElMessage.error(response.data.message || '加载用户列表失败')
+    }
+  } catch (error: any) {
+    console.error('加载已填写邮箱的用户列表失败:', error)
+    ElMessage.error(error?.response?.data?.message || '加载用户列表失败')
+  } finally {
+    loadingEmailUsers.value = false
+  }
+}
+
+// 测试发送邮件
+const testEmail = (user: User) => {
+  ElMessageBox.confirm(
+    `确定要向用户 "${user.username}" (${user.email}) 发送测试邮件吗？`,
+    '测试发送邮件',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    }
+  ).then(() => {
+    ElMessage.info('测试邮件功能暂未实现，请通过任务分配等功能测试邮件发送')
+  }).catch(() => {
+    // 取消
+  })
+}
+
 // 组件挂载时加载数据
 onMounted(() => {
   if (activeTab.value === 'permissions' && isAdminUser.value) {
@@ -625,6 +755,8 @@ const handleTabChange = (tabName: string) => {
     }
   } else if (tabName === 'config') {
     loadSystemConfig()
+  } else if (tabName === 'email') {
+    loadUsersWithEmail()
   }
 }
 </script>

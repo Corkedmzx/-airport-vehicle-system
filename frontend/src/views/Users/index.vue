@@ -288,6 +288,22 @@
         
         <el-row :gutter="20">
           <el-col :span="12">
+            <el-form-item label="邮箱授权码" prop="emailAuthCode">
+              <el-input 
+                v-model="userForm.emailAuthCode" 
+                type="password"
+                placeholder="请输入邮箱授权码（用于发送邮件）"
+                show-password
+              />
+              <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+                用于SMTP发送邮件，163/QQ邮箱需要使用授权码
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="20">
+          <el-col :span="12">
             <el-form-item label="角色" prop="role">
               <el-select 
                 v-model="userForm.role" 
@@ -518,6 +534,7 @@ const userForm = ref({
   username: '',
   realName: '',
   email: '',
+  emailAuthCode: '', // 邮箱授权码
   phone: '',
     role: '',
     password: '',
@@ -656,6 +673,7 @@ const editUser = (user: UserType) => {
     username: user.username,
     realName: user.realName,
     email: user.email,
+    emailAuthCode: '', // 授权码不返回给前端，编辑时留空
     phone: user.phone,
     role: userRole, // 使用roles数组的第一个角色
     password: '',
@@ -674,6 +692,7 @@ const resetUserForm = () => {
     username: '',
     realName: '',
     email: '',
+    emailAuthCode: '',
     phone: '',
     role: '',
     password: '',
@@ -696,23 +715,33 @@ const saveUser = async () => {
     const { createUserApi, updateUserApi } = await import('@/api/users')
     
     if (dialogMode.value === 'create') {
-      await createUserApi({
+      const createData: any = {
         username: userForm.value.username,
         realName: userForm.value.realName,
         email: userForm.value.email,
         phone: userForm.value.phone,
         password: userForm.value.password,
         status: userForm.value.status === 'active' ? 1 : 0
-      })
+      }
+      // 如果填写了授权码，则添加
+      if (userForm.value.emailAuthCode) {
+        createData.emailAuthCode = userForm.value.emailAuthCode
+      }
+      await createUserApi(createData)
       ElMessage.success('用户创建成功')
     } else {
-      await updateUserApi(Number(userForm.value.id), {
+      const updateData: any = {
         realName: userForm.value.realName,
         email: userForm.value.email,
         phone: userForm.value.phone,
-        role: userForm.value.role, // 添加角色字段
+        role: userForm.value.role,
         status: userForm.value.status === 'active' ? 1 : 0
-      })
+      }
+      // 如果填写了授权码，则更新
+      if (userForm.value.emailAuthCode) {
+        updateData.emailAuthCode = userForm.value.emailAuthCode
+      }
+      await updateUserApi(Number(userForm.value.id), updateData)
       ElMessage.success('用户信息更新成功')
     }
     

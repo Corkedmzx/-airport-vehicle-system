@@ -41,6 +41,17 @@
               <el-form-item label="邮箱" prop="email">
                 <el-input v-model="profileForm.email" placeholder="请输入邮箱地址" />
               </el-form-item>
+              <el-form-item label="邮箱授权码" prop="emailAuthCode">
+                <el-input 
+                  v-model="profileForm.emailAuthCode" 
+                  type="password"
+                  placeholder="请输入邮箱授权码（用于发送邮件）"
+                  show-password
+                />
+                <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+                  用于SMTP发送邮件，163/QQ邮箱需要使用授权码（不是登录密码）
+                </div>
+              </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="手机号" prop="phone">
@@ -182,6 +193,7 @@ const profileForm = reactive<Partial<UserType>>({
   username: '',
   realName: '',
   email: '',
+  emailAuthCode: '', // 邮箱授权码
   phone: '',
   avatar: '',
   roles: [],
@@ -276,6 +288,10 @@ const saveProfile = async () => {
         }
         if (profileForm.email !== originalProfile.value.email) {
           updateData.email = profileForm.email
+        }
+        // 如果填写了授权码，则更新（授权码不返回给前端，所以只要填写了就更新）
+        if (profileForm.emailAuthCode) {
+          updateData.emailAuthCode = profileForm.emailAuthCode
         }
         if (profileForm.phone !== originalProfile.value.phone) {
           updateData.phone = profileForm.phone

@@ -89,6 +89,25 @@ public interface DispatchTaskService {
     DispatchTask assignTask(Long taskId, Long vehicleId, Long driverId);
 
     /**
+     * 分配任务给车辆和司机（通过用户名）
+     * 
+     * @param taskId 任务ID
+     * @param vehicleId 车辆ID
+     * @param driverUsername 司机用户名
+     * @return 更新后的任务
+     */
+    DispatchTask assignTaskWithDriver(Long taskId, Long vehicleId, String driverUsername);
+
+    /**
+     * 分配任务给用户
+     * 
+     * @param taskId 任务ID
+     * @param username 用户名
+     * @return 更新后的任务
+     */
+    DispatchTask assignTaskToUser(Long taskId, String username);
+
+    /**
      * 取消分配任务（将已分配的任务恢复为待分配状态）
      * 
      * @param taskId 任务ID

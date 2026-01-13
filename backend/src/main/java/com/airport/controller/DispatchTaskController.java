@@ -175,30 +175,61 @@ public class DispatchTaskController {
     }
 
     @PutMapping("/{id}/assign")
-    @Operation(summary = "分配任务", description = "将任务分配给车辆和司机")
+    @Operation(summary = "分配任务", description = "将任务分配给车辆和司机（支持司机ID或用户名）")
     public Result<DispatchTask> assignTask(
             @Parameter(description = "任务ID", required = true) 
             @PathVariable Long id,
             @Parameter(description = "车辆ID", required = true) 
             @RequestParam Long vehicleId,
-            @Parameter(description = "司机ID", required = false) 
+            @Parameter(description = "司机ID（可选，如果提供了driverUsername则忽略）", required = false) 
             @RequestParam(required = false) Long driverId,
+            @Parameter(description = "司机用户名（可选，优先使用用户名）", required = false) 
+            @RequestParam(required = false) String driverUsername,
             HttpServletRequest request) {
         try {
             if (!hasPermission(request, "task:assign")) {
                 return Result.forbidden("无权限分配任务");
             }
 
-            DispatchTask updatedTask = taskService.assignTask(id, vehicleId, driverId);
-            return Result.success("任务分配成功", updatedTask);
+            DispatchTask updatedTask;
+            // 如果提供了司机用户名，优先使用用户名
+            if (driverUsername != null && !driverUsername.trim().isEmpty()) {
+                updatedTask = taskService.assignTaskWithDriver(id, vehicleId, driverUsername);
+                return Result.success("任务分配成功，邮件通知已发送", updatedTask);
+            } else {
+                // 否则使用司机ID
+                updatedTask = taskService.assignTask(id, vehicleId, driverId);
+                return Result.success("任务分配成功", updatedTask);
+            }
         } catch (Exception e) {
             log.error("分配任务失败", e);
             return Result.error(e.getMessage());
         }
     }
 
+    @PutMapping("/{id}/assign-to-user")
+    @Operation(summary = "分配任务给用户", description = "将任务分配给指定用户，并发送邮件通知")
+    public Result<DispatchTask> assignTaskToUser(
+            @Parameter(description = "任务ID", required = true) 
+            @PathVariable Long id,
+            @Parameter(description = "用户名", required = true) 
+            @RequestParam String username,
+            HttpServletRequest request) {
+        try {
+            if (!hasPermission(request, "task:assign")) {
+                return Result.forbidden("无权限分配任务");
+            }
+
+            DispatchTask updatedTask = taskService.assignTaskToUser(id, username);
+            return Result.success("任务分配成功，邮件通知已发送", updatedTask);
+        } catch (Exception e) {
+            log.error("分配任务给用户失败", e);
+            return Result.error(e.getMessage());
+        }
+    }
+
     @PutMapping("/{id}/unassign")
-    @Operation(summary = "取消分配任务", description = "将已分配的任务恢复为待分配状态")
+    @Operation(summary = "取消分配任务", description = "将已分配的任务恢复为待分配状态，并向司机发送邮件通知")
     public Result<DispatchTask> unassignTask(
             @Parameter(description = "任务ID", required = true) 
             @PathVariable Long id,
@@ -207,9 +238,9 @@ public class DispatchTaskController {
             if (!hasPermission(request, "task:assign")) {
                 return Result.forbidden("无权限取消分配");
             }
-
+            
             DispatchTask updatedTask = taskService.unassignTask(id);
-            return Result.success("取消分配成功", updatedTask);
+            return Result.success("取消分配成功，邮件通知已发送", updatedTask);
         } catch (Exception e) {
             log.error("取消分配失败", e);
             return Result.error(e.getMessage());

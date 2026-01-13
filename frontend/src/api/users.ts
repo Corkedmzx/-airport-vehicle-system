@@ -60,3 +60,7 @@ export const changePasswordApi = (oldPassword: string, newPassword: string) => {
   })
 }
 
+// 获取所有已填写邮箱的用户
+export const getUsersWithEmailApi = () => {
+  return request.get('/users/with-email')
+}

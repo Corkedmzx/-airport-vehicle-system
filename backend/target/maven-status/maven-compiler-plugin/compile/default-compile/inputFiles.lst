@@ -8,6 +8,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\common\excepti
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\DispatchTaskDTO.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\ForgotPasswordResponse.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SystemConfigRepository.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\EmailServiceImpl.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\SystemConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\SystemConfigController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\AlertRule.java
@@ -21,6 +22,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\Sys
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\Alert.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\OpenApiConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\AlertRuleController.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\SmtpEmailClient.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\utils\PasswordUtils.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\LoginRequest.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\Knife4jConfiguration.java
@@ -37,6 +39,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\securit
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SysRole.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\UserDTO.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\websocket\SensorWebSocketHandler.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\EmailService.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SysUserRoleRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\DispatchTaskRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\AlertRepository.java

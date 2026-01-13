@@ -16,6 +16,7 @@ public class UserDTO {
     private String username;
     private String realName;
     private String email;
+    private String emailAuthCode; // 邮箱授权码（前端不显示，仅用于后端处理）
     private String phone;
     private String avatar;
     private Integer status;
@@ -33,6 +34,8 @@ public class UserDTO {
         dto.setUsername(user.getUsername());
         dto.setRealName(user.getRealName());
         dto.setEmail(user.getEmail());
+        // 注意：授权码不应返回给前端，出于安全考虑
+        // dto.setEmailAuthCode(user.getEmailAuthCode());
         dto.setPhone(user.getPhone());
         dto.setAvatar(user.getAvatar());
         dto.setStatus(user.getStatus());

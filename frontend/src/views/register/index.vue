@@ -108,7 +108,7 @@
           已有账号？
           <el-link type="primary" :underline="false" @click="goToLogin">立即登录</el-link>
         </p>
-        <p class="copyright">© 2024 机场车辆监控系统. All Rights Reserved.</p>
+        <p class="copyright">© 2026 机场车辆监控系统. All Rights Reserved.</p>
       </div>
     </div>
     

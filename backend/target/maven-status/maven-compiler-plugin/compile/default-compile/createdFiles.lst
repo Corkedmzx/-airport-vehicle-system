@@ -7,6 +7,7 @@ com\airport\entity\SysUserRole.class
 com\airport\config\JacksonConfig.class
 com\airport\entity\SystemConfigEntity.class
 com\airport\websocket\VehicleLocationWebSocketHandler.class
+com\airport\service\EmailService.class
 com\airport\entity\SysPermission.class
 com\airport\service\DispatchTaskService.class
 com\airport\websocket\SensorWebSocketHandler.class
@@ -44,6 +45,7 @@ com\airport\repository\SysUserRoleRepository.class
 com\airport\repository\DispatchTaskRepository.class
 com\airport\repository\SysPermissionRepository.class
 com\airport\dto\VehicleDTO.class
+com\airport\service\impl\SmtpEmailClient.class
 com\airport\config\Knife4jConfiguration.class
 com\airport\entity\Alert.class
 com\airport\websocket\VehicleLocationServiceImpl.class
@@ -69,3 +71,4 @@ com\airport\utils\PasswordUtils.class
 com\airport\controller\StatisticsController$VehicleUsageData.class
 com\airport\websocket\VehicleLocationService.class
 com\airport\controller\UserController.class
+com\airport\service\impl\EmailServiceImpl.class

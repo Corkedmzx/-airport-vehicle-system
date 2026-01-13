@@ -70,7 +70,7 @@
       </el-form>
       
       <div class="login-footer">
-        <p>© 2024 机场车辆监控系统. All Rights Reserved.</p>
+        <p>© 2026 机场车辆监控系统. All Rights Reserved.</p>
       </div>
     </div>
     
