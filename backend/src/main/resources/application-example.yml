@@ -1,6 +1,5 @@
 # 应用配置示例文件
 # 复制此文件为 application.yml 并修改为实际配置
-# ⚠️ 重要：不要将包含真实敏感信息的 application.yml 提交到Git
 
 spring:
   application:
@@ -83,7 +82,7 @@ spring:
     path: /ws
 
   # 邮件配置
-  # ⚠️ 重要：邮箱账号和授权码存储在数据库中，不在配置文件中
+  # 重要：邮箱账号和授权码存储在数据库中，不在配置文件中
   # 系统会自动从数据库的sys_user表读取用户邮箱和授权码
   mail:
     enabled: true
