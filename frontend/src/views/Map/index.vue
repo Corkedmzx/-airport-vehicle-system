@@ -89,46 +89,56 @@
 
     <!-- 地图容器 -->
     <div class="map-container">
-      <div ref="mapContainer" class="map-view">
-        <div class="map-placeholder">
-          <div class="baidu-map-link">
-            <h3>地图监控</h3>
-            <p>点击下方按钮打开地图查看车辆位置</p>
-            <el-button type="primary" @click="openMap">
-              <el-icon><MapLocation /></el-icon>
-              打开地图
-            </el-button>
-            <el-button @click="showMapScreenshot">
-              <el-icon><Picture /></el-icon>
-              查看地图截图
-            </el-button>
-          </div>
-        </div>
+      <div ref="mapContainer" class="map-view" id="baidu-map-container">
+        <!-- 百度地图将在这里渲染 -->
       </div>
       
-      <!-- 图例 -->
-      <div class="map-legend">
-        <h4>图例</h4>
-        <div class="legend-items">
-          <div class="legend-item">
-            <div class="legend-marker active"></div>
-            <span>正常运行</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-marker maintenance"></div>
-            <span>维修中</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-marker fault"></div>
-            <span>故障</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-marker offline"></div>
-            <span>离线</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-marker task-running"></div>
-            <span>执行任务</span>
+      <!-- 图例悬浮窗 -->
+      <div 
+        class="map-legend-floating" 
+        :class="{ collapsed: legendCollapsed }"
+        :style="{ top: legendPosition.top + 'px', left: legendPosition.left + 'px' }"
+      >
+        <div 
+          class="legend-header" 
+          @mousedown="startDrag"
+          @click.stop="toggleLegend"
+        >
+          <h4>图例</h4>
+          <el-icon 
+            class="legend-toggle-icon"
+            @click.stop="toggleLegend"
+          >
+            <ArrowUp v-if="!legendCollapsed" />
+            <ArrowDown v-else />
+          </el-icon>
+        </div>
+        <div class="legend-content" v-show="!legendCollapsed">
+          <div class="legend-items">
+            <div class="legend-item">
+              <div class="legend-marker active"></div>
+              <span>正常运行</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-marker maintenance"></div>
+              <span>维修中</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-marker fault"></div>
+              <span>故障</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-marker offline"></div>
+              <span>离线</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-marker task-running"></div>
+              <span>执行任务</span>
+            </div>
+            <div class="legend-item" v-if="pcLocationMarker">
+              <div class="legend-marker pc-location"></div>
+              <span>PC位置</span>
+            </div>
           </div>
         </div>
       </div>
@@ -242,11 +252,14 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   Location, Download, Search, Refresh, Close,
-  Connection, Odometer, Clock, MapLocation, Picture
+  Connection, Odometer, Clock, MapLocation, Picture,
+  ArrowUp, ArrowDown
 } from '@element-plus/icons-vue'
 import type { Vehicle } from '@/api/types'
 import dayjs from 'dayjs'
 import { getSystemConfigApi } from '@/api/system'
+import { getVehiclesApi } from '@/api/vehicles'
+import { webSocketClient } from '@/utils/websocket'
 
 const router = useRouter()
 
@@ -255,6 +268,20 @@ const mapContainer = ref<HTMLElement>()
 const currentMapStyle = ref('streets')
 const showTraffic = ref(false)
 const mapStatus = ref('加载中')
+let baiduMap: any = null
+let mapMarkers: any[] = []
+
+// 图例相关
+const legendCollapsed = ref(false)
+const legendPosition = ref({ top: 16, left: 0 }) // 默认位置（右侧）
+const isDragging = ref(false)
+const dragStartPos = ref({ x: 0, y: 0 })
+const legendStartPos = ref({ top: 0, left: 0 })
+
+// PC位置相关
+const pcLocationMarker = ref<any>(null)
+const pcLocation = ref<{ latitude: number; longitude: number; accuracy: number } | null>(null)
+let pcLocationUpdateTimer: NodeJS.Timeout | null = null
 
 // 搜索和筛选
 const searchKeyword = ref('')
@@ -390,8 +417,83 @@ const requestMaintenance = (vehicle: Vehicle) => {
 
 // 更新地图标记
 const updateMapMarkers = () => {
-  // TODO: 实际更新地图标记
-  console.log('Updating map markers:', filteredVehicles.value.length)
+  if (!baiduMap) return
+  
+  // 清除现有车辆标记（保留PC位置标记）
+  mapMarkers.forEach(marker => {
+    baiduMap.removeOverlay(marker)
+  })
+  mapMarkers = []
+  
+  // 添加车辆标记
+  filteredVehicles.value.forEach((vehicle: any) => {
+    if (vehicle.latitude && vehicle.longitude) {
+      const point = new (window as any).BMap.Point(vehicle.longitude, vehicle.latitude)
+      
+      // 根据车辆状态选择图标颜色
+      const iconColor = getVehicleStatusColor(vehicle.status)
+      const icon = new (window as any).BMap.Icon(
+        `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="12" fill="${iconColor}" stroke="white" stroke-width="2"/></svg>`,
+        new (window as any).BMap.Size(32, 32),
+        { anchor: new (window as any).BMap.Size(16, 16) }
+      )
+      
+      const marker = new (window as any).BMap.Marker(point, { icon })
+      
+      // 添加信息窗口
+      const infoWindow = new (window as any).BMap.InfoWindow(
+        `<div style="padding: 8px;">
+          <strong>${vehicle.plateNumber}</strong><br/>
+          状态: ${getVehicleStatusText(vehicle.status)}<br/>
+          位置: ${vehicle.location || '未知'}<br/>
+          ${vehicle.speed ? `速度: ${vehicle.speed} km/h<br/>` : ''}
+          更新时间: ${formatTime(vehicle.lastUpdate)}
+        </div>`,
+        { width: 200, height: 120 }
+      )
+      
+      marker.addEventListener('click', () => {
+        baiduMap.openInfoWindow(infoWindow, point)
+        selectedVehicle.value = vehicle
+      })
+      
+      baiduMap.addOverlay(marker)
+      mapMarkers.push(marker)
+    }
+  })
+  
+  // PC位置标记由updatePCLocationMarker单独管理，不在这里处理
+  
+  // 如果有车辆或PC位置，调整地图视野以包含所有标记
+  const allPoints: any[] = []
+  
+  // 添加车辆位置点
+  filteredVehicles.value
+    .filter((v: any) => v.latitude && v.longitude)
+    .forEach((v: any) => {
+      allPoints.push(new (window as any).BMap.Point(v.longitude, v.latitude))
+    })
+  
+  // 添加PC位置点
+  if (pcLocation.value) {
+    allPoints.push(new (window as any).BMap.Point(pcLocation.value.longitude, pcLocation.value.latitude))
+  }
+  
+  if (allPoints.length > 0) {
+    const viewport = baiduMap.getViewport(allPoints, { padding: 50 })
+    baiduMap.centerAndZoom(viewport.center, viewport.zoom)
+  }
+}
+
+// 获取车辆状态颜色
+const getVehicleStatusColor = (status: number) => {
+  const colorMap: Record<number, string> = {
+    1: '#67c23a',  // 正常 - 绿色
+    2: '#e6a23c',  // 维修中 - 橙色
+    3: '#f56c6c',  // 故障 - 红色
+    0: '#909399'   // 停用 - 灰色
+  }
+  return colorMap[status] || '#909399'
 }
 
 // 地图供应商配置
@@ -412,12 +514,17 @@ const loadMapProvider = async () => {
 
 // 打开地图（根据配置动态切换）
 const openMap = () => {
-  // 构建地图URL，使用首都机场的坐标
-  // 注意：百度地图使用BD-09坐标系，高德和腾讯使用GCJ-02坐标系
-  // 这里使用GCJ-02坐标（高德/腾讯标准），百度地图会自动转换
-  const lat = 40.0801
-  const lng = 116.5842
-  const locationName = '首都机场'
+  // 如果有车辆数据，使用第一个车辆的位置，否则使用首都机场的坐标
+  let lat = 40.0801
+  let lng = 116.5842
+  let locationName = '首都机场'
+  
+  if (mapVehicles.value.length > 0 && mapVehicles.value[0].latitude && mapVehicles.value[0].longitude) {
+    lat = mapVehicles.value[0].latitude
+    lng = mapVehicles.value[0].longitude
+    locationName = mapVehicles.value[0].location || '车辆位置'
+  }
+  
   let url = ''
   let providerName = ''
   
@@ -455,104 +562,862 @@ const showMapScreenshot = () => {
 // 初始化地图
 const initMap = async () => {
   await nextTick()
-  if (!mapContainer.value) return
+  if (!mapContainer.value) {
+    console.warn('地图容器未准备好')
+    return
+  }
+  
+  // 确保DOM元素存在
+  const containerElement = document.getElementById('baidu-map-container')
+  if (!containerElement) {
+    console.error('找不到地图容器元素 #baidu-map-container')
+    mapStatus.value = '异常'
+    ElMessage.error('地图容器未找到')
+    return
+  }
   
   try {
-    // 加载地图供应商配置
-    await loadMapProvider()
-    // 地图使用外部链接，不需要初始化
+    // 动态加载百度地图API（通过后端代理获取AK）
+    await loadBaiduMapScript()
+    
+    // 等待百度地图API完全初始化（增加等待时间）
+    console.log('等待BMap对象完全初始化...')
+    let retryCount = 0
+    const maxRetries = 30 // 最多等待15秒（30 * 500ms）
+    
+    while (retryCount < maxRetries) {
+      // 检查BMap对象是否存在且已完全初始化
+      if (typeof (window as any).BMap !== 'undefined') {
+        // 尝试创建一个测试点，验证BMap是否完全初始化
+        try {
+          const testPoint = new (window as any).BMap.Point(116.5842, 40.0801)
+          if (testPoint && testPoint.lng !== undefined && testPoint.lat !== undefined) {
+            console.log('BMap对象已完全初始化')
+            break
+          }
+        } catch (e) {
+          // BMap还未完全初始化，继续等待
+          console.log(`BMap对象存在但未完全初始化，继续等待... (${retryCount + 1}/${maxRetries})`)
+        }
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 500))
+      retryCount++
+    }
+    
+    if (typeof (window as any).BMap === 'undefined') {
+      ElMessage.error('百度地图API加载失败，请检查后端配置')
+      mapStatus.value = '异常'
+      return
+    }
+
+    // 再次确保容器元素存在
+    const container = document.getElementById('baidu-map-container')
+    if (!container) {
+      throw new Error('地图容器元素不存在')
+    }
+    
+    console.log('开始创建百度地图实例...')
+    
+    // 创建百度地图实例
+    const map = new (window as any).BMap.Map('baidu-map-container')
+    
+    // 等待地图加载完成
+    await new Promise<void>((resolve) => {
+      map.addEventListener('tilesloaded', () => {
+        console.log('地图瓦片加载完成')
+        resolve()
+      }, { once: true })
+      
+      // 设置超时，避免无限等待
+      setTimeout(() => {
+        console.log('地图瓦片加载超时，继续初始化...')
+        resolve()
+      }, 5000)
+    })
+    
+    // 优先使用PC位置，如果没有则使用默认位置（首都机场）
+    let point: any
+    let zoom = 15
+    
+    if (pcLocation.value && pcLocation.value.latitude && pcLocation.value.longitude) {
+      // 使用PC位置
+      point = new (window as any).BMap.Point(pcLocation.value.longitude, pcLocation.value.latitude)
+      zoom = 16 // PC位置使用更大的缩放级别
+      console.log('[地图初始化] 使用PC位置:', {
+        latitude: pcLocation.value.latitude,
+        longitude: pcLocation.value.longitude
+      })
+    } else {
+      // 使用默认位置（首都机场）
+      point = new (window as any).BMap.Point(116.5842, 40.0801)
+      console.log('[地图初始化] 使用默认位置（首都机场）')
+    }
+    
+    map.centerAndZoom(point, zoom)
+    
+    // 启用滚轮缩放
+    map.enableScrollWheelZoom(true)
+    
+    // 添加地图控件
+    map.addControl(new (window as any).BMap.NavigationControl())
+    map.addControl(new (window as any).BMap.ScaleControl())
+    map.addControl(new (window as any).BMap.MapTypeControl())
+    
+    baiduMap = map
     mapStatus.value = '正常'
+    
+    console.log('地图初始化成功')
+    ElMessage.success('地图初始化成功')
   } catch (error) {
-    console.error('Map initialization failed:', error)
+    console.error('地图初始化失败:', error)
     mapStatus.value = '异常'
-    ElMessage.error('地图初始化失败')
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    ElMessage.error('地图初始化失败: ' + errorMessage)
+    
+    // 提供更详细的错误信息
+    if (errorMessage.includes('coordType') || errorMessage.includes('_rd')) {
+      console.error('提示：BMap对象可能未完全初始化，请尝试刷新页面')
+    }
   }
+}
+
+// 动态加载百度地图API脚本
+const loadBaiduMapScript = async () => {
+  return new Promise<void>((resolve, reject) => {
+    // 检查是否已经加载
+    if (typeof (window as any).BMap !== 'undefined') {
+      console.log('百度地图API已加载')
+      resolve()
+      return
+    }
+    
+    // 从后端获取API URL
+    console.log('正在获取百度地图API配置...')
+    fetch('/api/baidu-map/api-script')
+      .then(response => {
+        console.log('后端响应状态:', response.status, response.statusText)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.json()
+      })
+      .then(async (result: any) => {
+        console.log('后端返回结果:', result)
+        if (result.code === 200 && result.data?.apiUrl) {
+          const apiUrl = result.data.apiUrl
+          console.log('获取到百度地图API URL:', apiUrl)
+          
+          try {
+            // 由于document.write()在异步加载的脚本中无法工作，
+            // 我们需要通过后端代理获取第一个脚本内容，解析出getscript URL
+            
+            console.log('正在通过后端代理获取第一个脚本内容...')
+            const firstScriptResponse = await fetch('/api/baidu-map/first-script')
+            if (!firstScriptResponse.ok) {
+              throw new Error(`后端代理请求失败: ${firstScriptResponse.status}`)
+            }
+            const firstScriptResult = await firstScriptResponse.json()
+            
+            if (firstScriptResult.code !== 200 || !firstScriptResult.data) {
+              throw new Error(firstScriptResult.message || '获取第一个脚本内容失败')
+            }
+            
+            const firstScriptText = firstScriptResult.data
+            console.log('第一个脚本内容获取成功')
+            
+            // 解析第一个脚本，提取getscript URL
+            // 格式类似：document.write('...src="https://api.map.baidu.com/getscript?v=3.0&ak=...&services=&t=..."...');
+            const getscriptMatch = firstScriptText.match(/src=["']([^"']*getscript[^"']*)["']/i)
+            
+            if (!getscriptMatch || !getscriptMatch[1]) {
+              console.error('无法从第一个脚本中提取getscript URL')
+              console.error('第一个脚本内容预览:', firstScriptText.substring(0, 500))
+              
+              // 尝试手动构建getscript URL（备用方案）
+              const ak = result.data.ak || apiUrl.match(/ak=([^&]+)/)?.[1]
+              if (ak) {
+                const timestamp = Date.now()
+                const getscriptUrl = `https://api.map.baidu.com/getscript?v=3.0&ak=${ak}&services=&t=${timestamp}`
+                console.log('使用备用方案构建getscript URL:', getscriptUrl)
+                try {
+                  await loadGetscriptScript(getscriptUrl)
+                  resolve()
+                } catch (error: any) {
+                  reject(error)
+                }
+              } else {
+                reject(new Error('无法提取getscript URL，且无法构建备用URL（缺少AK参数）'))
+              }
+              return
+            }
+            
+            const getscriptUrl = getscriptMatch[1]
+            console.log('提取到getscript URL:', getscriptUrl)
+            
+            // 手动设置第一个脚本中定义的全局变量（避免使用eval）
+            // 从第一个脚本中提取这些值
+            const protocolMatch = firstScriptText.match(/BMAP_PROTOCOL\s*=\s*["']([^"']+)["']/i)
+            const loadTimeMatch = firstScriptText.match(/BMap_loadScriptTime\s*=\s*\(new\s+Date\)\.getTime\(\)/i)
+            
+            if (protocolMatch) {
+              ;(window as any).BMAP_PROTOCOL = protocolMatch[1]
+              console.log('设置BMAP_PROTOCOL:', protocolMatch[1])
+            } else {
+              ;(window as any).BMAP_PROTOCOL = 'https'
+              console.log('未找到BMAP_PROTOCOL，使用默认值: https')
+            }
+            
+            if (loadTimeMatch) {
+              ;(window as any).BMap_loadScriptTime = Date.now()
+              console.log('设置BMap_loadScriptTime:', (window as any).BMap_loadScriptTime)
+            } else {
+              ;(window as any).BMap_loadScriptTime = Date.now()
+              console.log('未找到BMap_loadScriptTime模式，使用当前时间戳')
+            }
+            
+            // 手动加载getscript脚本
+            try {
+              await loadGetscriptScript(getscriptUrl)
+              resolve()
+            } catch (error: any) {
+              reject(error)
+            }
+            
+          } catch (error: any) {
+            console.error('加载百度地图API失败:', error)
+            reject(new Error(`加载百度地图API失败: ${error.message}`))
+          }
+        } else {
+          const errorMsg = result.message || '获取百度地图API配置失败'
+          console.error('获取百度地图API配置失败:', errorMsg, result)
+          reject(new Error(errorMsg))
+        }
+      })
+      .catch((error: any) => {
+        console.error('获取百度地图API配置失败:', error)
+        reject(new Error(`无法连接到后端服务: ${error.message}。请检查后端是否正常运行`))
+      })
+  })
+}
+
+// 加载getscript脚本的辅助函数
+const loadGetscriptScript = async (getscriptUrl: string) => {
+  return new Promise<void>((resolveInner, rejectInner) => {
+    console.log('正在通过后端代理获取getscript脚本内容...')
+    
+    // 先通过后端代理获取内容，检查是否是错误页面
+    fetch(`/api/baidu-map/getscript?url=${encodeURIComponent(getscriptUrl)}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`后端代理请求失败: ${response.status}`)
+        }
+        return response.json()
+      })
+      .then((result: any) => {
+        if (result.code !== 200 || !result.data) {
+          const errorMsg = result.message || '获取getscript脚本内容失败'
+          console.error('获取getscript脚本内容失败:', errorMsg)
+          rejectInner(new Error(errorMsg))
+          return
+        }
+        
+        const scriptContent = result.data
+        console.log('成功获取getscript脚本内容，长度:', scriptContent.length)
+        
+        // 检查内容是否是错误页面
+        if (scriptContent.includes('APP被您禁用') || 
+            scriptContent.includes('APP服务被禁用') ||
+            scriptContent.includes('被禁用')) {
+              console.error('getscript返回错误页面')
+          rejectInner(new Error('百度地图应用被禁用。请检查：1. 应用状态是否为已启用；2. JavaScript API服务是否已启用；3. AK是否正确配置。详情查看: http://lbsyun.baidu.com/apiconsole/key'))
+          return
+        }
+        
+        // 将脚本内容作为内联脚本执行
+        const script = document.createElement('script')
+        script.type = 'text/javascript'
+        script.textContent = scriptContent
+        
+        const checkInterval = 100 // 每100ms检查一次
+        const maxWaitTime = 10000 // 最长等待10秒
+        const startTime = Date.now()
+        
+        // 轮询检测BMap对象是否可用
+        const checkBMap = () => {
+          const elapsed = Date.now() - startTime
+          
+          // 检查BMap对象是否已初始化
+          if (typeof (window as any).BMap !== 'undefined') {
+            // 验证BMap是否完全初始化（尝试创建Point对象）
+            try {
+              const testPoint = new (window as any).BMap.Point(116.5842, 40.0801)
+              if (testPoint && testPoint.lng !== undefined && testPoint.lat !== undefined) {
+                console.log('百度地图API加载成功，BMap对象已完全初始化')
+                resolveInner()
+                return true
+              }
+            } catch (e) {
+              // BMap还未完全初始化，继续等待
+            }
+          }
+          
+          // 检查是否超时
+          if (elapsed > maxWaitTime) {
+            console.error('百度地图API加载超时（10秒）')
+            const error = new Error('百度地图API加载超时，BMap对象未完全初始化。请检查网络连接和AK配置。')
+            rejectInner(error)
+            return true
+          }
+          
+          // 继续检查
+          return false
+        }
+        
+        // 创建定时器定期检查
+        const intervalId = setInterval(() => {
+          if (checkBMap()) {
+            clearInterval(intervalId)
+          }
+        }, checkInterval)
+        
+        script.onload = () => {
+          console.log('getscript脚本执行成功')
+          console.log('等待BMap对象完全初始化...')
+          // 等待一段时间后开始检查
+          setTimeout(() => {
+            if (checkBMap()) {
+              clearInterval(intervalId)
+            }
+          }, 500)
+        }
+        
+        script.onerror = (event) => {
+          console.error('getscript脚本执行失败（onerror触发）:', event)
+          clearInterval(intervalId)
+          const error = new Error('getscript脚本执行失败。可能的原因：脚本内容格式错误或AK配置问题。')
+          rejectInner(error)
+        }
+        
+        document.head.appendChild(script)
+        console.log('📝 已添加getscript脚本到页面')
+      })
+      .catch((error: any) => {
+        console.error('获取getscript脚本内容失败:', error)
+        rejectInner(error)
+      })
+  })
 }
 
 // 加载地图数据
 const loadMapData = async () => {
   try {
-    // TODO: 调用API获取地图车辆数据
-    // 模拟数据
-    mapVehicles.value = [
-      {
-        id: '1',
-        plateNumber: '京A12345',
-        vehicleType: '客运大巴',
-        status: 1,
-        location: 'T3航站楼',
-        latitude: 40.0801,
-        longitude: 116.5842,
-        speed: 45,
-        batteryLevel: 85,
-        lastUpdate: new Date().toISOString(),
-        currentTask: {
-          taskName: 'T3-01接机任务',
-          progress: 65
-        }
-      },
-      {
-        id: '2',
-        plateNumber: '京B67890',
-        vehicleType: '货运卡车',
-        status: 3,
-        location: '货机坪A',
-        latitude: 40.0789,
-        longitude: 116.5828,
-        speed: 0,
-        batteryLevel: 30,
-        lastUpdate: new Date().toISOString(),
-        currentTask: null
-      },
-      {
-        id: '3',
-        plateNumber: '京C11111',
-        vehicleType: '特种车辆',
-        status: 1,
-        location: '跑道边',
-        latitude: 40.0823,
-        longitude: 116.5867,
-        speed: 25,
-        batteryLevel: 92,
-        lastUpdate: new Date().toISOString(),
-        currentTask: {
-          taskName: '跑道维护任务',
-          progress: 30
-        }
-      }
-    ]
-    
-    // 更新统计信息
-    realTimeStats.value.onlineVehicles = mapVehicles.value.filter(v => v.status === 1).length
-    realTimeStats.value.runningTasks = mapVehicles.value.filter(v => v.currentTask).length
-    
-    lastUpdateTime.value = new Date().toISOString()
-    
-    filterVehicles()
+    // 调用API获取车辆数据
+    const response = await getVehiclesApi()
+    if (response.data.code === 200) {
+      const vehicles = response.data.data || []
+      
+      // 转换为地图显示格式
+      mapVehicles.value = vehicles.map((v: Vehicle) => ({
+        id: v.id?.toString() || '',
+        plateNumber: v.vehicleNo || '',
+        vehicleType: v.brand || '未知',
+        status: v.status || 0,
+        location: v.locationAddress || '未知位置',
+        latitude: v.locationLatitude ? Number(v.locationLatitude) : null,
+        longitude: v.locationLongitude ? Number(v.locationLongitude) : null,
+        speed: 0, // 速度信息需要从位置更新中获取
+        lastUpdate: v.lastUpdateTime || new Date().toISOString(),
+        currentTask: null // 任务信息需要从任务API获取
+      })).filter((v: any) => v.latitude != null && v.longitude != null) // 只显示有位置的车辆
+      
+      // 更新统计信息
+      realTimeStats.value.onlineVehicles = mapVehicles.value.filter((v: any) => v.status === 1).length
+      realTimeStats.value.runningTasks = mapVehicles.value.filter((v: any) => v.currentTask).length
+      
+      lastUpdateTime.value = new Date().toISOString()
+      
+      filterVehicles()
+    }
   } catch (error) {
     console.error('Load map data failed:', error)
     ElMessage.error('加载地图数据失败')
   }
 }
 
+// 处理WebSocket位置更新
+const handleVehicleLocationUpdate = (data: any) => {
+  const { vehicleId, vehicleNo, longitude, latitude, address, speed, source, deviceName } = data
+  
+  // 如果是PC位置，单独处理
+  if (source === 'pc_browser' || deviceName === 'pc_location') {
+    console.log('[PC位置] 收到WebSocket位置更新:', data)
+    // 更新PC位置
+    if (longitude && latitude) {
+      pcLocation.value = {
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        accuracy: data.accuracy || 0
+      }
+      // WebSocket更新时也自动缩放到PC位置
+      updatePCLocationMarker(true)
+      console.log('[PC位置] WebSocket更新成功，地图标记已刷新并自动缩放:', {
+        latitude: pcLocation.value.latitude,
+        longitude: pcLocation.value.longitude,
+        accuracy: pcLocation.value.accuracy
+      })
+    } else {
+      console.warn('[PC位置] WebSocket数据不完整，缺少longitude或latitude')
+    }
+    return
+  }
+  
+  // 处理车辆位置更新
+  // 查找并更新车辆位置
+  const vehicleIndex = mapVehicles.value.findIndex((v: any) => v.id === vehicleId?.toString() || v.plateNumber === vehicleNo)
+  if (vehicleIndex >= 0) {
+    const vehicle = mapVehicles.value[vehicleIndex]
+    vehicle.longitude = Number(longitude)
+    vehicle.latitude = Number(latitude)
+    vehicle.location = address || vehicle.location
+    vehicle.speed = speed || 0
+    vehicle.lastUpdate = new Date().toISOString()
+  } else {
+    // 如果车辆不存在，添加新车辆
+    mapVehicles.value.push({
+      id: vehicleId?.toString() || '',
+      plateNumber: vehicleNo || '',
+      vehicleType: '未知',
+      status: 1,
+      location: address || '未知位置',
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      speed: speed || 0,
+      lastUpdate: new Date().toISOString(),
+      currentTask: null
+    })
+  }
+  
+  // 更新筛选后的列表
+  filterVehicles()
+  
+  // 如果当前选中的车辆位置更新了，也更新选中车辆的信息
+  if (selectedVehicle.value && (selectedVehicle.value.id === vehicleId?.toString() || selectedVehicle.value.plateNumber === vehicleNo)) {
+    const updatedVehicle = mapVehicles.value.find((v: any) => v.id === vehicleId?.toString() || v.plateNumber === vehicleNo)
+    if (updatedVehicle) {
+      selectedVehicle.value = { ...updatedVehicle }
+    }
+  }
+  
+  // 更新地图标记
+  updateMapMarkers()
+  
+  // 更新最后更新时间
+  lastUpdateTime.value = new Date().toISOString()
+}
+
+// 切换图例展开/收缩
+const toggleLegend = () => {
+  legendCollapsed.value = !legendCollapsed.value
+  saveLegendPosition()
+}
+
+// 开始拖拽图例
+const startDrag = (e: MouseEvent) => {
+  // 如果点击的是展开/收缩图标，不拖拽
+  const target = e.target as HTMLElement
+  if (target.closest('.legend-toggle-icon')) {
+    return
+  }
+  
+  isDragging.value = true
+  dragStartPos.value = { x: e.clientX, y: e.clientY }
+  legendStartPos.value = { ...legendPosition.value }
+  
+  document.addEventListener('mousemove', handleDrag)
+  document.addEventListener('mouseup', stopDrag)
+  
+  e.preventDefault()
+  e.stopPropagation()
+}
+
+// 处理拖拽
+const handleDrag = (e: MouseEvent) => {
+  if (!isDragging.value) return
+  
+  const deltaX = e.clientX - dragStartPos.value.x
+  const deltaY = e.clientY - dragStartPos.value.y
+  
+  // 获取地图容器的边界
+  const mapContainerEl = mapContainer.value
+  if (!mapContainerEl) return
+  
+  const containerRect = mapContainerEl.getBoundingClientRect()
+  const legendWidth = 180 // 图例宽度
+  const legendHeight = legendCollapsed.value ? 50 : 200 // 图例高度（估算）
+  
+  // 计算新位置，限制在容器内
+  let newLeft = legendStartPos.value.left + deltaX
+  let newTop = legendStartPos.value.top + deltaY
+  
+  // 限制在容器范围内
+  newLeft = Math.max(0, Math.min(newLeft, containerRect.width - legendWidth))
+  newTop = Math.max(0, Math.min(newTop, containerRect.height - legendHeight))
+  
+  legendPosition.value = { top: newTop, left: newLeft }
+}
+
+// 停止拖拽
+const stopDrag = () => {
+  if (isDragging.value) {
+    isDragging.value = false
+    saveLegendPosition()
+    document.removeEventListener('mousemove', handleDrag)
+    document.removeEventListener('mouseup', stopDrag)
+  }
+}
+
+// 保存图例位置到localStorage
+const saveLegendPosition = () => {
+  try {
+    localStorage.setItem('map_legend_position', JSON.stringify(legendPosition.value))
+    localStorage.setItem('map_legend_collapsed', String(legendCollapsed.value))
+  } catch (error) {
+    console.warn('保存图例位置失败:', error)
+  }
+}
+
+// 从localStorage加载图例位置
+const loadLegendPosition = () => {
+  try {
+    const savedPosition = localStorage.getItem('map_legend_position')
+    const savedCollapsed = localStorage.getItem('map_legend_collapsed')
+    
+    if (savedPosition) {
+      const position = JSON.parse(savedPosition)
+      // 验证位置是否有效
+      if (position.top !== undefined && position.left !== undefined) {
+        legendPosition.value = position
+      }
+    } else {
+      // 默认位置：右上角
+      const mapContainerEl = mapContainer.value
+      if (mapContainerEl) {
+        const containerRect = mapContainerEl.getBoundingClientRect()
+        legendPosition.value = {
+          top: 16,
+          left: containerRect.width - 196 // 180宽度 + 16边距
+        }
+      }
+    }
+    
+    if (savedCollapsed !== null) {
+      legendCollapsed.value = savedCollapsed === 'true'
+    }
+  } catch (error) {
+    console.warn('加载图例位置失败:', error)
+  }
+}
+
+// 获取PC位置信息
+const getPCLocation = (): Promise<GeolocationPosition> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('浏览器不支持地理位置API'))
+      return
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve(position)
+      },
+      (error) => {
+        reject(error)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    )
+  })
+}
+
+// 上传PC位置信息到华为云（通过vehicle_001设备）
+const uploadPCLocation = async (latitude: number, longitude: number, accuracy: number) => {
+  try {
+    const payload = {
+      latitude,
+      longitude,
+      accuracy,
+      timestamp: Date.now()
+    }
+    
+    console.log('[PC位置] 开始上传位置信息到后端:', payload)
+    
+    const response = await fetch('/api/mqtt/upload-pc-location', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    
+    if (!response.ok) {
+      throw new Error(`上传失败: HTTP ${response.status}`)
+    }
+    
+    const result = await response.json()
+    if (result.code === 200) {
+      console.log('[PC位置] 后端接口返回成功，消息已发送到MQTT')
+      return true
+    } else {
+      console.error('[PC位置] 后端接口返回错误:', result.message)
+      return false
+    }
+  } catch (error: any) {
+    console.error('[PC位置] 上传位置信息失败:', error.message)
+    return false
+  }
+}
+
+// 更新PC位置标记
+const updatePCLocationMarker = (autoZoom = false) => {
+  if (!baiduMap || !pcLocation.value) {
+    console.warn('[PC位置] 无法更新标记：地图未初始化或位置数据不存在')
+    return
+  }
+  
+  // 清除旧标记
+  if (pcLocationMarker.value) {
+    baiduMap.removeOverlay(pcLocationMarker.value)
+  }
+  
+  // 创建新标记
+  const point = new (window as any).BMap.Point(pcLocation.value.longitude, pcLocation.value.latitude)
+  
+  // PC位置使用百度地图API的标准图标样式
+  // 创建一个Canvas图标，使用百度地图的标准样式
+  const canvas = document.createElement('canvas')
+  canvas.width = 32
+  canvas.height = 32
+  const ctx = canvas.getContext('2d')
+  
+  if (ctx) {
+    // 绘制外圈（白色边框）
+    ctx.beginPath()
+    ctx.arc(16, 16, 14, 0, Math.PI * 2)
+    ctx.fillStyle = '#409eff'
+    ctx.fill()
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 3
+    ctx.stroke()
+    
+    // 绘制内圈（白色中心）
+    ctx.beginPath()
+    ctx.arc(16, 16, 6, 0, Math.PI * 2)
+    ctx.fillStyle = '#ffffff'
+    ctx.fill()
+  }
+  
+  // 使用Canvas创建图标
+  const icon = new (window as any).BMap.Icon(
+    canvas.toDataURL(),
+    new (window as any).BMap.Size(32, 32),
+    { anchor: new (window as any).BMap.Size(16, 16) }
+  )
+  
+  const marker = new (window as any).BMap.Marker(point, { icon })
+  
+  // 添加信息窗口
+  const infoWindow = new (window as any).BMap.InfoWindow(
+    `<div style="padding: 12px; min-width: 260px; font-size: 13px; line-height: 1.6;">
+      <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #303133; border-bottom: 1px solid #e4e7ed; padding-bottom: 6px;">
+        PC位置
+      </div>
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">经度:</span>
+        <span style="color: #303133; font-family: monospace;">${pcLocation.value.longitude.toFixed(6)}</span>
+      </div>
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">纬度:</span>
+        <span style="color: #303133; font-family: monospace;">${pcLocation.value.latitude.toFixed(6)}</span>
+      </div>
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">精度:</span>
+        <span style="color: #303133;">${pcLocation.value.accuracy.toFixed(0)} 米</span>
+      </div>
+      <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #e4e7ed; color: #909399; font-size: 12px;">
+        <span style="color: #909399;">更新时间:</span>
+        <span style="color: #606266; margin-left: 4px;">${formatTime(new Date().toISOString())}</span>
+      </div>
+    </div>`,
+    { width: 280, height: 160 }
+  )
+  
+  marker.addEventListener('click', () => {
+    baiduMap.openInfoWindow(infoWindow, point)
+  })
+  
+  baiduMap.addOverlay(marker)
+  pcLocationMarker.value = marker
+  
+  // 如果启用自动缩放，则缩放到PC位置
+  if (autoZoom) {
+    baiduMap.centerAndZoom(point, 16)
+    console.log('[PC位置] 地图已自动缩放到PC位置')
+  }
+}
+
+// 启动PC位置监控
+const startPCLocationMonitoring = async () => {
+  try {
+    console.log('[PC位置] 启动PC位置监控...')
+    // 先获取一次位置
+    const position = await getPCLocation()
+    pcLocation.value = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy || 0
+    }
+    
+    console.log('[PC位置] 初始位置获取成功:', {
+      latitude: pcLocation.value.latitude,
+      longitude: pcLocation.value.longitude,
+      accuracy: pcLocation.value.accuracy
+    })
+    
+    // 如果地图已初始化，立即定位到PC位置
+    if (baiduMap) {
+      const point = new (window as any).BMap.Point(pcLocation.value.longitude, pcLocation.value.latitude)
+      baiduMap.centerAndZoom(point, 16)
+      console.log('[PC位置] 地图已定位到PC位置')
+    }
+    
+    // 上传位置信息
+    const uploadSuccess = await uploadPCLocation(
+      pcLocation.value.latitude,
+      pcLocation.value.longitude,
+      pcLocation.value.accuracy
+    )
+    
+    if (uploadSuccess) {
+      console.log('[PC位置] 初始位置上传成功，等待WebSocket推送更新地图')
+    } else {
+      console.warn('[PC位置] 初始位置上传失败')
+    }
+    
+    // 更新地图标记（启用自动缩放）
+    updatePCLocationMarker(true)
+    console.log('[PC位置] 地图标记已更新并自动缩放')
+    
+    // 设置定时更新（每60秒更新一次）
+    pcLocationUpdateTimer = setInterval(async () => {
+      try {
+        console.log('[PC位置] 开始定时更新位置信息...')
+        const position = await getPCLocation()
+        pcLocation.value = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy || 0
+        }
+        
+        console.log('[PC位置] 获取到位置:', {
+          latitude: pcLocation.value.latitude,
+          longitude: pcLocation.value.longitude,
+          accuracy: pcLocation.value.accuracy
+        })
+        
+        const uploadSuccess = await uploadPCLocation(
+          pcLocation.value.latitude,
+          pcLocation.value.longitude,
+          pcLocation.value.accuracy
+        )
+        
+        if (uploadSuccess) {
+          console.log('[PC位置] 位置信息上传成功，等待WebSocket推送更新地图')
+        } else {
+          console.warn('[PC位置] 位置信息上传失败')
+        }
+        
+        // 直接更新地图标记（不等待WebSocket，确保立即显示）
+        // 每60秒更新时也自动缩放到PC位置，确保用户能看到当前位置
+        updatePCLocationMarker(true)
+      } catch (error: any) {
+        console.error('[PC位置] 位置更新失败:', error.message)
+      }
+    }, 60000) // 60秒更新一次
+    
+    ElMessage.success('PC位置监控已启动（60秒更新一次）')
+    console.log('[PC位置] PC位置监控已启动，更新间隔: 60秒')
+  } catch (error: any) {
+    console.error('[PC位置] 启动PC位置监控失败:', error)
+    ElMessage.warning('PC位置监控启动失败: ' + error.message)
+  }
+}
+
+// 停止PC位置监控
+const stopPCLocationMonitoring = () => {
+  if (pcLocationUpdateTimer) {
+    clearInterval(pcLocationUpdateTimer)
+    pcLocationUpdateTimer = null
+  }
+  
+  if (pcLocationMarker.value && baiduMap) {
+    baiduMap.removeOverlay(pcLocationMarker.value)
+    pcLocationMarker.value = null
+  }
+  
+  pcLocation.value = null
+  ElMessage.info('PC位置监控已停止')
+}
+
 // 组件挂载时初始化
 onMounted(async () => {
+  // 先尝试获取PC位置（如果用户允许）
+  try {
+    console.log('[初始化] 尝试获取PC位置...')
+    const position = await getPCLocation()
+    pcLocation.value = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy || 0
+    }
+    console.log('[初始化] PC位置获取成功，将在初始化地图时使用')
+  } catch (error: any) {
+    console.warn('[初始化] PC位置获取失败（可能用户未授权），将使用默认位置:', error.message)
+  }
+  
+  // 初始化地图（如果有PC位置，会使用PC位置）
   await initMap()
   await loadMapData()
   updateMapMarkers()
   
-  // 设置定时更新
+  // 加载图例位置（需要等待DOM渲染完成）
+  await nextTick()
+  loadLegendPosition()
+  
+  // 监听WebSocket位置更新
+  webSocketClient.on('vehicle_location', handleVehicleLocationUpdate)
+  
+  // 启动PC位置监控（如果之前获取失败，这里会再次尝试）
+  await startPCLocationMonitoring()
+  
+  // 设置定时更新（作为备用，主要依赖WebSocket实时更新）
   updateTimer = setInterval(async () => {
     await loadMapData()
     updateMapMarkers()
-  }, 30000) // 30秒更新一次
+  }, 60000) // 60秒更新一次（备用）
 })
 
-// 组件卸载时清理定时器
+// 组件卸载时清理定时器和WebSocket监听
 onUnmounted(() => {
   if (updateTimer) {
     clearInterval(updateTimer)
   }
+  stopPCLocationMonitoring()
+  stopDrag() // 确保清理拖拽事件监听
+  webSocketClient.off('vehicle_location', handleVehicleLocationUpdate)
 })
 </script>
 
@@ -688,66 +1553,125 @@ onUnmounted(() => {
     }
   }
   
-  .map-legend {
+  .map-legend-floating {
     position: absolute;
-    top: 16px;
-    right: 16px;
     background: white;
     border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    min-width: 160px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 1000;
+    transition: box-shadow 0.3s ease;
+    overflow: hidden;
+    user-select: none;
     
-    h4 {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary-color);
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border-lighter-color);
+    &:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
     }
     
-    .legend-items {
-      .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
+    &.collapsed {
+      .legend-content {
+        max-height: 0;
+        opacity: 0;
+        padding: 0 16px;
+      }
+    }
+    
+    .legend-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: move;
+      user-select: none;
+      border-bottom: 1px solid var(--border-lighter-color);
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: var(--bg-hover-color);
+      }
+      
+      &:active {
+        cursor: grabbing;
+      }
+      
+      h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary-color);
+        margin: 0;
+        pointer-events: none; // 防止文字选择影响拖拽
+      }
+      
+      .legend-toggle-icon {
+        font-size: 16px;
+        color: var(--text-regular-color);
+        transition: transform 0.3s ease;
+        cursor: pointer;
+        pointer-events: auto; // 允许点击图标
+        flex-shrink: 0;
+        margin-left: 8px;
         
-        &:last-child {
-          margin-bottom: 0;
+        &:hover {
+          color: var(--text-primary-color);
         }
-        
-        .legend-marker {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
+      }
+    }
+    
+    .legend-content {
+      padding: 12px 16px;
+      max-height: 500px;
+      opacity: 1;
+      transition: all 0.3s ease;
+      
+      .legend-items {
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
           
-          &.active {
-            background: #67c23a;
+          &:last-child {
+            margin-bottom: 0;
           }
           
-          &.maintenance {
-            background: #e6a23c;
+          .legend-marker {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            
+            &.active {
+              background: #67c23a;
+            }
+            
+            &.maintenance {
+              background: #e6a23c;
+            }
+            
+            &.fault {
+              background: #f56c6c;
+            }
+            
+            &.offline {
+              background: #909399;
+            }
+            
+            &.task-running {
+              background: #409eff;
+              animation: pulse 2s infinite;
+            }
+            
+            &.pc-location {
+              background: #409eff;
+              border: 2px solid white;
+              box-shadow: 0 0 0 2px #409eff;
+            }
           }
           
-          &.fault {
-            background: #f56c6c;
+          span {
+            font-size: 12px;
+            color: var(--text-regular-color);
           }
-          
-          &.offline {
-            background: #909399;
-          }
-          
-          &.task-running {
-            background: #409eff;
-            animation: pulse 2s infinite;
-          }
-        }
-        
-        span {
-          font-size: 12px;
-          color: var(--text-regular-color);
         }
       }
     }

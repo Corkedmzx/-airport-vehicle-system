@@ -98,6 +98,13 @@ public class SecurityConfig {
                     "/druid/**",
                     "/api/druid/login.html",
                     "/druid/login.html",
+                    
+                    // 百度地图API代理（公开访问，无需认证）
+                    "/api/baidu-map/**",
+                    "/baidu-map/**",
+                    
+                    // MQTT位置上传（公开访问，用于PC位置上传）
+                    "/api/mqtt/upload-pc-location",
                     "/api/druid/index.html",
                     "/druid/index.html",
                     

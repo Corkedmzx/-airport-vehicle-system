@@ -29,6 +29,44 @@ public class VehicleLocationServiceImpl implements VehicleLocationService {
     @Override
     public void processLocationUpdate(String deviceId, Map<String, Object> locationData) {
         try {
+            // 检查是否是PC位置（通过source或deviceName字段判断）
+            String source = getStringValue(locationData, "source");
+            String deviceName = getStringValue(locationData, "deviceName");
+            boolean isPCLocation = "pc_browser".equals(source) || "pc_location".equals(deviceName);
+            
+            if (isPCLocation) {
+                // 处理PC位置（不关联车辆，直接通过WebSocket推送）
+                Double longitude = getDoubleValue(locationData, "longitude");
+                Double latitude = getDoubleValue(locationData, "latitude");
+                
+                if (longitude == null || latitude == null) {
+                    log.warn("PC位置数据不完整，缺少longitude或latitude");
+                    return;
+                }
+                
+                // 构建PC位置广播数据
+                Map<String, Object> broadcastData = new java.util.HashMap<>();
+                broadcastData.put("vehicleId", null); // PC位置没有车辆ID
+                broadcastData.put("vehicleNo", getStringValue(locationData, "vehicleNo")); // 使用vehicleNo字段（"PC位置"）
+                broadcastData.put("longitude", longitude);
+                broadcastData.put("latitude", latitude);
+                broadcastData.put("address", getStringValue(locationData, "address"));
+                broadcastData.put("speed", getDoubleValue(locationData, "speed", 0.0));
+                broadcastData.put("direction", getDoubleValue(locationData, "direction", 0.0));
+                broadcastData.put("accuracy", getDoubleValue(locationData, "accuracy"));
+                broadcastData.put("timestamp", getLongValue(locationData, "timestamp", System.currentTimeMillis()));
+                broadcastData.put("source", "pc_browser");
+                broadcastData.put("deviceName", "pc_location");
+                
+                // 通过WebSocket广播PC位置更新（使用deviceId作为标识）
+                webSocketHandler.broadcastVehicleLocationUpdate(null, broadcastData);
+                
+                log.info("[PC位置] 处理PC位置更新成功，设备ID: {}, 位置: ({}, {}), 精度: {}米, 已通过WebSocket推送到前端", 
+                        deviceId, latitude, longitude, getDoubleValue(locationData, "accuracy", 0.0));
+                return;
+            }
+            
+            // 处理车辆位置更新
             // 根据设备ID查找车辆
             Vehicle vehicle = vehicleRepository.findByGpsDeviceId(deviceId)
                     .orElse(null);
@@ -50,22 +88,39 @@ public class VehicleLocationServiceImpl implements VehicleLocationService {
             Vehicle updatedVehicle = vehicleService.updateVehicleLocation(vehicle.getId(), locationDTO);
             
             // 通过WebSocket广播位置更新
-            Map<String, Object> broadcastData = Map.of(
-                "vehicleId", updatedVehicle.getId(),
-                "vehicleNo", updatedVehicle.getVehicleNo(),
-                "longitude", locationDTO.getLongitude(),
-                "latitude", locationDTO.getLatitude(),
-                "address", locationDTO.getAddress() != null ? locationDTO.getAddress() : "",
-                "speed", getDoubleValue(locationData, "speed", 0.0),
-                "direction", getDoubleValue(locationData, "direction", 0.0),
-                "timestamp", System.currentTimeMillis()
-            );
+            Map<String, Object> broadcastData = new java.util.HashMap<>();
+            broadcastData.put("vehicleId", updatedVehicle.getId());
+            broadcastData.put("vehicleNo", updatedVehicle.getVehicleNo());
+            broadcastData.put("longitude", locationDTO.getLongitude());
+            broadcastData.put("latitude", locationDTO.getLatitude());
+            broadcastData.put("address", locationDTO.getAddress() != null ? locationDTO.getAddress() : "");
+            broadcastData.put("speed", getDoubleValue(locationData, "speed", 0.0));
+            broadcastData.put("direction", getDoubleValue(locationData, "direction", 0.0));
+            broadcastData.put("timestamp", System.currentTimeMillis());
             
             webSocketHandler.broadcastVehicleLocationUpdate(updatedVehicle.getId(), broadcastData);
             
             log.debug("处理位置更新成功，车辆: {}, 设备ID: {}", updatedVehicle.getVehicleNo(), deviceId);
         } catch (Exception e) {
             log.error("处理位置更新失败，设备ID: {}", deviceId, e);
+        }
+    }
+    
+    /**
+     * 获取Long值（带默认值）
+     */
+    private Long getLongValue(Map<String, Object> data, String key, Long defaultValue) {
+        Object value = data.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        try {
+            return Long.parseLong(value.toString());
+        } catch (Exception e) {
+            return defaultValue;
         }
     }
 

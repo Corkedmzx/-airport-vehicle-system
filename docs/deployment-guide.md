@@ -78,7 +78,7 @@ FLUSH PRIVILEGES;
 
 -- 代码内部调试使用的用户密码
 username: app_user
-password: App@Secure123!
+password: your-database-password
 
 -- 退出
 EXIT;

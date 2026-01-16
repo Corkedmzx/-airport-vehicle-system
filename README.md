@@ -14,218 +14,63 @@
 - **实时通信**: WebSocket (实时定位、消息推送)
 - **其他**: BCrypt密码加密、响应式设计
 
-## 项目结构
-
-```
-airport-vehicle-system/
-├── backend/                 # SpringBoot后端
-│   ├── src/main/java/
-│   │   └── com/airport/
-│   │       ├── controller/  # REST API控制器
-│   │       │   ├── AuthController.java          # 认证控制器
-│   │       │   ├── UserController.java          # 用户管理
-│   │       │   ├── VehicleController.java       # 车辆管理
-│   │       │   ├── DispatchTaskController.java  # 任务调度
-│   │       │   ├── StatisticsController.java    # 数据统计
-│   │       │   ├── AlertController.java         # 告警管理
-│   │       │   ├── SystemConfigController.java  # 系统配置
-│   │       │   └── ...
-│   │       ├── service/     # 业务逻辑层
-│   │       ├── repository/  # 数据访问层
-│   │       ├── entity/      # 实体类
-│   │       ├── dto/         # 数据传输对象
-│   │       ├── config/      # 配置类
-│   │       │   ├── RedisConfig.java          # Redis配置
-│   │       │   └── WebSocketHandlerConfig.java  # WebSocket配置
-│   │       ├── websocket/   # WebSocket处理器
-│   │       │   ├── VehicleLocationWebSocketHandler.java  # 车辆位置WebSocket
-│   │       │   ├── SensorWebSocketHandler.java           # 传感器WebSocket
-│   │       │   └── VehicleLocationService.java           # 位置服务
-│   │       └── utils/       # 工具类
-│   ├── src/main/resources/
-│   │   ├── application.yml  # 应用配置
-│   │   └── static/         # 静态资源
-│   └── pom.xml             # Maven配置
-├── frontend/               # Vue.js前端
-│   ├── src/
-│   │   ├── views/         # 页面视图
-│   │   │   ├── Dashboard/      # 仪表盘
-│   │   │   ├── Vehicles/       # 车辆管理
-│   │   │   ├── Tasks/          # 任务管理
-│   │   │   ├── Dispatch/       # 调度中心
-│   │   │   ├── Monitoring/     # 实时监控
-│   │   │   ├── Map/            # 地图监控
-│   │   │   ├── Statistics/     # 统计分析
-│   │   │   ├── Alerts/         # 告警管理
-│   │   │   ├── Users/          # 用户管理
-│   │   │   ├── Settings/       # 系统设置
-│   │   │   ├── Profile/        # 个人资料
-│   │   │   └── Logs/          # 系统日志
-│   │   ├── api/           # API接口
-│   │   ├── router/        # 路由配置
-│   │   ├── store/         # 状态管理
-│   │   ├── utils/         # 工具函数
-│   │   └── layout/        # 布局组件
-│   └── package.json
-├── database/              # 数据库脚本
-│   └── init.sql          # 初始化脚本（包含表结构、初始数据、权限配置）
-├── docs/                 # 文档
-│   ├── architecture.md        # 架构设计文档
-│   ├── deployment-guide.md    # 部署指南
-│   ├── system-integrity-check.md  # 系统完整性检查
-│   ├── project-delivery-summary.md # 项目交付总结
-│   ├── email-configuration.md # 邮件配置指南
-│   ├── git-security-guide.md # Git安全配置指南
-│   ├── mqtt-mobile-location-guide.md # MQTT手机定位指南
-│   └── api-integration-test.md # API接口测试指南
-└── README.md             # 项目说明
-```
-
 ## 核心功能模块
 
-### 1. 用户认证与权限管理模块
-- ✅ **用户注册与登录**: JWT Token认证机制
-- ✅ **密码管理**: BCrypt加密存储，支持修改密码（需验证旧密码）
-- ✅ **角色权限控制(RBAC)**: 
-  - 7种角色：系统管理员(ADMIN)、调度员(DISPATCHER)、操作员(OPERATOR)、监控员(MONITOR)、查看者(VIEWER)、司机(DRIVER)、维修员(MAINTENANCE)
-  - 细粒度权限控制：user:view/create/update/delete、vehicle:view/create/update/delete、task:view/create/update/delete/assign等
-  - 前后端双重权限验证
-- ✅ **个人资料管理**: 查看和修改个人信息、头像、密码
-- ✅ **用户管理**: 用户CRUD、角色分配、状态管理（仅管理员）
+### 1. 用户认证与权限管理
+- 用户注册与登录：JWT Token认证机制
+- 密码管理：BCrypt加密存储，支持修改密码
+- 角色权限控制(RBAC)：7种角色，细粒度权限控制
+- 个人资料管理：查看和修改个人信息、头像、密码
 
-### 2. 车辆管理模块
-- ✅ **车辆信息管理**: 车辆CRUD操作
-- ✅ **车辆状态监控**: 
-  - 正常运行、维护中、故障、离线、执行中、已分配、空闲
-  - 状态优先级显示（维护/故障/离线 > 任务相关状态）
-- ✅ **车辆类型管理**: 行李车、摆渡车、货运车、清洁车、维修车、巡逻车
-- ✅ **车辆详情**: 查看车辆详细信息、历史记录
-- ✅ **权限控制**: 基于权限的按钮显示和操作控制
+### 2. 车辆管理
+- 车辆信息管理：车辆CRUD操作
+- 车辆状态监控：正常运行、维护中、故障、离线等状态
+- 车辆类型管理：行李车、摆渡车、货运车、清洁车、维修车、巡逻车
+- 车辆详情：查看车辆详细信息、历史记录
 
-### 3. 任务调度模块
-- ✅ **任务创建**: 创建调度任务，设置优先级
-- ✅ **任务分配**: 
-  - 手动分配任务到车辆
-  - 取消分配功能
-  - 权限验证（task:assign）
-- ✅ **任务状态管理**: 
-  - 待分配(1) → 已分配(2) → 执行中(3) → 已完成(4)
-  - 任务取消、重新发送
-- ✅ **任务排序**: 
-  - 待分配任务按优先级降序
-  - 已分配和执行中任务按优先级降序
-  - 已完成任务按优先级降序
-  - 整体顺序：待分配 > (已分配,执行中) > 已完成
-- ✅ **调度中心**: 实时调度概览、可用车辆展示、任务分配界面
+### 3. 任务调度
+- 任务创建：创建调度任务，设置优先级
+- 任务分配：手动分配任务到车辆，取消分配功能
+- 任务状态管理：待分配 → 已分配 → 执行中 → 已完成
+- 调度中心：实时调度概览、可用车辆展示、任务分配界面
 
-### 4. 实时监控模块
-- ✅ **车辆实时监控**: 实时显示车辆位置、状态、速度等信息
-- ✅ **WebSocket实时定位**: 
-  - 前端通过WebSocket连接接收实时位置更新
-  - 车辆位置变更时自动推送给订阅用户
-  - 支持订阅/取消订阅特定车辆
-  - 心跳检测保持连接稳定
-- ✅ **传感器接口预留**: 
-  - 提供WebSocket端点供传感器设备连接
-  - 接收传感器发送的位置数据
-  - 自动更新车辆位置并广播
-- ✅ **监控统计**: 在线车辆数、运行中任务数、实时数据刷新
-- ✅ **车辆筛选**: 按状态、任务筛选车辆
-- ✅ **数据可视化**: 实时数据图表展示
+### 4. 实时监控
+- 车辆实时监控：实时显示车辆位置、状态、速度等信息
+- WebSocket实时定位：前端通过WebSocket连接接收实时位置更新
+- 传感器接口预留：提供WebSocket端点供传感器设备连接
+- 监控统计：在线车辆数、运行中任务数、实时数据刷新
 
-### 5. 地图监控模块
-- ✅ **多地图供应商支持**: 
-  - 百度地图（BD-09坐标系）
-  - 高德地图（GCJ-02坐标系）
-  - 腾讯地图（GCJ-02坐标系）
-- ✅ **地图切换**: 系统配置中切换地图供应商，地图监控页面自动适配
-- ✅ **车辆定位**: 在地图上查看车辆位置
-- ✅ **地图样式**: 支持街道、卫星、混合模式
+### 5. 地图监控
+- 实际地图显示：使用百度地图API显示实际地图
+- 实时车辆标记：在地图上实时显示车辆位置，根据状态显示不同颜色
+- PC位置监控：支持PC浏览器位置获取和显示
+- 多设备MQTT数据流转：手机定位 → 车辆定位器 → 网页监控端 → 系统地图
+- 自动视野调整：自动调整地图视野以包含所有车辆
 
-### 6. 统计分析模块
-- ✅ **仪表盘统计**: 
-  - 车辆总数、活跃车辆数
-  - 任务总数、今日任务、进行中任务、已完成任务
-  - 任务完成率
-  - 最近任务列表（按优先级排序）
-- ✅ **车辆使用情况排行**: 车辆使用率统计和排名
-- ✅ **任务效率统计**: 任务完成效率分析
-- ✅ **数据可视化**: ECharts图表展示
-- ✅ **实时数据**: 数据实时刷新
+### 6. 统计分析
+- 仪表盘统计：车辆总数、活跃车辆数、任务统计、任务完成率
+- 车辆使用情况排行：车辆使用率统计和排名
+- 任务效率统计：任务完成效率分析
+- 数据可视化：ECharts图表展示
 
-### 7. 告警管理模块
-- ✅ **告警规则配置**: 创建和管理告警规则
-- ✅ **告警记录**: 查看告警历史记录
-- ✅ **告警处理**: 告警确认和处理
+### 7. 告警管理
+- 告警规则配置：创建和管理告警规则
+- 告警记录：查看告警历史记录
+- 告警处理：告警确认和处理
 
-### 8. 系统管理模块
-- ✅ **Redis缓存**: 
-  - 使用Redis作为缓存层，提升系统性能
-  - 缓存车辆位置、用户会话等热点数据
-  - 支持缓存过期时间配置
-- ✅ **系统配置**: 
-  - 车辆位置更新间隔
-  - 自动任务分配开关
-  - 维护提醒提前天数
-  - 地图服务提供商选择（百度/高德/腾讯）
-  - 位置追踪开关
-- ✅ **权限设置**: 
-  - 角色权限配置（弹窗式勾选）
-  - 权限查看（显示格式：√权限名称）
-  - 仅管理员可操作
-- ✅ **系统日志**: 操作日志查看和管理
-- ✅ **用户管理**: 用户列表、角色分配、状态管理
-
-### 9. 响应式设计
-- ✅ **自适应布局**: 支持1920x1080及以下分辨率
-- ✅ **响应式组件**: 表格、卡片、表单自适应
-- ✅ **移动端适配**: 基础移动端支持
-
-## 开发进度
-
-- [x] 项目架构设计
-- [x] 后端API开发
-- [x] 前端界面开发
-- [x] 权限控制系统
-- [x] 地图监控功能
-- [x] 个人资料管理
-- [x] 系统配置管理
-- [x] 响应式设计
-- [x] 系统集成测试
-- [x] 文档完善
-
-## 运行要求
-
-### 后端要求
-- Java 17+
-- Maven 3.6+
-- MySQL 8.0+ 或 MariaDB 10.11+
-
-### 前端要求
-- Node.js 16+
-- npm 8.0+ 或 yarn
+### 8. 系统管理
+- Redis缓存：使用Redis作为缓存层，提升系统性能
+- 系统配置：车辆位置更新间隔、自动任务分配开关、地图服务提供商选择
+- 权限设置：角色权限配置
+- 系统日志：操作日志查看和管理
 
 ## 快速开始
 
-> 💡 **推荐**: 首次使用请查看 [QUICK_START.md](QUICK_START.md) 快速启动指南，包含详细的配置说明和常见问题解答。
+### 1. 配置数据库
 
-### 方式一：使用启动脚本（推荐，最简单）
+编辑 `backend/src/main/resources/application.yml`，修改数据库配置，或使用 `.env` 文件配置（推荐）。
 
-#### 1. 配置数据库
-
-编辑 `backend/src/main/resources/application.yml`，修改以下配置：
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/airport_vehicle_system?...
-    username: ${DB_USERNAME:app_user}  # 使用环境变量或直接修改
-    password: ${DB_PASSWORD:your-database-password}  # 使用环境变量或直接修改
-```
-
-> 💡 **安全提示**: 推荐使用环境变量配置敏感信息，详见 [Git安全配置指南](docs/git-security-guide.md)
-
-#### 2. 初始化数据库
+### 2. 初始化数据库
 
 ```bash
 # 创建数据库
@@ -237,55 +82,40 @@ EXIT;
 mysql -u root -p airport_vehicle_system < database/init.sql
 ```
 
-#### 3. 启动应用
+### 3. 配置环境变量
 
-**Windows:**
-```bash
-# 双击运行或在命令行执行
-start-backend.bat
-start-frontend.bat
+在 `backend` 目录下创建 `.env` 文件：
+
+```env
+# MySQL数据库配置
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=airport_vehicle_system
+DB_USERNAME=app_user
+DB_PASSWORD=your-password
+
+# JWT配置
+JWT_SECRET=your-jwt-secret-key
+
+# 华为云IoT MQTT配置（可选）
+HUAWEI_IOT_MQTT_ENABLED=true
+HUAWEI_IOT_MQTT_BROKER=ssl://your-broker:8883
+HUAWEI_IOT_MQTT_INSTANCE_ID=your-instance-id
+
+# 百度地图配置（可选）
+BAIDU_MAP_AK=your-baidu-map-ak
 ```
 
-**Linux/macOS:**
-```bash
-# 先添加执行权限
-chmod +x start-backend.sh start-frontend.sh
-
-# 运行启动脚本
-./start-backend.sh
-./start-frontend.sh
-```
-
-启动脚本会自动检查环境、编译项目并启动服务。
-
-### 方式二：手动启动
-
-#### 1. 数据库初始化
-
-```bash
-# 创建数据库
-mysql -u root -p
-CREATE DATABASE airport_vehicle_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-# 导入初始化脚本
-mysql -u root -p airport_vehicle_system < database/init.sql
-```
-
-#### 2. 配置数据库连接
-
-编辑 `backend/src/main/resources/application.yml`，修改数据库配置。
-
-#### 3. 启动后端
+### 4. 启动后端
 
 ```bash
 cd backend
-mvn clean package
-java -jar target/airport-vehicle-system-1.0.0.jar
+mvn spring-boot:run
 ```
 
 后端默认运行在：http://localhost:8080/api
 
-#### 4. 启动前端
+### 5. 启动前端
 
 ```bash
 cd frontend
@@ -295,34 +125,7 @@ npm run dev
 
 前端默认运行在：http://localhost:5173
 
-### 配置说明
-
-**数据库配置方式:**
-
-1. **使用环境变量**（推荐，安全）:
-   ```powershell
-   # Windows PowerShell
-   $env:DB_USERNAME="app_user"
-   $env:DB_PASSWORD="your-database-password"
-   
-   # Linux/macOS
-   export DB_USERNAME=app_user
-   export DB_PASSWORD=your-database-password
-   ```
-   然后启动应用，系统会自动读取环境变量。
-
-2. **直接修改配置文件**（不推荐提交到Git）:
-   - 编辑 `backend/src/main/resources/application.yml`
-   - 修改 `spring.datasource` 下的 `url`、`username`、`password`
-   - ⚠️ 注意：不要将包含真实密码的配置文件提交到Git
-
-> 💡 **详细说明**: 查看 [Git安全配置指南](docs/git-security-guide.md) 了解如何安全地管理敏感配置
-
-**Redis配置**（可选）:
-- Redis是可选的，未安装时系统会自动降级到内存缓存
-- 如需使用Redis，请安装并启动Redis服务
-
-### 5. 默认账号
+### 6. 默认账号
 
 - **用户名**: admin
 - **密码**: admin123
@@ -340,71 +143,46 @@ npm run dev
 
 | 功能模块 | ADMIN | DISPATCHER | OPERATOR | MONITOR | VIEWER | DRIVER | MAINTENANCE |
 |---------|-------|------------|----------|---------|--------|--------|-------------|
-| 用户管理 | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| 车辆管理 | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ |
-| 任务创建 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| 任务分配 | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| 实时监控 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| 地图监控 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| 统计分析 | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| 告警管理 | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| 系统配置 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| 用户管理 | 是 | 否 | 是 | 否 | 否 | 否 | 否 |
+| 车辆管理 | 是 | 否 | 是 | 否 | 否 | 否 | 是 |
+| 任务创建 | 是 | 是 | 否 | 否 | 否 | 否 | 否 |
+| 任务分配 | 是 | 是 | 否 | 否 | 否 | 否 | 否 |
+| 实时监控 | 是 | 是 | 是 | 是 | 是 | 否 | 否 |
+| 地图监控 | 是 | 是 | 是 | 是 | 是 | 否 | 否 |
+| 统计分析 | 是 | 是 | 是 | 是 | 是 | 否 | 否 |
+| 告警管理 | 是 | 否 | 否 | 是 | 否 | 否 | 否 |
+| 系统配置 | 是 | 否 | 否 | 否 | 否 | 否 | 否 |
 
 ## 主要特性
 
 1. **完整的RBAC权限控制**: 前后端双重验证，细粒度权限管理
-2. **WebSocket实时定位**: 
-   - 车辆位置实时推送，支持订阅/取消订阅
-   - 传感器数据接入接口（预留）
-   - JWT认证保护，心跳检测，自动重连
-3. **Redis缓存** (可选): 
-   - 提升系统性能，缓存热点数据
-   - 自动降级机制，Redis不可用时使用内存缓存
-   - 支持无密码和有密码两种配置
+2. **WebSocket实时定位**: 车辆位置实时推送，支持订阅/取消订阅
+3. **Redis缓存** (可选): 提升系统性能，缓存热点数据，自动降级机制
 4. **实时数据监控**: 车辆状态、任务进度实时更新
 5. **智能任务调度**: 优先级排序、自动分配建议
 6. **多地图支持**: 支持百度、高德、腾讯三种地图供应商
 7. **响应式设计**: 适配不同屏幕尺寸
-8. **完善的用户管理**: 个人资料、密码修改、权限查看
-9. **系统配置管理**: 灵活的配置项管理
-10. **数据统计分析**: 多维度数据统计和可视化
-
-## 技术亮点
-
-- **前后端分离**: RESTful API设计，职责清晰
-- **WebSocket实时通信**: 
-  - 原生WebSocket实现，支持JWT认证
-  - 车辆位置实时推送，支持订阅机制
-  - 传感器数据接入接口（预留）
-  - 心跳检测和自动重连
-- **Redis缓存** (可选): 
-  - 使用Spring Data Redis + Lettuce连接池
-  - 自动降级机制，Redis不可用时不影响应用启动
-  - 支持无密码和有密码配置
-- **JWT认证**: 无状态认证，支持分布式部署
-- **权限控制**: 基于角色的访问控制，前后端双重验证
-- **响应式设计**: 使用CSS变量、clamp()、媒体查询实现自适应
-- **代码质量**: TypeScript类型检查、统一代码规范
-- **安全性**: BCrypt密码加密、SQL注入防护、XSS防护
+8. **多设备MQTT数据流转**: 支持手机定位、车辆定位器、网页监控端数据流转
 
 ## 文档
 
 ### 核心文档
 - [架构设计文档](docs/architecture.md) - 系统架构设计和技术选型
 - [部署指南](docs/deployment-guide.md) - 详细的部署步骤和配置说明
-- [快速启动指南](QUICK_START.md) - 快速上手指南
 
 ### 功能文档
-- [邮件配置指南](docs/email-configuration.md) - 邮件发送功能配置说明
-- [MQTT手机定位指南](docs/mqtt-mobile-location-guide.md) - 手机定位数据接入方案
+- [环境变量配置指南](docs/environment-configuration.md) - 环境变量配置说明
+- [MQTT + 华为云IoT集成指南](docs/mqtt-huawei-iot-integration-guide.md) - MQTT定位数据接入和地图显示
+- [多设备MQTT数据流转指南](docs/multi-device-mqtt-integration-guide.md) - 多设备数据流转配置
+- [设备激活指南](docs/device-activation-guide.md) - 华为云IoT设备激活
+- [MQTTX使用指南](docs/mqttx-usage-guide.md) - MQTTX客户端工具使用说明
+- [百度地图配置指南](docs/baidu-map-server-proxy-guide.md) - 百度地图服务端代理配置
+- [百度地图浏览器AK指南](docs/create-browser-ak-guide.md) - 创建浏览器端AK
+- [邮件配置指南](docs/email-configuration.md) - 邮件发送功能配置
 
 ### 测试与安全
-- [API接口测试指南](docs/api-integration-test.md) - 前后端API联调测试
 - [Git安全配置指南](docs/git-security-guide.md) - Git提交前的安全检查
-
-### 项目文档
-- [系统完整性检查](docs/system-integrity-check.md) - 系统完整性验证报告
-- [项目交付总结](docs/project-delivery-summary.md) - 项目交付物清单和成果总结
+- [MQTT故障排除](docs/troubleshooting-mqtt-connection.md) - MQTT连接问题排查
 
 ## 作者
 

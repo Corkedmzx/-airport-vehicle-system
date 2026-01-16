@@ -1,31 +1,31 @@
 # Git安全配置指南
 
-## ⚠️ 重要安全提醒
+## 重要安全提醒
 
 **在将项目上传到Git之前，请务必检查并处理以下敏感信息！**
 
 ## 1. 敏感信息检查清单
 
-### ✅ 已安全处理的项目
+### 已安全处理的项目
 
 1. **邮箱账号和授权码**
-   - ✅ 存储在数据库中（`sys_user`表的`email`和`email_auth_code`字段）
-   - ✅ 不在配置文件中硬编码
-   - ✅ 不会提交到Git
+   - 存储在数据库中（`sys_user`表的`email`和`email_auth_code`字段）
+   - 不在配置文件中硬编码
+   - 不会提交到Git
 
 2. **数据库密码**
-   - ✅ 已改为使用环境变量 `${DB_PASSWORD}`
-   - ✅ 默认值为占位符 `your-database-password`
+   - 已改为使用环境变量 `${DB_PASSWORD}`
+   - 默认值为占位符 `your-database-password`
 
 3. **JWT密钥**
-   - ✅ 已改为使用环境变量 `${JWT_SECRET}`
-   - ✅ 默认值为占位符 `your-jwt-secret-key-change-this-in-production`
+   - 已改为使用环境变量 `${JWT_SECRET}`
+   - 默认值为占位符 `your-jwt-secret-key-change-this-in-production`
 
 4. **Druid监控密码**
-   - ✅ 已改为使用环境变量 `${DRUID_PASSWORD}`
-   - ✅ 默认值为占位符 `your-druid-password`
+   - 已改为使用环境变量 `${DRUID_PASSWORD}`
+   - 默认值为占位符 `your-druid-password`
 
-### ⚠️ 需要检查的文件
+### 需要检查的文件
 
 1. **`backend/src/main/resources/application.yml`**
    - 确保所有敏感信息都使用环境变量
@@ -110,14 +110,14 @@ dotenv -e ../.env mvn spring-boot:run
 
 项目已包含 `.gitignore` 文件，确保以下内容不会被提交：
 
-- ✅ `backend/target/` - 编译输出
-- ✅ `backend/logs/` - 日志文件
-- ✅ `*.log` - 所有日志文件
-- ✅ `.env` - 环境变量文件
-- ✅ `application-local.yml` - 本地配置
-- ✅ `application-prod.yml` - 生产配置
-- ✅ `frontend/node_modules/` - 前端依赖
-- ✅ `frontend/dist/` - 前端构建输出
+- `backend/target/` - 编译输出
+- `backend/logs/` - 日志文件
+- `*.log` - 所有日志文件
+- `.env` - 环境变量文件
+- `application-local.yml` - 本地配置
+- `application-prod.yml` - 生产配置
+- `frontend/node_modules/` - 前端依赖
+- `frontend/dist/` - 前端构建输出
 
 ## 4. 上传前检查步骤
 
@@ -159,9 +159,9 @@ mvn clean compile -DskipTests
 
 ### 邮箱和授权码存储
 
-- ✅ **邮箱地址**：存储在 `sys_user.email` 字段
-- ✅ **授权码**：存储在 `sys_user.email_auth_code` 字段
-- ✅ **加密建议**：生产环境建议对授权码进行加密存储
+- **邮箱地址**：存储在 `sys_user.email` 字段
+- **授权码**：存储在 `sys_user.email_auth_code` 字段
+- **加密建议**：生产环境建议对授权码进行加密存储
 
 ### 数据库备份安全
 
@@ -225,7 +225,7 @@ git filter-branch --force --index-filter \
   "git rm --cached --ignore-unmatch backend/src/main/resources/application.yml" \
   --prune-empty --tag-name-filter cat -- --all
 
-# 强制推送（⚠️ 危险操作，会重写历史）
+# 强制推送（危险操作，会重写历史）
 git push origin --force --all
 ```
 
@@ -272,22 +272,22 @@ trufflehog git file://. --json
 
 ## 总结
 
-### ✅ 当前项目安全状态
+### 当前项目安全状态
 
-1. **邮箱和授权码**：✅ 安全（存储在数据库，不提交到Git）
-2. **配置文件**：✅ 已改为使用环境变量
-3. **.gitignore**：✅ 已配置，排除敏感文件
-4. **文档**：✅ 只包含示例，无真实敏感信息
+1. **邮箱和授权码**：安全（存储在数据库，不提交到Git）
+2. **配置文件**：已改为使用环境变量
+3. **.gitignore**：已配置，排除敏感文件
+4. **文档**：只包含示例，无真实敏感信息
 
-### ⚠️ 上传前必做
+### 上传前必做
 
-1. ✅ 确认 `application.yml` 中所有敏感信息都使用环境变量
-2. ✅ 确认 `.gitignore` 已正确配置
-3. ✅ 确认没有真实的邮箱和授权码在代码中
-4. ✅ 确认数据库密码已改为环境变量
-5. ✅ 确认JWT密钥已改为环境变量
+1. 确认 `application.yml` 中所有敏感信息都使用环境变量
+2. 确认 `.gitignore` 已正确配置
+3. 确认没有真实的邮箱和授权码在代码中
+4. 确认数据库密码已改为环境变量
+5. 确认JWT密钥已改为环境变量
 
-### 📝 推荐做法
+### 推荐做法
 
 1. 使用 `application-example.yml` 作为模板
 2. 创建 `.env` 文件存储真实配置（不提交）

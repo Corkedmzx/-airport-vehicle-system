@@ -12,7 +12,7 @@ spring:
     allow-bean-definition-overriding: true
   
   # 数据源配置 - 使用MySQL数据库
-  # ⚠️ 重要：使用环境变量配置敏感信息，不要将真实密码提交到Git
+  # 重要：使用环境变量配置敏感信息
   # 环境变量：DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
@@ -91,7 +91,7 @@ spring:
   # 邮件配置
   # 系统会自动从数据库的sys_user表中读取用户邮箱地址（email字段）和授权码（email_auth_code字段）并发送邮件
   # 每个用户使用自己的邮箱账号和授权码发送邮件
-  # ⚠️ 重要：以下配置为默认SMTP服务器，实际发送时会根据用户邮箱自动选择对应的SMTP服务器
+  # 重要：以下配置为默认SMTP服务器，实际发送时会根据用户邮箱自动选择对应的SMTP服务器
   mail:
     enabled: true  # 是否启用邮件服务
     host: ${MAIL_HOST:smtp.163.com}  # 默认SMTP服务器地址（系统会根据用户邮箱自动选择）
@@ -190,7 +190,7 @@ management:
       enabled: true
 
 # JWT配置
-# ⚠️ 重要：生产环境必须使用强随机密钥，不要使用默认值
+# 重要：生产环境必须使用强随机密钥，不要使用默认值
 jwt:
   secret: ${JWT_SECRET:your-jwt-secret-key-change-this-in-production}
   expiration: 86400 # 24小时
@@ -224,7 +224,7 @@ dispatch:
 map:
   provider: baidu
   baidu:
-    ak: ${BAIDU_MAP_AK:your-baidu-ak}
+    ak: ${BAIDU_MAP_AK:}  # 百度地图AK（从环境变量读取）
   gaode:
     key: ${GAODE_MAP_KEY:your-gaode-key}
   tencent:
@@ -247,3 +247,37 @@ system:
   export-max-rows: 10000
   # 系统维护开关
   maintenance-mode: false
+
+# 华为云IoT平台配置（MQTT）
+# ⚠️ 重要：使用环境变量配置敏感信息
+# 华为云IoT使用动态密码机制，系统会自动根据设备密钥和时间戳生成密码
+# Client ID格式: {deviceId}_{deviceType}_{passwordSignatureType}_{timestamp}
+# Password: HMAC-SHA256(deviceSecret, timestamp) 的十六进制字符串
+# 
+# 设备信息读取优先级：
+# 1. 环境变量 (HUAWEI_IOT_MQTT_DEVICE_ID, HUAWEI_IOT_MQTT_DEVICE_SECRET)
+# 2. 配置文件 (huawei.iot.mqtt.device-id, huawei.iot.mqtt.device-secret)
+# 3. 设备密钥文件 (自动从 device-key-path 目录读取)
+huawei:
+  iot:
+    mqtt:
+      enabled: ${HUAWEI_IOT_MQTT_ENABLED:false}  # 是否启用MQTT客户端
+      broker: ${HUAWEI_IOT_MQTT_BROKER:ssl://64fa0824ea.st1.iotda-device.cn-north-4.myhuaweicloud.com:8883}  # MQTT Broker地址，格式: ssl://{endpoint}:8883
+      device-id: ${HUAWEI_IOT_MQTT_DEVICE_ID:}  # 设备ID，例如: 6961b5c87f2e6c302f48db15_vihecle_001（可选，会从文件自动读取）
+      device-secret: ${HUAWEI_IOT_MQTT_DEVICE_SECRET:}  # 设备密钥（用于生成动态密码）（可选，会从文件自动读取）
+      device-key-path: ${HUAWEI_IOT_MQTT_DEVICE_KEY_PATH:e:/share/设备密钥}  # 设备密钥文件目录
+      device-name: ${HUAWEI_IOT_MQTT_DEVICE_NAME:vihecle_001}  # 设备名称（用于匹配密钥文件），例如: vihecle_001, mobile_001, web_001
+      instance-id: ${HUAWEI_IOT_MQTT_INSTANCE_ID:a494d922-ff97-4873-bd0c-2d6b1a72086d}  # 华为云IoT实例ID
+      topic: ${HUAWEI_IOT_MQTT_TOPIC:/a494d922-ff97-4873-bd0c-2d6b1a72086d/6961b5c87f2e6c302f48db15_vihecle_001/user/location}  # 订阅主题，支持通配符（注意：不使用$oc前缀）
+      qos: ${HUAWEI_IOT_MQTT_QOS:1}  # 服务质量等级 (0, 1, 2)
+      connection-timeout: ${HUAWEI_IOT_MQTT_CONNECTION_TIMEOUT:30}  # 连接超时时间（秒）
+      keep-alive: ${HUAWEI_IOT_MQTT_KEEP_ALIVE:60}  # 心跳间隔（秒）
+
+# 百度地图配置
+# ⚠️ 重要：使用服务端代理方式，AK不会暴露在前端
+# 后端使用IP白名单（支持端口），前端通过后端代理调用百度地图API
+baidu:
+  map:
+    ak: ${BAIDU_MAP_AK:}  # 百度地图AK（从环境变量读取）
+    api:
+      base-url: ${BAIDU_MAP_API_BASE_URL:https://api.map.baidu.com}  # 百度地图API基础URL

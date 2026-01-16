@@ -105,24 +105,30 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
 
     /**
      * 发送车辆位置更新消息给所有订阅的用户
+     * 
+     * @param vehicleId 车辆ID，如果为null表示PC位置或其他非车辆位置
+     * @param locationData 位置数据
      */
     public void broadcastVehicleLocationUpdate(Long vehicleId, Map<String, Object> locationData) {
-        WebSocketSession session = vehicleSessions.get(vehicleId);
-        if (session != null && session.isOpen()) {
-            try {
-                sendMessage(session, createMessage("VEHICLE_LOCATION_UPDATE", locationData));
-            } catch (Exception e) {
-                log.error("广播车辆位置更新失败，车辆ID: {}", vehicleId, e);
+        // 如果有车辆ID，发送给订阅该车辆的会话
+        if (vehicleId != null) {
+            WebSocketSession session = vehicleSessions.get(vehicleId);
+            if (session != null && session.isOpen()) {
+                try {
+                    sendMessage(session, createMessage("VEHICLE_LOCATION_UPDATE", locationData));
+                } catch (Exception e) {
+                    log.error("广播车辆位置更新失败，车辆ID: {}", vehicleId, e);
+                }
             }
         }
         
-        // 也发送给所有连接的用户（用于地图监控页面）
+        // 发送给所有连接的用户（用于地图监控页面，包括PC位置）
         userSessions.values().forEach(s -> {
             if (s.isOpen()) {
                 try {
                     sendMessage(s, createMessage("VEHICLE_LOCATION_UPDATE", locationData));
                 } catch (Exception e) {
-                    log.error("发送车辆位置更新给用户失败", e);
+                    log.error("发送位置更新给用户失败", e);
                 }
             }
         });

@@ -160,6 +160,13 @@
             <artifactId>httpclient5</artifactId>
         </dependency>
 
+        <!-- Dotenv - 自动加载 .env 文件 -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
 
         <!-- Spring Mail - 用于发送邮件通知 -->
         <dependency>
