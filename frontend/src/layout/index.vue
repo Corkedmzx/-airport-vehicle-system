@@ -98,6 +98,10 @@
           />
         </div>
         
+        <div class="navbar-center">
+          <h2 class="page-title">{{ currentPageTitle }}</h2>
+        </div>
+        
         <div class="navbar-right">
           <!-- 用户信息 -->
           <el-dropdown @command="handleUserCommand">
@@ -159,6 +163,11 @@ const isCollapsed = ref(false)
 // 当前激活的菜单
 const activeMenu = computed(() => {
   return route.path
+})
+
+// 当前页面标题
+const currentPageTitle = computed(() => {
+  return (route.meta.title as string) || '车辆监控'
 })
 
 // 切换侧边栏
@@ -299,6 +308,20 @@ watch(isCollapsed, (newVal) => {
     .navbar-left {
       display: flex;
       align-items: center;
+    }
+    
+    .navbar-center {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .page-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #303133;
+      }
     }
     
     .navbar-right {
