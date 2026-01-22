@@ -459,7 +459,7 @@ const loadRealTimeVehicles = async () => {
         lastUpdate: v.lastUpdateTime || v.updateTime || '',
         currentTask: runningTask ? {
           taskName: runningTask.taskName || '',
-          progress: 0 // 需要计算任务进度
+          progress: runningTask.progress || 0 // 使用任务的实际进度
         } : null,
         hasTask: vehicleTasks.length > 0,
         hasRunningTask: hasRunningTask

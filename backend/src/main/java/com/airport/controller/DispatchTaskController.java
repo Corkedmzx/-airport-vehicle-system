@@ -191,18 +191,61 @@ public class DispatchTaskController {
                 return Result.forbidden("无权限分配任务");
             }
 
+            // 获取当前用户ID（调度员）
+            Long dispatcherId = getCurrentUserId(request);
+            
             DispatchTask updatedTask;
             // 如果提供了司机用户名，优先使用用户名
             if (driverUsername != null && !driverUsername.trim().isEmpty()) {
-                updatedTask = taskService.assignTaskWithDriver(id, vehicleId, driverUsername);
+                updatedTask = taskService.assignTaskWithDriver(id, vehicleId, driverUsername, dispatcherId);
                 return Result.success("任务分配成功，邮件通知已发送", updatedTask);
             } else {
                 // 否则使用司机ID
-                updatedTask = taskService.assignTask(id, vehicleId, driverId);
+                updatedTask = taskService.assignTask(id, vehicleId, driverId, dispatcherId);
                 return Result.success("任务分配成功", updatedTask);
             }
         } catch (Exception e) {
             log.error("分配任务失败", e);
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/assign-to-maintenance")
+    @Operation(summary = "分配维修任务给维修员", description = "将维护调度任务分配给维修员（支持维修员ID或用户名）")
+    public Result<DispatchTask> assignTaskToMaintenance(
+            @Parameter(description = "任务ID", required = true) 
+            @PathVariable Long id,
+            @Parameter(description = "车辆ID", required = true) 
+            @RequestParam Long vehicleId,
+            @Parameter(description = "维修员ID（可选，如果提供了maintenanceUsername则忽略）", required = false) 
+            @RequestParam(required = false) Long maintenanceId,
+            @Parameter(description = "维修员用户名（可选，优先使用用户名）", required = false) 
+            @RequestParam(required = false) String maintenanceUsername,
+            HttpServletRequest request) {
+        try {
+            if (!hasPermission(request, "task:assign")) {
+                return Result.forbidden("无权限分配任务");
+            }
+
+            // 获取当前用户ID（调度员）
+            Long dispatcherId = getCurrentUserId(request);
+            if (dispatcherId == null) {
+                return Result.unauthorized("未认证或认证已过期");
+            }
+            
+            DispatchTask updatedTask;
+            // 如果提供了维修员用户名，优先使用用户名
+            if (maintenanceUsername != null && !maintenanceUsername.trim().isEmpty()) {
+                String dispatcherUsername = getCurrentUsername(request);
+                updatedTask = taskService.assignTaskToMaintenanceWithUsername(id, vehicleId, maintenanceUsername, dispatcherUsername);
+                return Result.success("维修任务分配成功，邮件通知已发送", updatedTask);
+            } else {
+                // 否则使用维修员ID
+                updatedTask = taskService.assignTaskToMaintenance(id, vehicleId, maintenanceId, dispatcherId);
+                return Result.success("维修任务分配成功，邮件通知已发送", updatedTask);
+            }
+        } catch (Exception e) {
+            log.error("分配维修任务失败", e);
             return Result.error(e.getMessage());
         }
     }
@@ -267,14 +310,14 @@ public class DispatchTaskController {
     }
 
     @PutMapping("/{id}/complete")
-    @Operation(summary = "完成任务", description = "标记任务为已完成")
+    @Operation(summary = "完成任务", description = "标记任务为已完成（需要task:complete权限）")
     public Result<DispatchTask> completeTask(
             @Parameter(description = "任务ID", required = true) 
             @PathVariable Long id,
             HttpServletRequest request) {
         try {
-            if (!hasPermission(request, "task:update")) {
-                return Result.forbidden("无权限完成任务");
+            if (!hasPermission(request, "task:complete")) {
+                return Result.forbidden("无权限完成任务，需要task:complete权限");
             }
 
             DispatchTask updatedTask = taskService.completeTask(id);
@@ -330,6 +373,40 @@ public class DispatchTaskController {
     public Result<TaskStatistics> getTaskStatistics() {
         TaskStatistics statistics = taskService.getTaskStatistics();
         return Result.success(statistics);
+    }
+
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId(HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return null;
+            }
+            String token = authHeader.substring(7);
+            return jwtUtils.getUserIdFromToken(token);
+        } catch (Exception e) {
+            log.warn("获取当前用户ID失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 获取当前用户名
+     */
+    private String getCurrentUsername(HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return null;
+            }
+            String token = authHeader.substring(7);
+            return jwtUtils.getUsernameFromToken(token);
+        } catch (Exception e) {
+            log.warn("获取当前用户名失败: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

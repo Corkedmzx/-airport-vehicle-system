@@ -114,6 +114,14 @@
       </div>
       
       <div class="toolbar-right">
+        <el-button 
+          type="danger" 
+          @click="batchDeleteAlerts" 
+          :disabled="selectedAlerts.length === 0"
+        >
+          <el-icon><Delete /></el-icon>
+          一键删除 ({{ selectedAlerts.length }})
+        </el-button>
         <el-button type="primary" @click="batchAcknowledge">
           <el-icon><Check /></el-icon>
           批量确认
@@ -199,29 +207,60 @@
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
-            <el-button 
-              v-if="row.status === 'unprocessed'"
-              type="primary" 
-              size="small" 
-              @click="acknowledgeAlert(row)"
-            >
-              确认
-            </el-button>
-            <el-button 
-              v-if="row.status === 'processing'"
-              type="success" 
-              size="small" 
-              @click="resolveAlert(row)"
-            >
-              解决
-            </el-button>
+            <!-- 维修员按钮：确认、完成、报告 -->
+            <template v-if="isMaintenanceRole">
+              <el-button 
+                v-if="row.status === 'unprocessed'"
+                type="primary" 
+                size="small" 
+                @click="acknowledgeAlert(row)"
+              >
+                确认
+              </el-button>
+              <el-button 
+                v-if="row.status === 'processing'"
+                type="success" 
+                size="small" 
+                @click="resolveAlert(row)"
+              >
+                完成
+              </el-button>
+              <el-button 
+                type="warning" 
+                size="small" 
+                @click="sendReportEmail(row)"
+              >
+                报告
+              </el-button>
+            </template>
+            
+            <!-- 管理员按钮：分配任务 -->
+            <template v-if="isAdminRole">
+              <el-button 
+                v-if="row.category === 'vehicle_fault' && row.status !== 'resolved'"
+                type="warning" 
+                size="small" 
+                @click="assignTaskFromAlert(row)"
+              >
+                分配任务
+              </el-button>
+            </template>
+            
+            <!-- 通用按钮：详情、删除 -->
             <el-button 
               size="small" 
               @click="viewAlertDetail(row)"
             >
               详情
+            </el-button>
+            <el-button 
+              type="danger" 
+              size="small" 
+              @click="deleteAlert(row)"
+            >
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -289,7 +328,13 @@
             <div class="content-item">
               <label>相关车辆:</label>
               <el-button type="primary" link @click="viewVehicle(currentAlert.vehicleId)">
-                {{ currentAlert.vehiclePlate }}
+                {{ currentAlert.vehiclePlate || '查看车辆' }}
+              </el-button>
+            </div>
+            <div v-if="currentAlert.reportId" class="content-item">
+              <label>关联报告:</label>
+              <el-button type="primary" link @click="viewReport(currentAlert.reportId)">
+                查看报告 #{{ currentAlert.reportId }}
               </el-button>
             </div>
           </div>
@@ -330,6 +375,99 @@
             @click="resolveAlert(currentAlert)"
           >
             标记已解决
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 分配任务对话框 -->
+    <el-dialog
+      v-model="assignTaskDialogVisible"
+      title="从告警创建维护任务"
+      width="600px"
+      @close="resetAssignTaskForm"
+    >
+      <el-form
+        ref="assignTaskFormRef"
+        :model="assignTaskForm"
+        :rules="assignTaskRules"
+        label-width="120px"
+      >
+        <el-form-item label="告警信息">
+          <el-input :value="currentAlert?.title" disabled />
+        </el-form-item>
+        
+        <el-form-item label="任务名称" prop="taskName">
+          <el-input v-model="assignTaskForm.taskName" placeholder="请输入任务名称" />
+        </el-form-item>
+        
+        <el-form-item label="任务类型">
+          <el-input value="维护调度" disabled />
+        </el-form-item>
+        
+        <el-form-item label="优先级" prop="priority">
+          <el-select v-model="assignTaskForm.priority" style="width: 100%">
+            <el-option label="低" :value="1" />
+            <el-option label="中" :value="2" />
+            <el-option label="高" :value="3" />
+            <el-option label="紧急" :value="4" />
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item label="车辆位置" prop="startLocation">
+          <el-input v-model="assignTaskForm.startLocation" placeholder="请输入车辆位置" />
+        </el-form-item>
+        
+        <el-form-item label="维修地点" prop="endLocation">
+          <el-input v-model="assignTaskForm.endLocation" placeholder="请输入维修地点" />
+        </el-form-item>
+        
+        <el-form-item label="开始时间" prop="startTime">
+          <el-date-picker
+            v-model="assignTaskForm.startTime"
+            type="datetime"
+            placeholder="选择开始时间"
+            style="width: 100%"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm:ss"
+          />
+        </el-form-item>
+        
+        <el-form-item label="任务描述" prop="description">
+          <el-input
+            v-model="assignTaskForm.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入任务描述（将从告警信息自动填充）"
+          />
+        </el-form-item>
+        
+        <el-form-item label="分配维修员" prop="maintenanceUsername">
+          <el-select
+            v-model="assignTaskForm.maintenanceUsername"
+            placeholder="请选择维修员"
+            style="width: 100%"
+            filterable
+            @focus="loadMaintenance"
+          >
+            <el-option
+              v-for="maintenance in availableMaintenance"
+              :key="maintenance.id"
+              :label="`${maintenance.realName || maintenance.username} (${maintenance.username})`"
+              :value="maintenance.username"
+            >
+              <span>{{ maintenance.realName || maintenance.username }}</span>
+              <span style="color: #8492a6; font-size: 13px; margin-left: 8px;">{{ maintenance.username }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="assignTaskDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmAssignTask" :loading="assignTaskLoading">
+            创建并分配任务
           </el-button>
         </span>
       </template>
@@ -455,12 +593,22 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Setting, Download, Warning, InfoFilled, CircleCheck, Bell,
-  Search, Check, Refresh
+  Search, Check, Refresh, Message, Delete
 } from '@element-plus/icons-vue'
 import type { Alert } from '@/api/types'
 import dayjs from 'dayjs'
+import { sendAlertEmailApi } from '@/api/email'
+import { useUserStore } from '@/store/user'
+import { isMaintenance, hasPermission } from '@/utils/permission'
 
 const router = useRouter()
+const userStore = useUserStore()
+
+// 判断是否为维修员
+const isMaintenanceRole = computed(() => isMaintenance())
+
+// 判断是否为管理员（有任务分配权限）
+const isAdminRole = computed(() => hasPermission('task:assign'))
 
 // 告警统计数据
 const alertStats = ref({
@@ -501,6 +649,32 @@ const loading = ref(false)
 // 详情对话框
 const detailDialogVisible = ref(false)
 const currentAlert = ref<Alert | null>(null)
+
+// 分配任务对话框
+const assignTaskDialogVisible = ref(false)
+const assignTaskFormRef = ref()
+const assignTaskLoading = ref(false)
+const assignTaskForm = ref({
+  taskName: '',
+  priority: 3,
+  startLocation: '',
+  endLocation: '',
+  startTime: '',
+  description: '',
+  maintenanceUsername: ''
+})
+const assignTaskRules = {
+  taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
+  startLocation: [{ required: true, message: '请输入车辆位置', trigger: 'blur' }],
+  endLocation: [{ required: true, message: '请输入维修地点', trigger: 'blur' }],
+  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+  maintenanceUsername: [{ required: true, message: '请选择维修员', trigger: 'change' }]
+}
+
+// 可用维修员列表
+const availableMaintenance = ref<any[]>([])
+const maintenanceLoaded = ref(false)
 
 // 过滤后的告警列表
 const filteredAlerts = computed(() => {
@@ -605,8 +779,16 @@ const formatDateTime = (time: string) => {
 }
 
 // 查看车辆
-const viewVehicle = (vehicleId: string) => {
+const viewVehicle = (vehicleId: string | number) => {
   router.push(`/vehicles/${vehicleId}`)
+}
+
+// 查看报告
+const viewReport = (reportId: string | number) => {
+  // 可以跳转到报告详情页面，或者显示报告信息
+  ElMessage.info(`报告ID: ${reportId}，报告详情功能开发中`)
+  // 如果将来有报告详情页面，可以使用：
+  // router.push(`/vehicle-reports/${reportId}`)
 }
 
 // 查看告警详情
@@ -618,6 +800,175 @@ const viewAlertDetail = (alert: Alert) => {
 // 重置详情表单
 const resetDetailForm = () => {
   currentAlert.value = null
+}
+
+// 从告警分配任务
+const assignTaskFromAlert = async (alert: Alert) => {
+  currentAlert.value = alert
+  
+  // 加载车辆信息
+  if (alert.vehicleId) {
+    try {
+      const { getVehicleApi } = await import('@/api/vehicles')
+      const response = await getVehicleApi(Number(alert.vehicleId))
+      if (response.data.code === 200) {
+        const vehicle = response.data.data
+        assignTaskForm.value.startLocation = vehicle.locationAddress || vehicle.vehicleNo + ' 当前位置'
+      }
+    } catch (error) {
+      console.error('加载车辆信息失败:', error)
+    }
+  }
+  
+  // 填充表单
+  assignTaskForm.value = {
+    taskName: `维修任务 - ${alert.title}`,
+    priority: alert.severity === 'high' ? 4 : alert.severity === 'medium' ? 3 : 2,
+    startLocation: assignTaskForm.value.startLocation || '待确认',
+    endLocation: '维修车间',
+    startTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    description: alert.description || '',
+    maintenanceUsername: ''
+  }
+  
+  assignTaskDialogVisible.value = true
+  loadMaintenance()
+}
+
+// 加载维修员列表
+const loadMaintenance = async () => {
+  if (maintenanceLoaded.value && availableMaintenance.value.length > 0) return
+  
+  try {
+    const { getUsersApi } = await import('@/api/users')
+    const response = await getUsersApi({ page: 0, size: 1000 })
+    
+    if (response.data.code === 200) {
+      let users: any[] = []
+      if (response.data.data?.content && Array.isArray(response.data.data.content)) {
+        users = response.data.data.content
+      } else if (Array.isArray(response.data.data)) {
+        users = response.data.data
+      }
+      
+      // 筛选出维修员角色的用户
+      availableMaintenance.value = users.filter((user: any) => {
+        if (user.status !== 1 && user.status !== 'active') {
+          return false
+        }
+        
+        if (user.roles && Array.isArray(user.roles)) {
+          if (user.roles.length > 0 && typeof user.roles[0] === 'object') {
+            return user.roles.some((role: any) => 
+              role.roleCode === 'MAINTENANCE' || 
+              role.roleName?.includes('维修') ||
+              role.roleName?.toLowerCase().includes('maintenance')
+            )
+          } else if (typeof user.roles[0] === 'string') {
+            return user.roles.includes('MAINTENANCE') || 
+                   user.roles.some((code: string) => code.toLowerCase().includes('maintenance'))
+          }
+        }
+        
+        if (user.role === 'MAINTENANCE' || user.role?.toLowerCase() === 'maintenance') {
+          return true
+        }
+        
+        return false
+      })
+      
+      maintenanceLoaded.value = true
+    }
+  } catch (error) {
+    console.error('加载维修员列表失败:', error)
+    ElMessage.warning('加载维修员列表失败，请刷新重试')
+  }
+}
+
+// 确认分配任务
+const confirmAssignTask = async () => {
+  if (!assignTaskFormRef.value) return
+  
+  try {
+    await assignTaskFormRef.value.validate()
+    
+    if (!currentAlert.value) {
+      ElMessage.error('告警信息不存在')
+      return
+    }
+    
+    assignTaskLoading.value = true
+    
+    // 创建维护调度任务
+    const { createTaskApi } = await import('@/api/tasks')
+    const taskData = {
+      taskName: assignTaskForm.value.taskName,
+      taskType: '维护调度',
+      priority: assignTaskForm.value.priority,
+      startLocation: assignTaskForm.value.startLocation,
+      endLocation: assignTaskForm.value.endLocation,
+      startTime: assignTaskForm.value.startTime,
+      description: assignTaskForm.value.description,
+      status: 1 // 待分配
+    }
+    
+    const createResponse = await createTaskApi(taskData)
+    
+    if (createResponse.data.code === 200) {
+      const createdTask = createResponse.data.data
+      
+      // 分配任务给维修员
+      if (currentAlert.value.vehicleId) {
+        const { assignTaskToMaintenanceApi } = await import('@/api/tasks')
+        await assignTaskToMaintenanceApi(
+          createdTask.id,
+          Number(currentAlert.value.vehicleId),
+          undefined,
+          assignTaskForm.value.maintenanceUsername
+        )
+        
+        // 更新告警状态为处理中，并关联任务ID
+        const { acknowledgeAlertApi, updateAlertApi } = await import('@/api/alerts')
+        // 先更新告警关联任务ID
+        try {
+          await updateAlertApi(Number(currentAlert.value.id), { taskId: createdTask.id })
+        } catch (error) {
+          console.warn('更新告警任务ID失败:', error)
+        }
+        // 然后确认告警
+        await acknowledgeAlertApi(Number(currentAlert.value.id))
+        
+        ElMessage.success('任务创建并分配成功，已通知维修员')
+        assignTaskDialogVisible.value = false
+        await loadAlerts()
+        await loadAlertStats()
+      } else {
+        ElMessage.error('告警未关联车辆，无法分配任务')
+      }
+    } else {
+      ElMessage.error(createResponse.data.message || '创建任务失败')
+    }
+  } catch (error: any) {
+    if (error !== false) {
+      ElMessage.error(error?.response?.data?.message || '分配任务失败')
+    }
+  } finally {
+    assignTaskLoading.value = false
+  }
+}
+
+// 重置分配任务表单
+const resetAssignTaskForm = () => {
+  assignTaskForm.value = {
+    taskName: '',
+    priority: 3,
+    startLocation: '',
+    endLocation: '',
+    startTime: '',
+    description: '',
+    maintenanceUsername: ''
+  }
+  assignTaskFormRef.value?.clearValidate()
 }
 
 // 确认告警
@@ -894,6 +1245,69 @@ const handleSelectionChange = (selection: Alert[]) => {
   selectedAlerts.value = selection
 }
 
+// 删除告警
+const deleteAlert = async (alert: Alert) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这条告警吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const { deleteAlertApi } = await import('@/api/alerts')
+    const response = await deleteAlertApi(Number(alert.id))
+    if (response.data.code === 200) {
+      ElMessage.success('删除成功')
+      await loadData()
+    } else {
+      ElMessage.error(response.data.message || '删除失败')
+    }
+  } catch (error: any) {
+    if (error === 'cancel') {
+      return
+    }
+    console.error('Delete alert failed:', error)
+    ElMessage.error(error?.response?.data?.message || '删除失败')
+  }
+}
+
+// 批量删除告警
+const batchDeleteAlerts = async () => {
+  if (selectedAlerts.value.length === 0) {
+    ElMessage.warning('请先选择要删除的告警')
+    return
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedAlerts.value.length} 条告警吗？此操作不可恢复！`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    const { deleteAlertsApi } = await import('@/api/alerts')
+    const alertIds = selectedAlerts.value.map(alert => Number(alert.id))
+    const response = await deleteAlertsApi(alertIds)
+    if (response.data.code === 200) {
+      ElMessage.success(`成功删除 ${alertIds.length} 条告警`)
+      selectedAlerts.value = []
+      await loadData()
+    } else {
+      ElMessage.error(response.data.message || '批量删除失败')
+    }
+  } catch (error: any) {
+    if (error === 'cancel') {
+      return
+    }
+    console.error('Batch delete alerts failed:', error)
+    ElMessage.error(error?.response?.data?.message || '批量删除失败')
+  }
+}
+
 // 分页大小变化
 const handleSizeChange = (size: number) => {
   pagination.value.size = size
@@ -1065,6 +1479,36 @@ const loadAlertsOld = async () => {
     pagination.value.total = alerts.value.length
   } catch (error) {
     console.error('Load alerts failed:', error)
+  }
+}
+
+// 维修员发送报告邮件给管理员
+const sendReportEmail = async (alert: Alert) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要向管理员发送告警报告邮件吗？',
+      '发送报告邮件',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    )
+    
+    const { default: request } = await import('@/utils/request')
+    const response = await request.post(`/alerts/${alert.id}/send-report-email`)
+    
+    if (response.data.code === 200) {
+      ElMessage.success('报告邮件已发送给管理员')
+    } else {
+      ElMessage.error(response.data.message || '发送失败')
+    }
+  } catch (error: any) {
+    if (error === 'cancel') {
+      return
+    }
+    console.error('发送报告邮件失败:', error)
+    ElMessage.error(error?.response?.data?.message || '发送报告邮件失败')
   }
 }
 

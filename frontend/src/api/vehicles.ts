@@ -51,3 +51,8 @@ export const getVehiclesByTypeApi = (typeId: number) => {
 export const getVehicleStatisticsApi = () => {
   return request.get<VehicleStatistics>('/vehicles/statistics')
 }
+
+// 创建车辆报告
+export const createVehicleReportApi = (data: any) => {
+  return request.post('/vehicle-reports', data)
+}

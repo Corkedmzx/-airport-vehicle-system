@@ -71,6 +71,39 @@ WHERE id = 1;
 3. **自动选择SMTP服务器**：系统会根据邮箱域名自动选择对应的SMTP服务器（如163.com -> smtp.163.com）
 4. **发送邮件**：使用用户的邮箱账号发送邮件给该用户
 
+## 邮件测试功能
+
+系统提供了邮件测试功能，可以在系统设置页面测试邮件发送是否正常。
+
+### 使用步骤
+
+1. **进入系统设置**
+   - 登录系统后，点击左侧菜单"系统设置"
+   - 选择"邮件配置"标签页
+
+2. **查看已配置邮箱的用户**
+   - 系统会显示所有已填写邮箱的用户列表
+   - 包括用户ID、用户名、真实姓名、邮箱地址等信息
+
+3. **发送测试邮件**
+   - 在用户列表的操作列，点击"测试发送"按钮
+   - 确认后，系统会向该用户的邮箱发送一封测试邮件
+   - 测试邮件包含系统信息和邮件配置验证说明
+
+### API接口
+
+系统提供了邮件测试API接口：
+
+- **接口地址**: `POST /api/email/test`
+- **请求参数**:
+  ```json
+  {
+    "email": "user@example.com",
+    "subject": "测试邮件 - 机场车辆监控与调度系统"
+  }
+  ```
+- **权限要求**: 需要用户认证（JWT Token）
+
 ## 使用示例
 
 ### 后端代码
@@ -94,6 +127,24 @@ emailService.sendDriverTaskAssignmentEmail(
 ### 前端代码
 
 前端无需特殊配置，邮件发送由后端自动处理。用户只需在个人资料或管理员在用户管理中配置邮箱和授权码即可。
+
+### 邮件测试代码示例
+
+```typescript
+// 前端调用邮件测试接口
+import { sendTestEmailApi } from '@/api/email'
+
+const testEmail = async (email: string) => {
+  try {
+    const response = await sendTestEmailApi(email, '测试邮件')
+    if (response.data.code === 200) {
+      console.log('测试邮件发送成功')
+    }
+  } catch (error) {
+    console.error('测试邮件发送失败:', error)
+  }
+}
+```
 
 ## 常见问题
 

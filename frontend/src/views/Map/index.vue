@@ -1003,17 +1003,17 @@ const handleVehicleLocationUpdate = (data: any) => {
       
       // 将WGS84坐标转换为BD09坐标
       convertWGS84ToBD09(wgs84Lon, wgs84Lat).then(bd09Coord => {
-        pcLocation.value = {
+      pcLocation.value = {
           latitude: bd09Coord.lat,
           longitude: bd09Coord.lng,
-          accuracy: data.accuracy || 0
-        }
+        accuracy: data.accuracy || 0
+      }
         // WebSocket更新时不自动缩放，保持用户当前视图
         updatePCLocationMarker(false)
         console.log('[PC位置] WebSocket更新成功，坐标已转换（WGS84 -> BD09），地图标记已刷新:', {
           wgs84: { lat: wgs84Lat, lng: wgs84Lon },
           bd09: { lat: pcLocation.value.latitude, lng: pcLocation.value.longitude },
-          accuracy: pcLocation.value.accuracy
+        accuracy: pcLocation.value.accuracy
         })
       }).catch(error => {
         console.error('[PC位置] WebSocket位置坐标转换失败:', error.message)

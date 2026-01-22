@@ -103,6 +103,18 @@
         </div>
         
         <div class="navbar-right">
+          <!-- 消息中心 -->
+          <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99" class="message-badge">
+            <el-button
+              type="text"
+              :icon="Message"
+              @click="goToMessages"
+              class="message-btn"
+            >
+              消息中心
+            </el-button>
+          </el-badge>
+          
           <!-- 用户信息 -->
           <el-dropdown @command="handleUserCommand">
             <div class="user-info">
@@ -149,9 +161,10 @@ import {
   Van, Odometer, List, DataAnalysis, Setting,
   Expand, Fold, ArrowDown, User, SwitchButton,
   VideoCamera, Operation, MapLocation, Warning,
-  UserFilled, Document, Tools
+  UserFilled, Document, Tools, Message
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
+import { getUnreadCountApi } from '@/api/messages'
 
 const route = useRoute()
 const router = useRouter()
@@ -159,6 +172,26 @@ const userStore = useUserStore()
 
 // 侧边栏折叠状态
 const isCollapsed = ref(false)
+
+// 未读消息数量
+const unreadCount = ref(0)
+
+// 加载未读消息数量
+const loadUnreadCount = async () => {
+  try {
+    const response = await getUnreadCountApi()
+    if (response.data.code === 200) {
+      unreadCount.value = response.data.data || 0
+    }
+  } catch (error: any) {
+    console.error('Load unread count failed:', error)
+  }
+}
+
+// 跳转到消息中心
+const goToMessages = () => {
+  router.push('/messages')
+}
 
 // 当前激活的菜单
 const activeMenu = computed(() => {
@@ -210,6 +243,14 @@ onMounted(() => {
   if (savedState) {
     isCollapsed.value = JSON.parse(savedState)
   }
+  
+  // 加载未读消息数量
+  loadUnreadCount()
+  
+  // 每30秒刷新一次未读数量
+  setInterval(() => {
+    loadUnreadCount()
+  }, 30000)
 })
 
 // 保存侧边栏状态
@@ -325,6 +366,23 @@ watch(isCollapsed, (newVal) => {
     }
     
     .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .message-badge {
+        .message-btn {
+          color: var(--text-primary-color);
+          font-size: 14px;
+          padding: 8px 12px;
+          
+          &:hover {
+            background-color: #f5f7fa;
+            border-radius: 6px;
+          }
+        }
+      }
+      
       .user-info {
         display: flex;
         align-items: center;

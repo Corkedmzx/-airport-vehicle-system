@@ -84,9 +84,10 @@ public interface DispatchTaskService {
      * @param taskId 任务ID
      * @param vehicleId 车辆ID
      * @param driverId 司机ID
+     * @param dispatcherId 调度员ID（可选，用于记录和通知）
      * @return 更新后的任务
      */
-    DispatchTask assignTask(Long taskId, Long vehicleId, Long driverId);
+    DispatchTask assignTask(Long taskId, Long vehicleId, Long driverId, Long dispatcherId);
 
     /**
      * 分配任务给车辆和司机（通过用户名）
@@ -94,9 +95,10 @@ public interface DispatchTaskService {
      * @param taskId 任务ID
      * @param vehicleId 车辆ID
      * @param driverUsername 司机用户名
+     * @param dispatcherId 调度员ID（可选，用于记录和通知）
      * @return 更新后的任务
      */
-    DispatchTask assignTaskWithDriver(Long taskId, Long vehicleId, String driverUsername);
+    DispatchTask assignTaskWithDriver(Long taskId, Long vehicleId, String driverUsername, Long dispatcherId);
 
     /**
      * 分配任务给用户
@@ -106,6 +108,28 @@ public interface DispatchTaskService {
      * @return 更新后的任务
      */
     DispatchTask assignTaskToUser(Long taskId, String username);
+
+    /**
+     * 分配维护调度任务给维修员
+     * 
+     * @param taskId 任务ID
+     * @param vehicleId 车辆ID（需要维修的车辆）
+     * @param maintenanceId 维修员ID
+     * @param dispatcherId 调度员ID（用于记录和通知）
+     * @return 更新后的任务
+     */
+    DispatchTask assignTaskToMaintenance(Long taskId, Long vehicleId, Long maintenanceId, Long dispatcherId);
+
+    /**
+     * 分配维护调度任务给维修员（通过用户名）
+     * 
+     * @param taskId 任务ID
+     * @param vehicleId 车辆ID（需要维修的车辆）
+     * @param maintenanceUsername 维修员用户名
+     * @param dispatcherUsername 调度员用户名
+     * @return 更新后的任务
+     */
+    DispatchTask assignTaskToMaintenanceWithUsername(Long taskId, Long vehicleId, String maintenanceUsername, String dispatcherUsername);
 
     /**
      * 取消分配任务（将已分配的任务恢复为待分配状态）

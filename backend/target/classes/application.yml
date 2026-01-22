@@ -50,7 +50,7 @@ spring:
     hibernate:
       ddl-auto: update
       naming:
-        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        physical-strategy: com.airport.config.HibernateNamingConfig
     show-sql: false
     properties:
       hibernate:

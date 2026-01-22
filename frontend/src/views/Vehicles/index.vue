@@ -92,6 +92,14 @@
               编辑
             </el-button>
             <el-button 
+              v-if="(isDriver() || isMaintenance()) && !hasPermission('vehicle:update')"
+              type="warning" 
+              link 
+              @click.stop="handleReport(row)"
+            >
+              填写报告
+            </el-button>
+            <el-button 
               v-if="hasPermission('vehicle:delete')"
               type="danger" 
               link 
@@ -120,14 +128,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
 import { getVehiclesApi, deleteVehicleApi } from '@/api/vehicles'
 import type { Vehicle } from '@/api/types'
 import { formatDate, timeAgo } from '@/utils'
-import { hasPermission } from '@/utils/permission'
+import { hasPermission, isDriver, isMaintenance } from '@/utils/permission'
 
 const router = useRouter()
 
@@ -264,6 +272,11 @@ const handleDelete = async (row: Vehicle) => {
   }
 }
 
+// 填写报告（司机）
+const handleReport = (row: Vehicle) => {
+  router.push(`/vehicles/${row.id}/report`)
+}
+
 // 分页变化
 const handleSizeChange = (size: number) => {
   pagination.size = size
@@ -276,9 +289,25 @@ const handleCurrentChange = (page: number) => {
   loadVehicles()
 }
 
+// 自动刷新定时器
+let refreshTimer: NodeJS.Timeout | null = null
+
 // 组件挂载
 onMounted(() => {
   loadVehicles()
+  
+  // 设置自动刷新（每30秒刷新一次）
+  refreshTimer = setInterval(() => {
+    loadVehicles()
+  }, 30000)
+})
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
 })
 </script>
 

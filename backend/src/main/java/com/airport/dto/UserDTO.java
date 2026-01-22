@@ -24,11 +24,19 @@ public class UserDTO {
     private java.time.LocalDateTime createTime;
     private java.time.LocalDateTime updateTime;
     private List<String> roles; // 角色代码列表
+    private List<String> permissions; // 权限代码列表
 
     /**
      * 从SysUser实体转换为UserDTO
      */
     public static UserDTO fromEntity(SysUser user, List<String> roles) {
+        return fromEntity(user, roles, null);
+    }
+
+    /**
+     * 从SysUser实体转换为UserDTO（包含权限）
+     */
+    public static UserDTO fromEntity(SysUser user, List<String> roles, List<String> permissions) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
@@ -43,6 +51,7 @@ public class UserDTO {
         dto.setCreateTime(user.getCreateTime());
         dto.setUpdateTime(user.getUpdateTime());
         dto.setRoles(roles);
+        dto.setPermissions(permissions);
         return dto;
     }
 }

@@ -32,3 +32,17 @@ export const getAlertStatisticsApi = () => {
   return request.get('/alerts/statistics')
 }
 
+// 删除告警
+export const deleteAlertApi = (id: number) => {
+  return request.delete(`/alerts/${id}`)
+}
+
+// 批量删除告警
+export const deleteAlertsApi = (alertIds: number[]) => {
+  return request.delete('/alerts/batch', { data: alertIds })
+}
+
+// 更新告警
+export const updateAlertApi = (id: number, data: Partial<Alert>) => {
+  return request.put(`/alerts/${id}`, data)
+}

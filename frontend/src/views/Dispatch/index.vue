@@ -150,6 +150,91 @@
         </div>
       </div>
 
+      <!-- 进行中任务 -->
+      <div class="dispatch-section">
+        <div class="section-header">
+          <h3 class="section-title">进行中任务 ({{ inProgressTasks.length }})</h3>
+          <div class="section-actions">
+            <el-button @click="refreshData" size="small">
+              <el-icon><Refresh /></el-icon>
+              刷新
+            </el-button>
+          </div>
+        </div>
+        
+        <div class="tasks-table">
+          <el-table
+            v-loading="loading"
+            :data="inProgressTasks"
+            style="width: 100%"
+          >
+            <el-table-column prop="taskName" label="任务名称" min-width="150">
+              <template #default="{ row }">
+                <div class="task-info">
+                  <div class="task-name">{{ row.taskName }}</div>
+                  <div class="task-id">编号: {{ row.taskNo }}</div>
+                </div>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="taskType" label="类型" width="100">
+              <template #default="{ row }">
+                <el-tag size="small">{{ row.taskType }}</el-tag>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="row.status === 3 ? 'primary' : 'warning'" size="small">
+                  {{ row.status === 3 ? '执行中' : '已分配' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="assignedVehicleId" label="分配车辆" width="120">
+              <template #default="{ row }">
+                {{ getVehicleNo(row.assignedVehicleId) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="startLocation" label="起点" min-width="120" />
+            <el-table-column prop="endLocation" label="终点" min-width="120" />
+            
+            <el-table-column prop="progress" label="进度" width="120">
+              <template #default="{ row }">
+                <el-progress
+                  :percentage="row.progress || 0"
+                  :status="row.status === 4 ? 'success' : undefined"
+                  :show-text="false"
+                  :stroke-width="6"
+                />
+                <span style="font-size: 12px; color: #666;">{{ row.progress || 0 }}%</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="操作" width="200" fixed="right">
+              <template #default="{ row }">
+                <el-button 
+                  v-if="canCompleteTask(row)"
+                  type="success" 
+                  size="small" 
+                  @click="completeTask(row)"
+                >
+                  完成任务
+                </el-button>
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  @click="viewTaskDetail(row)"
+                >
+                  查看详情
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+
       <!-- 车辆状态 -->
       <div class="dispatch-section">
         <div class="section-header">
@@ -297,7 +382,37 @@
           </el-select>
         </el-form-item>
         
-        <el-form-item label="分配司机" prop="driverUsername">
+        <!-- 根据任务类型显示不同的分配选项 -->
+        <el-form-item 
+          v-if="selectedTaskType === '维护调度'"
+          label="分配维修员" 
+          prop="maintenanceUsername"
+        >
+          <el-select 
+            v-model="assignForm.maintenanceUsername" 
+            placeholder="请选择维修员"
+            style="width: 100%"
+            filterable
+            @focus="loadMaintenance"
+          >
+            <el-option
+              v-for="maintenance in availableMaintenance"
+              :key="maintenance.id"
+              :label="`${maintenance.realName || maintenance.username} (${maintenance.username})`"
+              :value="maintenance.username"
+            >
+              <span>{{ maintenance.realName || maintenance.username }}</span>
+              <span style="color: #8492a6; font-size: 13px; margin-left: 8px;">{{ maintenance.username }}</span>
+              <span v-if="maintenance.email" style="color: #8492a6; font-size: 12px; margin-left: 8px;">{{ maintenance.email }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item 
+          v-else
+          label="分配司机" 
+          prop="driverUsername"
+        >
           <el-select 
             v-model="assignForm.driverUsername" 
             placeholder="请选择司机"
@@ -351,14 +466,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import {
   Operation, Refresh, List, Van, Odometer, TrendCharts
 } from '@element-plus/icons-vue'
 import type { DispatchTask, Vehicle } from '@/api/types'
+import { isDriver, isMaintenance, hasPermission } from '@/utils/permission'
+import { useUserStore } from '@/store/user'
 import dayjs from 'dayjs'
+
+const userStore = useUserStore()
 
 // 扩展Vehicle类型，添加任务相关属性和显示属性
 interface VehicleWithTask extends Vehicle {
@@ -388,8 +507,14 @@ const dispatchStats = ref({
 // 待分配任务列表
 const pendingTasks = ref<DispatchTask[]>([])
 
+// 进行中任务列表（状态为2-已分配或3-执行中）
+const inProgressTasks = ref<DispatchTask[]>([])
+
 // 车辆列表
 const availableVehicles = ref<VehicleWithTask[]>([])
+
+// 自动刷新定时器
+let refreshTimer: NodeJS.Timeout | null = null
 
 // 筛选后的车辆列表
 const filteredVehicles = ref<VehicleWithTask[]>([])
@@ -410,6 +535,7 @@ const assignForm = ref({
   taskName: '',
   vehicleId: '',
   driverUsername: '',
+  maintenanceUsername: '',
   estimatedDuration: 0,
   notes: ''
 })
@@ -418,21 +544,39 @@ const assignForm = ref({
 const availableDrivers = ref<any[]>([])
 const driversLoaded = ref(false)
 
-// 分配表单验证规则
-const assignRules = {
-  taskId: [
-    { required: true, message: '请选择任务', trigger: 'change' }
-  ],
-  vehicleId: [
-    { required: true, message: '请选择车辆', trigger: 'change' }
-  ],
-  driverUsername: [
-    { required: true, message: '请选择司机', trigger: 'change' }
-  ],
-  estimatedDuration: [
-    { required: true, message: '请输入预计时长', trigger: 'blur' }
-  ]
-}
+// 可用维修员列表
+const availableMaintenance = ref<any[]>([])
+const maintenanceLoaded = ref(false)
+
+// 当前选中的任务类型（用于判断显示司机还是维修员）
+const selectedTaskType = computed(() => {
+  if (!assignForm.value.taskId) return ''
+  const task = pendingTasks.value.find(t => t.id === Number(assignForm.value.taskId))
+  return task?.taskType || ''
+})
+
+// 分配表单验证规则（动态验证，根据任务类型）
+const assignRules = computed(() => {
+  const isMaintenanceTask = selectedTaskType.value === '维护调度'
+  
+  return {
+    taskId: [
+      { required: true, message: '请选择任务', trigger: 'change' }
+    ],
+    vehicleId: [
+      { required: true, message: '请选择车辆', trigger: 'change' }
+    ],
+    driverUsername: isMaintenanceTask ? [] : [
+      { required: true, message: '请选择司机', trigger: 'change' }
+    ],
+    maintenanceUsername: !isMaintenanceTask ? [] : [
+      { required: true, message: '请选择维修员', trigger: 'change' }
+    ],
+    estimatedDuration: [
+      { required: true, message: '请输入预计时长', trigger: 'blur' }
+    ]
+  }
+})
 
 // 可用于分配的车辆
 const availableVehiclesForAssign = computed(() => {
@@ -728,13 +872,19 @@ const autoAssignAll = async () => {
 // 手动分配
 // 手动分配任务
 const manualAssign = (task?: DispatchTask) => {
-  // 打开对话框时加载司机列表
-  loadDrivers()
+  // 根据任务类型加载不同的列表
+  if (task?.taskType === '维护调度') {
+    loadMaintenance()
+  } else {
+    loadDrivers()
+  }
+  
   assignForm.value = {
     taskId: task ? task.id.toString() : '',
     taskName: task ? task.taskName : '',
     vehicleId: '',
     driverUsername: '',
+    maintenanceUsername: '',
     estimatedDuration: task?.estimatedDuration || 60,
     notes: ''
   }
@@ -747,6 +897,17 @@ const handleTaskChange = (taskId: number) => {
   if (task) {
     assignForm.value.taskName = task.taskName
     assignForm.value.estimatedDuration = task.estimatedDuration || 60
+    
+    // 根据任务类型加载不同的列表
+    if (task.taskType === '维护调度') {
+      loadMaintenance()
+      // 清空司机选择
+      assignForm.value.driverUsername = ''
+    } else {
+      loadDrivers()
+      // 清空维修员选择
+      assignForm.value.maintenanceUsername = ''
+    }
   }
 }
 
@@ -904,6 +1065,64 @@ const loadDrivers = async () => {
   }
 }
 
+// 加载维修员列表
+const loadMaintenance = async () => {
+  if (maintenanceLoaded.value && availableMaintenance.value.length > 0) return
+  
+  try {
+    const { getUsersApi } = await import('@/api/users')
+    const response = await getUsersApi({ page: 0, size: 1000 })
+    
+    if (response.data.code === 200) {
+      // 处理分页数据或直接数组数据
+      let users: any[] = []
+      if (response.data.data?.content && Array.isArray(response.data.data.content)) {
+        users = response.data.data.content
+      } else if (Array.isArray(response.data.data)) {
+        users = response.data.data
+      }
+      
+      // 筛选出维修员角色的用户
+      availableMaintenance.value = users.filter((user: any) => {
+        // 只显示启用的用户
+        if (user.status !== 1 && user.status !== 'active') {
+          return false
+        }
+        
+        // 检查用户角色
+        if (user.roles && Array.isArray(user.roles)) {
+          // 如果 roles 是对象数组（包含 roleCode 或 roleName）
+          if (user.roles.length > 0 && typeof user.roles[0] === 'object') {
+            return user.roles.some((role: any) => 
+              role.roleCode === 'MAINTENANCE' || 
+              role.roleName?.includes('维修') ||
+              role.roleName?.toLowerCase().includes('maintenance')
+            )
+          } 
+          // 如果 roles 是字符串数组（roleCode列表）
+          else if (typeof user.roles[0] === 'string') {
+            return user.roles.includes('MAINTENANCE') || 
+                   user.roles.some((code: string) => code.toLowerCase().includes('maintenance'))
+          }
+        }
+        
+        // 检查是否有role字段（单个角色）
+        if (user.role === 'MAINTENANCE' || user.role?.toLowerCase() === 'maintenance') {
+          return true
+        }
+        
+        return false
+      })
+      
+      maintenanceLoaded.value = true
+      console.log('已加载维修员列表:', availableMaintenance.value.length, availableMaintenance.value)
+    }
+  } catch (error) {
+    console.error('加载维修员列表失败:', error)
+    ElMessage.warning('加载维修员列表失败，请刷新重试')
+  }
+}
+
 // 确认分配
 const confirmAssign = async () => {
   if (!assignFormRef.value) return
@@ -911,19 +1130,43 @@ const confirmAssign = async () => {
   try {
     await assignFormRef.value.validate()
     
-    if (!assignForm.value.driverUsername) {
-      ElMessage.warning('请选择司机')
-      return
+    const task = pendingTasks.value.find(t => t.id === Number(assignForm.value.taskId))
+    const isMaintenanceTask = task?.taskType === '维护调度'
+    
+    // 根据任务类型验证不同的字段
+    if (isMaintenanceTask) {
+      if (!assignForm.value.maintenanceUsername) {
+        ElMessage.warning('请选择维修员')
+        return
+      }
+    } else {
+      if (!assignForm.value.driverUsername) {
+        ElMessage.warning('请选择司机')
+        return
+      }
     }
     
-    // 调用分配API，传递司机用户名
-    const { assignTaskApi } = await import('@/api/tasks')
-    const response = await assignTaskApi(
-      Number(assignForm.value.taskId),
-      Number(assignForm.value.vehicleId),
-      undefined,
-      assignForm.value.driverUsername
-    )
+    let response: any
+    
+    if (isMaintenanceTask) {
+      // 调用维修任务分配API
+      const { assignTaskToMaintenanceApi } = await import('@/api/tasks')
+      response = await assignTaskToMaintenanceApi(
+        Number(assignForm.value.taskId),
+        Number(assignForm.value.vehicleId),
+        undefined,
+        assignForm.value.maintenanceUsername
+      )
+    } else {
+      // 调用普通任务分配API，传递司机用户名
+      const { assignTaskApi } = await import('@/api/tasks')
+      response = await assignTaskApi(
+        Number(assignForm.value.taskId),
+        Number(assignForm.value.vehicleId),
+        undefined,
+        assignForm.value.driverUsername
+      )
+    }
     
     if (response.data.code === 200) {
       const updatedTask = response.data.data
@@ -980,6 +1223,7 @@ const confirmAssign = async () => {
 // 刷新数据
 const refreshData = async () => {
   await loadData()
+  await loadInProgressTasks()
   ElMessage.success('数据已刷新')
 }
 
@@ -990,7 +1234,8 @@ const loadData = async () => {
     // 先加载任务数据，再加载车辆数据（车辆数据需要任务数据来标记hasTask）
     await Promise.all([
       loadDispatchStats(),
-      loadPendingTasks()
+      loadPendingTasks(),
+      loadInProgressTasks()
     ])
     // 车辆数据加载会使用任务数据，所以单独加载
     await loadAvailableVehicles()
@@ -1181,9 +1426,114 @@ const loadAvailableVehicles = async () => {
   }
 }
 
+// 检查是否可以完成任务
+const canCompleteTask = (task: DispatchTask): boolean => {
+  // 检查任务状态
+  if (task.status !== 2 && task.status !== 3) {
+    return false
+  }
+  // 检查权限
+  const hasPerm = hasPermission('task:complete')
+  // 调试日志（仅在开发环境）
+  if (!hasPerm && import.meta.env.DEV) {
+    console.log('用户没有task:complete权限', {
+      userInfo: userStore.userInfo,
+      permissions: userStore.userInfo?.permissions
+    })
+  }
+  return hasPerm
+}
+
+// 完成任务
+const completeTask = async (task: DispatchTask) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要完成任务 "${task.taskName}" 吗？`,
+      '确认完成任务',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    const { completeTaskApi } = await import('@/api/tasks')
+    const response = await completeTaskApi(task.id)
+    
+    if (response.data.code === 200) {
+      ElMessage.success('任务已完成')
+      // 立即刷新数据
+      await loadData()
+      await loadAvailableVehicles()
+    } else {
+      ElMessage.error(response.data.message || '完成任务失败')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.response?.data?.message || '完成任务失败')
+    }
+  }
+}
+
+// 查看任务详情
+const viewTaskDetail = (task: DispatchTask) => {
+  router.push(`/tasks/${task.id}`)
+}
+
+// 获取车辆号
+const getVehicleNo = (vehicleId: any) => {
+  if (!vehicleId) return '-'
+  const vehicle = availableVehicles.value.find(v => {
+    const vId = typeof v.id === 'string' ? Number(v.id) : v.id
+    const tVId = typeof vehicleId === 'string' ? Number(vehicleId) : vehicleId
+    return vId === tVId
+  })
+  return vehicle?.plateNumber || vehicleId
+}
+
+// 加载进行中任务
+const loadInProgressTasks = async () => {
+  try {
+    const { getTasksApi } = await import('@/api/tasks')
+    const response = await getTasksApi({ status: undefined }) // 获取所有任务
+    
+    if (response.data.code === 200) {
+      let allTasks: DispatchTask[] = []
+      if (Array.isArray(response.data.data)) {
+        allTasks = response.data.data
+      } else if (response.data.data?.content) {
+        allTasks = response.data.data.content
+      }
+      
+      // 筛选出状态为2（已分配）或3（执行中）的任务
+      inProgressTasks.value = allTasks.filter((task: DispatchTask) => 
+        task.status === 2 || task.status === 3
+      )
+    }
+  } catch (error) {
+    console.error('Load in-progress tasks failed:', error)
+    inProgressTasks.value = []
+  }
+}
+
 // 组件挂载时加载数据
 onMounted(() => {
   loadData()
+  loadInProgressTasks()
+  
+  // 设置自动刷新（每30秒刷新一次）
+  refreshTimer = setInterval(() => {
+    loadData()
+    loadInProgressTasks()
+  }, 30000)
+})
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
 })
 </script>
 

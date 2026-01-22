@@ -157,6 +157,28 @@ CREATE TABLE IF NOT EXISTS `vehicle_location` (
     KEY `idx_vehicle_time` (`vehicle_id`, `location_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='车辆实时位置表';
 
+-- 车辆报告表（司机提交的车辆问题报告）
+CREATE TABLE IF NOT EXISTS `vehicle_report` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '报告ID',
+    `vehicle_id` bigint NOT NULL COMMENT '车辆ID',
+    `reporter_id` bigint NOT NULL COMMENT '报告人ID（司机）',
+    `report_type` varchar(50) NOT NULL COMMENT '报告类型:fault-故障,maintenance-维修需求,other-其他',
+    `title` varchar(200) NOT NULL COMMENT '报告标题',
+    `description` text NOT NULL COMMENT '问题描述',
+    `severity` varchar(20) DEFAULT 'medium' COMMENT '严重程度:low-低,medium-中,high-高,urgent-紧急',
+    `status` varchar(20) DEFAULT 'pending' COMMENT '处理状态:pending-待处理,processing-处理中,resolved-已解决,closed-已关闭',
+    `handler_id` bigint DEFAULT NULL COMMENT '处理人ID',
+    `handler_notes` text DEFAULT NULL COMMENT '处理备注',
+    `resolve_time` datetime DEFAULT NULL COMMENT '解决时间',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_vehicle_id` (`vehicle_id`),
+    KEY `idx_reporter_id` (`reporter_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='车辆报告表';
+
 -- ================================
 -- 3. 调度管理相关表
 -- ================================
@@ -220,6 +242,7 @@ CREATE TABLE IF NOT EXISTS `alert` (
     `category` varchar(50) NOT NULL COMMENT '告警类别:vehicle_fault,task_timeout,system_error,safety_alert',
     `vehicle_id` bigint DEFAULT NULL COMMENT '关联车辆ID',
     `task_id` bigint DEFAULT NULL COMMENT '关联任务ID',
+    `report_id` bigint DEFAULT NULL COMMENT '关联报告ID（车辆报告）',
     `status` varchar(20) DEFAULT 'unprocessed' COMMENT '状态:unprocessed-未处理,processing-处理中,resolved-已解决',
     `assignee` varchar(50) DEFAULT NULL COMMENT '处理人',
     `acknowledged` tinyint DEFAULT 0 COMMENT '是否已确认:0-未确认,1-已确认',
@@ -231,6 +254,7 @@ CREATE TABLE IF NOT EXISTS `alert` (
     PRIMARY KEY (`id`),
     KEY `idx_vehicle_id` (`vehicle_id`),
     KEY `idx_task_id` (`task_id`),
+    KEY `idx_report_id` (`report_id`),
     KEY `idx_status` (`status`),
     KEY `idx_severity` (`severity`),
     KEY `idx_create_time` (`create_time`)
@@ -407,6 +431,7 @@ INSERT INTO `sys_permission` (`permission_name`, `permission_code`, `permission_
 ('编辑任务', 'task:update', 'button', '编辑任务信息', 1),
 ('删除任务', 'task:delete', 'button', '删除任务', 1),
 ('分配任务', 'task:assign', 'button', '分配任务给车辆', 1),
+('完成任务', 'task:complete', 'button', '确认完成任务', 1),
 ('调度中心', 'dispatch:view', 'menu', '查看调度中心', 1),
 ('实时监控', 'monitoring:view', 'menu', '查看实时监控', 1),
 ('统计分析', 'statistics:view', 'menu', '查看统计分析', 1),
@@ -430,9 +455,14 @@ INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
 SELECT 7, id FROM `sys_permission` WHERE `permission_code` IN ('task:view', 'task:create', 'task:update', 'vehicle:view', 'vehicle:create', 'vehicle:update', 'monitoring:view')
 ON DUPLICATE KEY UPDATE `role_id` = 7;
 
+-- 为DRIVER角色分配权限
+INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
+SELECT 3, id FROM `sys_permission` WHERE `permission_code` IN ('task:view', 'task:complete', 'dispatch:view', 'monitoring:view', 'vehicle:view')
+ON DUPLICATE KEY UPDATE `role_id` = 3;
+
 -- 为MAINTENANCE角色分配权限
 INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
-SELECT 4, id FROM `sys_permission` WHERE `permission_code` IN ('alert:view', 'monitoring:view', 'vehicle:view')
+SELECT 4, id FROM `sys_permission` WHERE `permission_code` IN ('alert:view', 'monitoring:view', 'vehicle:view', 'task:view', 'task:complete', 'dispatch:view')
 ON DUPLICATE KEY UPDATE `role_id` = 4;
 
 -- 为MONITOR角色分配权限
@@ -449,6 +479,34 @@ INSERT INTO `vehicle` (`vehicle_no`, `vehicle_type_id`, `brand`, `model`, `color
 ('京C11111', 3, '解放', 'CA1165PK2L2T4E', '黄色', '2022-11-10', 1, 116.4200, 39.8968, '货运区'),
 ('京D22222', 4, '比亚迪', 'T4A', '绿色', '2026-01-08', 1, 116.4334, 39.9156, '清洁区') AS new
 ON DUPLICATE KEY UPDATE `vehicle_no` = new.`vehicle_no`;
+
+-- ================================
+-- 7. 站内信相关表
+-- ================================
+
+-- 站内信表
+CREATE TABLE IF NOT EXISTS `message` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+    `user_id` bigint NOT NULL COMMENT '接收用户ID',
+    `title` varchar(200) NOT NULL COMMENT '消息标题',
+    `content` text NOT NULL COMMENT '消息内容',
+    `message_type` varchar(50) NOT NULL COMMENT '消息类型:task_assignment-任务分配,task_completion-任务完成,alert-告警,maintenance-维修,system-系统通知',
+    `category` varchar(50) DEFAULT NULL COMMENT '消息类别:与邮件类型对应',
+    `read` tinyint DEFAULT 0 COMMENT '是否已读:0-未读,1-已读',
+    `read_time` datetime DEFAULT NULL COMMENT '阅读时间',
+    `related_id` bigint DEFAULT NULL COMMENT '关联ID（如任务ID、告警ID等）',
+    `related_type` varchar(50) DEFAULT NULL COMMENT '关联类型:task,alert,vehicle等',
+    `priority` varchar(20) DEFAULT 'normal' COMMENT '优先级:high-高,medium-中,low-低,normal-普通',
+    `extra_data` text COMMENT '扩展数据(JSON格式)',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_read` (`read`),
+    KEY `idx_message_type` (`message_type`),
+    KEY `idx_create_time` (`create_time`),
+    KEY `idx_related` (`related_type`, `related_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='站内信表';
 
 -- 创建示例调度任务
 INSERT INTO `dispatch_task` (`task_no`, `task_name`, `task_type`, `priority`, `description`, `start_location`, `end_location`, `start_time`) VALUES

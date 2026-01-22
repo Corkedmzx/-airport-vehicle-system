@@ -54,6 +54,12 @@ public class Alert extends BaseEntity {
     private Long taskId;
 
     /**
+     * 关联报告ID（车辆报告）
+     */
+    @Column(name = "report_id")
+    private Long reportId;
+
+    /**
      * 处理状态:unprocessed-未处理,processing-处理中,resolved-已解决
      */
     @Column(name = "status", nullable = false, length = 20)

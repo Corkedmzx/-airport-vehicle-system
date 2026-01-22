@@ -124,6 +124,36 @@ export const useUserStore = defineStore('user', () => {
     return false
   }
   
+  // 刷新用户信息（用于权限更新后刷新）
+  const refreshUserInfo = async () => {
+    try {
+      const { getCurrentUserApi } = await import('@/api/users')
+      const response = await getCurrentUserApi()
+      if (response.data.code === 200) {
+        const user = response.data.data
+        // 更新用户信息
+        userInfo.value = {
+          id: user.id,
+          username: user.username,
+          realName: user.realName || '',
+          email: user.email || '',
+          avatar: user.avatar || '',
+          roles: user.roles || [],
+          permissions: user.permissions || []
+        }
+        // 更新本地存储
+        localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+        ElMessage.success('用户权限已刷新')
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('刷新用户信息失败:', error)
+      ElMessage.error('刷新用户权限失败，请重新登录')
+      return false
+    }
+  }
+  
   return {
     // 状态
     token,
@@ -135,6 +165,7 @@ export const useUserStore = defineStore('user', () => {
     logout,
     checkTokenExpiry,
     initUserInfo,
-    restoreLogin
+    restoreLogin,
+    refreshUserInfo
   }
 })

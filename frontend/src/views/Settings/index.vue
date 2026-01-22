@@ -208,6 +208,64 @@
               </template>
             </el-alert>
             
+            <el-card class="config-card" style="margin-bottom: 20px;">
+              <template #header>
+                <span>邮件通知类型说明</span>
+              </template>
+              <div class="email-notification-types-scroll">
+                <div class="email-notification-types">
+                <div class="notification-type-item">
+                  <h4>🔴 管理员 (ADMIN)</h4>
+                  <ul>
+                    <li>系统级告警通知</li>
+                    <li>重要操作通知（用户管理、角色权限变更、系统配置等）</li>
+                    <li>所有高优先级告警</li>
+                  </ul>
+                </div>
+                <div class="notification-type-item">
+                  <h4>🔵 调度员 (DISPATCHER)</h4>
+                  <ul>
+                    <li>任务创建确认邮件</li>
+                    <li>任务完成通知</li>
+                    <li>任务相关告警</li>
+                    <li>高优先级告警</li>
+                  </ul>
+                </div>
+                <div class="notification-type-item">
+                  <h4>🚗 司机 (DRIVER)</h4>
+                  <ul>
+                    <li>任务分配通知（包含车辆信息）</li>
+                    <li>任务取消分配通知</li>
+                    <li>任务完成确认</li>
+                  </ul>
+                </div>
+                <div class="notification-type-item">
+                  <h4>🔧 维修员 (MAINTENANCE)</h4>
+                  <ul>
+                    <li>车辆故障告警</li>
+                    <li>维修提醒（定期保养、故障维修等）</li>
+                    <li>车辆状态变化通知</li>
+                  </ul>
+                </div>
+                <div class="notification-type-item">
+                  <h4>👁️ 监控员 (MONITOR)</h4>
+                  <ul>
+                    <li>系统状态通知（正常/警告/错误）</li>
+                    <li>告警通知</li>
+                    <li>系统错误通知</li>
+                  </ul>
+                </div>
+                <div class="notification-type-item">
+                  <h4>⚙️ 操作员 (OPERATOR)</h4>
+                  <ul>
+                    <li>操作确认通知（车辆/用户操作）</li>
+                    <li>资源变更通知</li>
+                  </ul>
+                </div>
+                </div>
+              </div>
+            </el-card>
+            
             <!-- 已填写邮箱的用户列表 -->
             <el-card class="config-card">
               <template #header>
@@ -575,6 +633,27 @@ const saveRolePermissionsFromDialog = async () => {
       closeEditPermissionsDialog()
       // 重新加载数据
       await loadRolePermissions()
+      
+      // 提示用户刷新权限（如果当前用户属于该角色）
+      const userStore = useUserStore()
+      const currentUserRoles = userStore.userInfo?.roles || []
+      const updatedRoleCode = currentEditRole.value.roleCode
+      
+      if (currentUserRoles.includes(updatedRoleCode)) {
+        ElMessageBox.confirm(
+          '您所属角色的权限已更新，是否立即刷新您的用户权限？',
+          '权限更新成功',
+          {
+            confirmButtonText: '立即刷新',
+            cancelButtonText: '稍后刷新',
+            type: 'success'
+          }
+        ).then(async () => {
+          await userStore.refreshUserInfo()
+        }).catch(() => {
+          ElMessage.info('您可以在个人资料页面手动刷新权限，或重新登录以获取最新权限')
+        })
+      }
     } else {
       ElMessage.error(response.data.message || '保存失败')
     }
@@ -698,8 +777,9 @@ const loadUsersWithEmail = async () => {
 }
 
 // 测试发送邮件
-const testEmail = (user: User) => {
-  ElMessageBox.confirm(
+const testEmail = async (user: User) => {
+  try {
+    await ElMessageBox.confirm(
     `确定要向用户 "${user.username}" (${user.email}) 发送测试邮件吗？`,
     '测试发送邮件',
     {
@@ -707,11 +787,23 @@ const testEmail = (user: User) => {
       cancelButtonText: '取消',
       type: 'info'
     }
-  ).then(() => {
-    ElMessage.info('测试邮件功能暂未实现，请通过任务分配等功能测试邮件发送')
-  }).catch(() => {
-    // 取消
-  })
+    )
+    
+    const { sendTestEmailApi } = await import('@/api/email')
+    const response = await sendTestEmailApi(user.email, '测试邮件 - 机场车辆监控与调度系统')
+    
+    if (response.data.code === 200) {
+      ElMessage.success('测试邮件发送成功')
+    } else {
+      ElMessage.error(response.data.message || '发送失败')
+    }
+  } catch (error: any) {
+    if (error === 'cancel') {
+      return
+    }
+    console.error('发送测试邮件失败:', error)
+    ElMessage.error(error?.response?.data?.message || '发送测试邮件失败')
+  }
 }
 
 // 组件挂载时加载数据
@@ -873,6 +965,62 @@ const handleTabChange = (tabName: string) => {
     color: var(--text-regular-color);
     margin-bottom: 24px;
     flex-shrink: 0;
+  }
+}
+
+.email-notification-types-scroll {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 10px;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+}
+
+.email-notification-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  
+  .notification-type-item {
+    padding: 16px;
+    background: #f5f7fa;
+    border-radius: 8px;
+    border-left: 4px solid #409EFF;
+    
+    h4 {
+      margin: 0 0 12px 0;
+      color: #303133;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #606266;
+      font-size: 14px;
+      line-height: 1.8;
+      
+      li {
+        margin-bottom: 6px;
+      }
+    }
   }
 }
 

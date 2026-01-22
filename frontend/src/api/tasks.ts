@@ -40,6 +40,19 @@ export const assignTaskApi = (id: number, vehicleId: number, driverId?: number, 
   })
 }
 
+// 分配维修任务给维修员（支持维修员ID或用户名）
+export const assignTaskToMaintenanceApi = (id: number, vehicleId: number, maintenanceId?: number, maintenanceUsername?: string) => {
+  const params: any = { vehicleId }
+  if (maintenanceUsername) {
+    params.maintenanceUsername = maintenanceUsername
+  } else if (maintenanceId) {
+    params.maintenanceId = maintenanceId
+  }
+  return request.put<DispatchTask>(`/tasks/${id}/assign-to-maintenance`, null, {
+    params
+  })
+}
+
 // 取消分配任务
 export const unassignTaskApi = (id: number) => {
   return request.put<DispatchTask>(`/tasks/${id}/unassign`)

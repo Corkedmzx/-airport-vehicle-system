@@ -139,6 +139,19 @@ export interface QueryParams {
 }
 
 // 告警相关类型
+export interface VehicleReport {
+  id?: number
+  vehicleId: number
+  reporterId?: number
+  reportType: string
+  severity: string
+  title: string
+  description: string
+  status?: string
+  createTime?: string
+  updateTime?: string
+}
+
 export interface Alert {
   id: string
   title: string
@@ -147,6 +160,7 @@ export interface Alert {
   category: string
   vehicleId: string
   vehiclePlate: string
+  reportId?: number
   status: 'unprocessed' | 'processing' | 'resolved'
   assignee?: string
   createdAt: string
@@ -176,6 +190,24 @@ export interface User {
   loginCount?: number
   createdAt: string
   remark?: string
+}
+
+// 站内信相关类型
+export interface Message {
+  id: number
+  userId: number
+  title: string
+  content: string
+  messageType: 'task_assignment' | 'task_completion' | 'alert' | 'maintenance' | 'system'
+  category?: string
+  read: boolean
+  readTime?: string
+  relatedId?: number
+  relatedType?: 'task' | 'alert' | 'vehicle'
+  priority: 'high' | 'medium' | 'low' | 'normal'
+  extraData?: string
+  createTime: string
+  updateTime: string
 }
 
 // 日志相关类型

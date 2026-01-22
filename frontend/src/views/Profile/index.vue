@@ -168,6 +168,55 @@
           </el-form-item>
         </el-form>
       </el-card>
+
+      <!-- 权限信息卡片 -->
+      <el-card class="profile-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <el-icon><Lock /></el-icon>
+            <span>权限信息</span>
+            <el-button 
+              type="primary" 
+              size="small" 
+              :loading="refreshingPermissions"
+              @click="refreshPermissions"
+              style="margin-left: auto;"
+            >
+              <el-icon><Refresh /></el-icon>
+              刷新权限
+            </el-button>
+          </div>
+        </template>
+
+        <div class="permission-info">
+          <div class="info-item">
+            <label>权限列表：</label>
+            <div class="permission-tags">
+              <el-tag
+                v-for="permission in userStore.userInfo?.permissions || []"
+                :key="permission"
+                type="success"
+                style="margin-right: 8px; margin-bottom: 8px;"
+              >
+                {{ getPermissionName(permission) }}
+              </el-tag>
+              <span v-if="!userStore.userInfo?.permissions || userStore.userInfo.permissions.length === 0" style="color: #909399;">
+                暂无权限
+              </span>
+            </div>
+          </div>
+          <el-alert
+            title="提示"
+            type="info"
+            :closable="false"
+            style="margin-top: 20px;"
+          >
+            <template #default>
+              <p>如果您的权限已更新，请点击"刷新权限"按钮以获取最新权限，或重新登录系统。</p>
+            </template>
+          </el-alert>
+        </div>
+      </el-card>
     </div>
   </div>
 </template>
@@ -187,6 +236,7 @@ const profileFormRef = ref<FormInstance>()
 const passwordFormRef = ref<FormInstance>()
 const saving = ref(false)
 const changingPassword = ref(false)
+const refreshingPermissions = ref(false)
 
 const profileForm = reactive<Partial<UserType>>({
   id: '',
@@ -386,6 +436,45 @@ const resetForm = () => {
   profileFormRef.value?.resetFields()
 }
 
+// 刷新权限
+const refreshPermissions = async () => {
+  try {
+    refreshingPermissions.value = true
+    await userStore.refreshUserInfo()
+  } catch (error) {
+    console.error('刷新权限失败:', error)
+  } finally {
+    refreshingPermissions.value = false
+  }
+}
+
+// 获取权限名称
+const getPermissionName = (permissionCode: string) => {
+  const permissionMap: Record<string, string> = {
+    'user:view': '查看用户',
+    'user:create': '创建用户',
+    'user:update': '编辑用户',
+    'user:delete': '删除用户',
+    'vehicle:view': '查看车辆',
+    'vehicle:create': '创建车辆',
+    'vehicle:update': '编辑车辆',
+    'vehicle:delete': '删除车辆',
+    'task:view': '查看任务',
+    'task:create': '创建任务',
+    'task:update': '编辑任务',
+    'task:delete': '删除任务',
+    'task:assign': '分配任务',
+    'task:complete': '完成任务',
+    'dispatch:view': '查看调度中心',
+    'monitoring:view': '查看实时监控',
+    'statistics:view': '查看统计分析',
+    'alert:view': '查看告警',
+    'system:view': '查看系统设置',
+    'permission:manage': '管理权限'
+  }
+  return permissionMap[permissionCode] || permissionCode
+}
+
 // 获取角色名称
 const getRoleName = (roleCode: string) => {
   const roleMap: Record<string, string> = {
@@ -418,6 +507,34 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.permission-info {
+  padding: 10px 0;
+}
+
+.permission-info .info-item {
+  margin-bottom: 20px;
+}
+
+.permission-info .info-item label {
+  display: inline-block;
+  width: 100px;
+  font-weight: 500;
+  color: #606266;
+  margin-bottom: 10px;
+}
+
+.permission-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .profile-page {
   padding: 24px;
   max-width: 1200px;

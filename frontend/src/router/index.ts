@@ -68,6 +68,13 @@ const router = createRouter({
           meta: { title: '编辑车辆', hidden: true }
         },
         {
+          path: 'vehicles/:id/report',
+          name: 'VehicleReport',
+          // @ts-ignore: ignore missing module/type declaration for .vue files
+          component: () => import('@/views/Vehicles/Report.vue'),
+          meta: { title: '车辆问题报告', hidden: true }
+        },
+        {
           path: 'tasks',
           name: 'Tasks',
           // @ts-ignore: ignore missing module/type declaration for .vue files
@@ -143,6 +150,13 @@ const router = createRouter({
           // @ts-ignore: ignore missing module/type declaration for .vue files
           component: () => import('@/views/Logs/index.vue'),
           meta: { title: '系统日志' }
+        },
+        {
+          path: 'messages',
+          name: 'Messages',
+          // @ts-ignore: ignore missing module/type declaration for .vue files
+          component: () => import('@/views/Messages/index.vue'),
+          meta: { title: '站内信' }
         },
         {
           path: 'settings',

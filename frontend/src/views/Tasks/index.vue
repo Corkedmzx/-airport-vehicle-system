@@ -116,7 +116,7 @@
                 开始
               </el-button>
               <el-button
-                v-if="row.status === 3 && hasPermission('task:update')"
+                v-if="row.status === 3 && hasPermission('task:complete')"
                 type="warning"
                 link
                 @click.stop="handleComplete(row)"
@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
@@ -446,9 +446,25 @@ const handleCurrentChange = (page: number) => {
   loadTasks()
 }
 
+// 自动刷新定时器
+let refreshTimer: NodeJS.Timeout | null = null
+
 // 组件挂载
 onMounted(() => {
   loadTasks()
+  
+  // 设置自动刷新（每30秒刷新一次）
+  refreshTimer = setInterval(() => {
+    loadTasks()
+  }, 30000)
+})
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
 })
 </script>
 

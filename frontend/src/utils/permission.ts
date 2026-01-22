@@ -54,3 +54,20 @@ export const isViewer = (): boolean => {
                                                        'task:create', 'task:update', 'task:delete'])
 }
 
+/**
+ * 检查用户是否是司机
+ */
+export const isDriver = (): boolean => {
+  const userStore = useUserStore()
+  const roles = userStore.userInfo?.roles || []
+  return roles.includes('DRIVER')
+}
+
+/**
+ * 检查用户是否是维修员
+ */
+export const isMaintenance = (): boolean => {
+  const userStore = useUserStore()
+  const roles = userStore.userInfo?.roles || []
+  return roles.includes('MAINTENANCE')
+}

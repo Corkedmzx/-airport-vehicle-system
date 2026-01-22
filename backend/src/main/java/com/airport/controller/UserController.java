@@ -43,6 +43,8 @@ public class UserController {
     private final SysRoleRepository roleRepository;
     private final SysUserRepository userRepository;
     private final com.airport.utils.JwtUtils jwtUtils;
+    private final com.airport.repository.SysRolePermissionRepository rolePermissionRepository;
+    private final com.airport.repository.SysPermissionRepository permissionRepository;
 
     /**
      * 从请求头中获取当前用户名
@@ -364,7 +366,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息")
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息（包含角色和权限）")
     public Result<UserDTO> getCurrentUser(HttpServletRequest request) {
         try {
             String currentUsername = getCurrentUsername(request);
@@ -373,12 +375,33 @@ public class UserController {
             }
             
             SysUser user = userService.findByUsername(currentUsername);
+            
+            // 获取角色代码
             List<String> roleCodes = userRoleRepository.findByUserId(user.getId()).stream()
                     .map(userRole -> roleRepository.findById(userRole.getRoleId()))
                     .filter(java.util.Optional::isPresent)
                     .map(opt -> opt.get().getRoleCode())
                     .collect(Collectors.toList());
-            UserDTO userDTO = UserDTO.fromEntity(user, roleCodes);
+            
+            // 获取权限代码
+            List<String> permissionCodes = new java.util.ArrayList<>();
+            List<SysUserRole> userRoles = userRoleRepository.findByUserId(user.getId());
+            for (SysUserRole userRole : userRoles) {
+                List<com.airport.entity.SysRolePermission> rolePermissions = 
+                        rolePermissionRepository.findByRoleId(userRole.getRoleId());
+                if (rolePermissions != null) {
+                    for (com.airport.entity.SysRolePermission rp : rolePermissions) {
+                        permissionRepository.findById(rp.getPermissionId())
+                                .ifPresent(permission -> {
+                                    if (!permissionCodes.contains(permission.getPermissionCode())) {
+                                        permissionCodes.add(permission.getPermissionCode());
+                                    }
+                                });
+                    }
+                }
+            }
+            
+            UserDTO userDTO = UserDTO.fromEntity(user, roleCodes, permissionCodes);
             return Result.success(userDTO);
         } catch (Exception e) {
             log.error("获取当前用户信息失败", e);
