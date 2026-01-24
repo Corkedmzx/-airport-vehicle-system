@@ -36,7 +36,13 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        log.info("========== WebSocket连接尝试建立 ==========");
+        log.info("会话ID: {}", session.getId());
+        log.info("连接URI: {}", session.getUri());
+        
         String token = getTokenFromSession(session);
+        log.info("从会话中提取的token: {}", token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "null");
+        
         if (token == null || !validateToken(token)) {
             log.warn("WebSocket连接失败：无效的token");
             session.close(CloseStatus.BAD_DATA.withReason("无效的认证token"));
@@ -46,8 +52,13 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         String username = jwtUtils.getUsernameFromToken(token);
         Long userId = jwtUtils.getUserIdFromToken(token);
         
+        log.info("Token验证成功，用户: {}, 用户ID: {}", username, userId);
+        
         userSessions.put(username, session);
-        log.info("WebSocket连接已建立，用户: {}, 用户ID: {}", username, userId);
+        log.info("========== ✅ WebSocket连接已建立 ==========");
+        log.info("用户: {}, 用户ID: {}, 会话ID: {}", username, userId, session.getId());
+        log.info("当前用户会话数量: {}", userSessions.size());
+        log.info("所有用户会话: {}", userSessions.keySet());
         
         // 发送连接成功消息
         sendMessage(session, createMessage("CONNECTED", Map.of("message", "连接成功")));
@@ -123,15 +134,21 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         }
         
         // 发送给所有连接的用户（用于地图监控页面，包括PC位置）
-        userSessions.values().forEach(s -> {
+        log.debug("广播位置更新给所有用户，位置数据: {}", locationData);
+        int sentCount = 0;
+        for (WebSocketSession s : userSessions.values()) {
             if (s.isOpen()) {
                 try {
-                    sendMessage(s, createMessage("VEHICLE_LOCATION_UPDATE", locationData));
+                    String message = createMessage("VEHICLE_LOCATION_UPDATE", locationData);
+                    sendMessage(s, message);
+                    sentCount++;
+                    log.debug("位置更新已发送给用户会话: {}", s.getId());
                 } catch (Exception e) {
-                    log.error("发送位置更新给用户失败", e);
+                    log.error("发送位置更新给用户失败，会话ID: {}", s.getId(), e);
                 }
             }
-        });
+        }
+        log.info("位置更新已广播给 {} 个用户会话", sentCount);
     }
 
     /**

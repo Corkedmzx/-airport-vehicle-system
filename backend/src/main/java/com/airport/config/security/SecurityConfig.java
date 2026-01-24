@@ -105,6 +105,7 @@ public class SecurityConfig {
                     
                     // MQTT位置上传（公开访问，用于PC位置上传）
                     "/api/mqtt/upload-pc-location",
+                    "/mqtt/upload-pc-location",
                     "/api/druid/index.html",
                     "/druid/index.html",
                     

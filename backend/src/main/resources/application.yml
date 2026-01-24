@@ -45,6 +45,11 @@ spring:
         url-pattern: /*
         exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
   
+  # Web MVC配置 - 禁用默认静态资源处理，避免拦截API路由
+  web:
+    resources:
+      add-mappings: false  # 禁用默认静态资源映射，只使用明确配置的静态资源路径
+  
   # JPA配置
   jpa:
     hibernate:

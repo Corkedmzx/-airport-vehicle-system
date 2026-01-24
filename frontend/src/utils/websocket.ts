@@ -24,18 +24,32 @@ export class WebSocketClient {
       const token = userStore.token
       
       if (!token) {
-        console.warn('未登录，跳过WebSocket连接')
+        console.warn('[WebSocket] ⚠️ 未登录，跳过WebSocket连接')
         return
+      }
+
+      console.log('[WebSocket] ========== 开始连接WebSocket ==========')
+      console.log('[WebSocket] Token存在:', !!token)
+      console.log('[WebSocket] Token前10个字符:', token.substring(0, 10) + '...')
+      
+      // 如果已有连接，先关闭
+      if (this.ws) {
+        console.log('[WebSocket] 关闭现有连接')
+        this.ws.close()
+        this.ws = null
       }
 
       // 使用SockJS降级方案
       const wsUrl = this.getWebSocketUrl(token)
+      console.log('[WebSocket] 创建WebSocket连接，URL:', wsUrl)
       this.ws = new WebSocket(wsUrl)
       
       this.setupEventListeners()
       
+      console.log('[WebSocket] WebSocket对象已创建，等待连接...')
+      
     } catch (error) {
-      console.error('WebSocket连接失败:', error)
+      console.error('[WebSocket] ❌ WebSocket连接失败:', error)
       this.scheduleReconnect()
     }
   }
@@ -44,12 +58,26 @@ export class WebSocketClient {
    * 获取WebSocket URL
    */
   private getWebSocketUrl(token: string): string {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
-    const wsPath = '/api/ws/vehicles'
+    // 前端开发环境使用代理，需要直接连接到后端
+    const isDev = import.meta.env.DEV
+    let protocol = 'ws:'
+    let host = 'localhost:8080'
     
-    // 使用token参数
-    return `${protocol}//${host}${wsPath}?token=${encodeURIComponent(token)}`
+    if (isDev) {
+      // 开发环境：直接连接后端
+      protocol = 'ws:'
+      host = 'localhost:8080'
+    } else {
+      // 生产环境：使用当前域名
+      protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      host = window.location.host
+    }
+    
+    const wsPath = '/api/ws/vehicles'
+    const url = `${protocol}//${host}${wsPath}?token=${encodeURIComponent(token)}`
+    
+    console.log('[WebSocket] 连接URL:', url)
+    return url
   }
 
   /**
@@ -59,7 +87,9 @@ export class WebSocketClient {
     if (!this.ws) return
 
     this.ws.onopen = () => {
-      console.log('WebSocket连接已建立')
+      console.log('[WebSocket] ========== ✅ WebSocket连接已建立 ==========')
+      console.log('[WebSocket] 连接URL:', this.ws?.url)
+      console.log('[WebSocket] 连接状态:', this.ws?.readyState, '(OPEN=1)')
       this.reconnectAttempts = 0
       this.startHeartbeat()
       this.notifyListeners('connect', {})
@@ -68,24 +98,35 @@ export class WebSocketClient {
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
+        console.log('[WebSocket] ========== 收到WebSocket消息 ==========')
+        console.log('[WebSocket] 原始消息字符串:', event.data)
+        console.log('[WebSocket] 解析后的消息对象:', JSON.stringify(data, null, 2))
+        console.log('[WebSocket] 消息类型:', data.type)
+        console.log('[WebSocket] 消息数据:', JSON.stringify(data.data, null, 2))
         this.handleMessage(data)
       } catch (error) {
-        console.error('解析WebSocket消息失败:', error)
+        console.error('[WebSocket] ❌ 解析WebSocket消息失败:', error, '原始数据:', event.data)
       }
     }
 
     this.ws.onclose = (event) => {
-      console.log('WebSocket连接已关闭:', event.reason)
+      console.log('[WebSocket] ⚠️ WebSocket连接已关闭')
+      console.log('[WebSocket] 关闭原因:', event.reason)
+      console.log('[WebSocket] 关闭代码:', event.code)
+      console.log('[WebSocket] 是否正常关闭:', event.wasClean)
       this.stopHeartbeat()
       this.notifyListeners('disconnect', { reason: event.reason })
       
       if (!event.wasClean) {
+        console.log('[WebSocket] 连接异常关闭，将在3秒后重连...')
         this.scheduleReconnect()
       }
     }
 
     this.ws.onerror = (error) => {
-      console.error('WebSocket错误:', error)
+      console.error('[WebSocket] ❌ WebSocket错误:', error)
+      console.error('[WebSocket] 连接URL:', this.ws?.url)
+      console.error('[WebSocket] 连接状态:', this.ws?.readyState)
       this.notifyListeners('error', { error })
     }
   }
@@ -96,12 +137,15 @@ export class WebSocketClient {
   private handleMessage(data: any): void {
     const { type, data: messageData } = data
     
+    console.log('[WebSocket] 处理消息, type:', type, ', messageData:', messageData)
+    
     // 触发对应类型的监听器
     this.notifyListeners(type, messageData)
     
     // 特殊处理某些消息类型
     switch (type) {
       case 'VEHICLE_LOCATION_UPDATE':
+        console.log('[WebSocket] VEHICLE_LOCATION_UPDATE消息，调用handleVehicleLocationUpdate')
         this.handleVehicleLocationUpdate(messageData)
         break
       case 'ALERT_NOTIFICATION':
@@ -120,8 +164,26 @@ export class WebSocketClient {
    * 处理车辆位置更新
    */
   private handleVehicleLocationUpdate(data: any): void {
+    console.log('[WebSocket] ========== handleVehicleLocationUpdate被调用 ==========')
+    console.log('[WebSocket] 位置数据:', JSON.stringify(data, null, 2))
+    console.log('[WebSocket] 数据字段检查:', {
+      source: data.source,
+      deviceName: data.deviceName,
+      userId: data.userId,
+      userName: data.userName,
+      longitude: data.longitude,
+      latitude: data.latitude,
+      hasSource: !!data.source,
+      hasDeviceName: !!data.deviceName,
+      hasUserId: !!data.userId
+    })
     // 更新车辆位置
     this.notifyListeners('vehicle_location', data)
+    const listenerCount = this.listeners.get('vehicle_location')?.length || 0
+    console.log('[WebSocket] ✅ 已通知vehicle_location监听器，监听器数量:', listenerCount)
+    if (listenerCount === 0) {
+      console.warn('[WebSocket] ⚠️ 警告：没有注册vehicle_location监听器！')
+    }
   }
 
   /**
@@ -278,14 +340,20 @@ export class WebSocketClient {
    * 通知监听器
    */
   private notifyListeners(event: string, data: any): void {
-    if (this.listeners.has(event)) {
-      this.listeners.get(event)!.forEach(callback => {
+    const listeners = this.listeners.get(event)
+    console.log(`[WebSocket] notifyListeners: event=${event}, listeners数量=${listeners?.length || 0}`)
+    if (listeners && listeners.length > 0) {
+      listeners.forEach((callback, index) => {
         try {
+          console.log(`[WebSocket] 执行监听器 [${event}][${index}]`)
           callback(data)
+          console.log(`[WebSocket] 监听器 [${event}][${index}] 执行成功`)
         } catch (error) {
-          console.error(`WebSocket监听器执行错误 (${event}):`, error)
+          console.error(`[WebSocket] ❌ 执行监听器失败 [${event}][${index}]:`, error)
         }
       })
+    } else {
+      console.warn(`[WebSocket] ⚠️ 没有找到事件 [${event}] 的监听器`)
     }
   }
 

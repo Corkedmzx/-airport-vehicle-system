@@ -103,6 +103,9 @@ public class MultiDeviceMqttServiceImpl implements MultiDeviceMqttService, MqttC
         // 加载所有设备信息
         loadAllDeviceInfos();
 
+        // 连接 mobile_001（小程序位置发布设备）
+        connectDevice("mobile_001");
+
         // 连接 vehicle_001（中转设备，订阅 mobile_001，转发到 web_001）
         connectDevice("vehicle_001");
 
@@ -121,6 +124,14 @@ public class MultiDeviceMqttServiceImpl implements MultiDeviceMqttService, MqttC
             if (!Files.exists(deviceKeyDir)) {
                 log.error("设备密钥目录不存在: {}", deviceKeyPath);
                 return;
+            }
+
+            // 加载 mobile_001（小程序位置发布设备）
+            DeviceInfo mobileInfo = loadDeviceInfo("mobile_001");
+            if (mobileInfo != null) {
+                deviceInfos.put("mobile_001", mobileInfo);
+                // mobile_001 只发布数据，不订阅（所有小程序用户共享此设备）
+                log.info("mobile_001 设备已加载，用于小程序位置发布");
             }
 
             // 加载 vehicle_001

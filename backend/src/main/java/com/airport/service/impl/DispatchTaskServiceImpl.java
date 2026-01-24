@@ -106,7 +106,7 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
                 attempts++;
                 if (attempts >= maxAttempts) {
                     throw new RuntimeException("无法生成唯一的任务编号，请稍后重试");
-                }
+        }
             } while (taskRepository.findByTaskNo(taskNo) != null);
             task.setTaskNo(taskNo);
         } else {
@@ -224,23 +224,23 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
             if (driver != null) {
                 // 发送邮件通知
                 if (driver.getEmail() != null && !driver.getEmail().trim().isEmpty()) {
-                    // 使用异步方法发送邮件，不阻塞响应
-                    emailService.sendDriverTaskAssignmentEmailAsync(
-                        driver.getEmail(),
-                        task.getTaskNo(),
-                        task.getTaskName(),
-                        task.getTaskType(),
-                        task.getPriority(),
-                        task.getStartLocation(),
-                        task.getEndLocation(),
-                        task.getStartTime(),
-                        vehicle.getVehicleNo(),
-                        vehicle.getBrand(),
+                // 使用异步方法发送邮件，不阻塞响应
+                emailService.sendDriverTaskAssignmentEmailAsync(
+                    driver.getEmail(),
+                    task.getTaskNo(),
+                    task.getTaskName(),
+                    task.getTaskType(),
+                    task.getPriority(),
+                    task.getStartLocation(),
+                    task.getEndLocation(),
+                    task.getStartTime(),
+                    vehicle.getVehicleNo(),
+                    vehicle.getBrand(),
                         vehicle.getModel(),
                         dispatcherName,
                         dispatcherRole
-                    );
-                    log.info("任务分配邮件发送任务已提交，司机邮箱: {}", driver.getEmail());
+                );
+                log.info("任务分配邮件发送任务已提交，司机邮箱: {}", driver.getEmail());
                 }
                 
                 // 发送站内信通知
@@ -1165,6 +1165,21 @@ public class DispatchTaskServiceImpl implements DispatchTaskService {
         }
 
         return updatedTask;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DispatchTask> findActiveTasksByUserId(Long userId) {
+        // 查找用户正在执行的任务（状态为2-已分配或3-执行中）
+        return taskRepository.findActiveTasksByUserId(userId);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<DispatchTask> getMyTasks(Long userId) {
+        // 查询分配给当前用户的任务（包括司机任务和维修员任务）
+        // 只返回未完成的任务（状态不为4-已完成和5-已取消）
+        return taskRepository.findMyTasks(userId);
     }
 
     /**

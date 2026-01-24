@@ -44,10 +44,77 @@ public class DispatchTaskController {
     private final JwtUtils jwtUtils;
 
     @GetMapping
-    @Operation(summary = "获取任务列表", description = "获取所有调度任务")
-    public Result<List<DispatchTask>> getAllTasks() {
+    @Operation(summary = "获取任务列表", description = "获取所有调度任务，支持action=my-tasks参数获取当前用户的任务")
+    public Result<List<DispatchTask>> getAllTasks(
+            @Parameter(description = "操作类型，my-tasks表示获取当前用户的任务", required = false)
+            @RequestParam(required = false) String action,
+            HttpServletRequest request) {
+        // 如果指定了action=my-tasks，返回当前用户的任务
+        if ("my-tasks".equals(action)) {
+            try {
+                Long userId = getCurrentUserId(request);
+                List<DispatchTask> tasks = taskService.getMyTasks(userId);
+                log.info("用户 {} 获取自己的任务列表，共 {} 条", userId, tasks.size());
+                return Result.success(tasks);
+            } catch (Exception e) {
+                log.error("获取当前用户任务列表失败", e);
+                return Result.error("获取任务列表失败: " + e.getMessage());
+            }
+        }
+        
+        // 否则返回所有任务
         List<DispatchTask> tasks = taskService.getAllTasks();
         return Result.success(tasks);
+    }
+
+    @PostMapping("/confirm-complete")
+    @Operation(summary = "确认任务完成", description = "小程序使用：确认任务完成，支持传递完成说明等信息（需要task:complete权限）")
+    public Result<DispatchTask> confirmTaskComplete(
+            @Parameter(description = "任务ID", required = true)
+            @RequestParam Long taskId,
+            @Parameter(description = "任务名称", required = false)
+            @RequestParam(required = false) String taskName,
+            @Parameter(description = "完成说明", required = false)
+            @RequestParam(required = false) String content,
+            @Parameter(description = "车辆ID", required = false)
+            @RequestParam(required = false) Long vehicleId,
+            @Parameter(description = "任务类型", required = false)
+            @RequestParam(required = false) String taskType,
+            HttpServletRequest request) {
+        try {
+            // 检查权限
+            if (!hasPermission(request, "task:complete")) {
+                return Result.forbidden("无权限完成任务，需要task:complete权限");
+            }
+
+            // 获取任务信息
+            DispatchTask task = taskService.getTaskById(taskId)
+                    .orElseThrow(() -> new RuntimeException("任务不存在"));
+
+            // 如果提供了完成说明，更新任务的备注
+            if (content != null && !content.trim().isEmpty()) {
+                String existingRemark = task.getRemark();
+                String newRemark = content.trim();
+                if (existingRemark != null && !existingRemark.trim().isEmpty()) {
+                    task.setRemark(existingRemark + "\n\n完成说明：" + newRemark);
+                } else {
+                    task.setRemark("完成说明：" + newRemark);
+                }
+                taskService.updateTask(taskId, task);
+            }
+
+            // 完成任务（会自动更新车辆状态和发送通知）
+            DispatchTask updatedTask = taskService.completeTask(taskId);
+            
+            log.info("用户 {} 确认完成任务 {}，完成说明: {}", 
+                    getCurrentUserId(request), task.getTaskNo(), 
+                    content != null ? content : "无");
+            
+            return Result.success("任务完成确认成功", updatedTask);
+        } catch (Exception e) {
+            log.error("确认任务完成失败", e);
+            return Result.error("确认任务完成失败: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
@@ -193,7 +260,7 @@ public class DispatchTaskController {
 
             // 获取当前用户ID（调度员）
             Long dispatcherId = getCurrentUserId(request);
-            
+
             DispatchTask updatedTask;
             // 如果提供了司机用户名，优先使用用户名
             if (driverUsername != null && !driverUsername.trim().isEmpty()) {

@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/mqtt")
+@RequestMapping("/mqtt")
 @RequiredArgsConstructor
 @Tag(name = "MQTT位置上传", description = "PC位置信息上传到华为云IoT平台")
 public class MqttLocationController {
@@ -48,15 +48,15 @@ public class MqttLocationController {
     @Operation(summary = "上传PC位置信息", description = "将PC位置信息上传到华为云IoT平台，通过vehicle_001设备发布到web_001主题")
     public Result<String> uploadPCLocation(@RequestBody Map<String, Object> locationData) {
         try {
-            log.info("[PC位置] 收到PC位置上传统计请求: {}", locationData);
+            log.info("[PC位置上传] 收到PC位置上传统计请求: {}", locationData);
             
             // 检查vehicle_001设备是否已连接
             if (!multiDeviceMqttService.isDeviceConnected("vehicle_001")) {
-                log.error("[PC位置] vehicle_001设备未连接，无法上传PC位置信息");
+                log.error("[PC位置上传] vehicle_001设备未连接，无法上传PC位置信息");
                 return Result.error("vehicle_001设备未连接，请检查MQTT服务状态");
             }
             
-            log.debug("[PC位置] vehicle_001设备连接状态正常");
+            log.debug("[PC位置上传] vehicle_001设备连接状态正常");
 
             // 提取位置信息
             Double latitude = getDoubleValue(locationData, "latitude");
@@ -98,12 +98,14 @@ public class MqttLocationController {
             // web_001会接收并推送到系统
             multiDeviceMqttService.publishToDevice("vehicle_001", topic, payload, 1);
 
-            log.info("[PC位置] PC位置信息已通过vehicle_001上传到web_001，主题: {}, 位置: ({}, {}), 精度: {}米", 
+            log.info("[PC位置上传] PC位置信息已通过vehicle_001上传到web_001，主题: {}, 位置: ({}, {}), 精度: {}米", 
                     topic, latitude, longitude, accuracy != null ? accuracy : "未知");
 
             return Result.success("PC位置信息上传成功");
         } catch (Exception e) {
-            log.error("上传PC位置信息失败", e);
+            log.error("[PC位置上传] 上传PC位置信息失败", e);
+            // 记录详细的错误堆栈，便于排查问题
+            log.error("[PC位置上传] 错误详情: {}", e.getClass().getName() + ": " + e.getMessage(), e);
             return Result.error("上传PC位置信息失败: " + e.getMessage());
         }
     }

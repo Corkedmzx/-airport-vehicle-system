@@ -70,4 +70,10 @@ public class SysUser extends BaseEntity {
      */
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
+    
+    /**
+     * 关联的车辆ID（用于位置上传）
+     */
+    @Column(name = "vehicle_id")
+    private Long vehicleId;
 }

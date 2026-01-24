@@ -184,4 +184,16 @@ public class MessageServiceImpl implements MessageService {
         messageRepository.deleteAll(messages);
         log.info("用户{}批量删除了{}条消息", userId, messages.size());
     }
+
+    @Override
+    public Long clearReadMessages(Long userId) {
+        // 先统计要删除的消息数量
+        Long count = messageRepository.countByUserIdAndRead(userId, true);
+        if (count > 0) {
+            // 删除所有已读消息
+            messageRepository.deleteByUserIdAndRead(userId, true);
+            log.info("用户{}清空了{}条已读消息", userId, count);
+        }
+        return count;
+    }
 }

@@ -111,4 +111,12 @@ public interface MessageService {
      * @param userId 用户ID（验证权限）
      */
     void deleteMessages(List<Long> messageIds, Long userId);
+
+    /**
+     * 清空当前用户的所有已读消息
+     * 
+     * @param userId 用户ID
+     * @return 删除的消息数量
+     */
+    Long clearReadMessages(Long userId);
 }

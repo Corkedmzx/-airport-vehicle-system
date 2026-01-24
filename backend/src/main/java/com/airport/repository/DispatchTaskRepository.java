@@ -84,6 +84,34 @@ public interface DispatchTaskRepository extends JpaRepository<DispatchTask, Long
      * @return 任务列表
      */
     List<DispatchTask> findByAssignedDriverIdOrderByStartTimeDesc(Long driverId);
+    
+    /**
+     * 根据分配的用户ID查找任务（按开始时间降序）
+     * 
+     * @param userId 用户ID
+     * @return 任务列表
+     */
+    List<DispatchTask> findByAssignedUserIdOrderByStartTimeDesc(Long userId);
+    
+    /**
+     * 查找用户正在执行的任务（状态为2-已分配或3-执行中）
+     * 
+     * @param driverId 司机ID
+     * @return 任务列表
+     */
+    @Query("SELECT t FROM DispatchTask t WHERE (t.assignedDriverId = :userId OR t.assignedUserId = :userId) AND t.status IN (2, 3) ORDER BY t.actualStartTime DESC")
+    List<DispatchTask> findActiveTasksByUserId(@Param("userId") Long userId);
+
+    /**
+     * 查找分配给指定用户的任务（包括司机任务和维修员任务）
+     * 查询条件：assignedDriverId = userId OR assignedUserId = userId
+     * 
+     * @param userId 用户ID
+     * @return 任务列表（按开始时间降序）
+     */
+    @Query("SELECT t FROM DispatchTask t WHERE (t.assignedDriverId = :userId OR t.assignedUserId = :userId) " +
+           "AND t.status != 4 AND t.status != 5 ORDER BY t.startTime DESC")
+    List<DispatchTask> findMyTasks(@Param("userId") Long userId);
 
     /**
      * 统计各状态任务数量

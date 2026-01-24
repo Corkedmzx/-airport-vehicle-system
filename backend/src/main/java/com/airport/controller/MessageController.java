@@ -85,6 +85,68 @@ public class MessageController {
         }
     }
 
+    @PostMapping(value = "/operations/clear-read", produces = "application/json")
+    @Operation(summary = "清空已读消息", description = "清空当前用户的所有已读消息")
+    public Result<Long> clearReadMessages(HttpServletRequest request) {
+        try {
+            Long userId = getCurrentUserId(request);
+            Long count = messageService.clearReadMessages(userId);
+            Result<Long> result = Result.success(count);
+            result.setMessage("已清空 " + count + " 条已读消息");
+            return result;
+        } catch (Exception e) {
+            log.error("清空已读消息失败", e);
+            return Result.error("清空已读消息失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/create")
+    @Operation(summary = "创建消息", description = "创建新的站内信消息（小程序使用）")
+    public Result<Message> createMessage(
+            HttpServletRequest request,
+            @Parameter(description = "消息标题", required = true)
+            @RequestParam String title,
+            @Parameter(description = "消息内容", required = true)
+            @RequestParam String content,
+            @Parameter(description = "消息类型", required = false)
+            @RequestParam(required = false, defaultValue = "system") String messageType,
+            @Parameter(description = "接收用户ID列表（为空则发送给管理员）", required = false)
+            @RequestParam(required = false) List<Long> targetUserIds,
+            @Parameter(description = "接收角色代码列表（为空则发送给管理员）", required = false)
+            @RequestParam(required = false) List<String> targetRoleCodes,
+            @Parameter(description = "关联车辆ID", required = false)
+            @RequestParam(required = false) Long vehicleId,
+            @Parameter(description = "优先级", required = false)
+            @RequestParam(required = false, defaultValue = "normal") String priority) {
+        try {
+            Long currentUserId = getCurrentUserId(request);
+            
+            // 如果没有指定接收用户，则发送给管理员角色
+            List<Message> messages;
+            if (targetUserIds != null && !targetUserIds.isEmpty()) {
+                messages = messageService.createMessagesForUsers(
+                    targetUserIds, title, content, messageType, null, priority, vehicleId, vehicleId != null ? "vehicle" : null);
+            } else if (targetRoleCodes != null && !targetRoleCodes.isEmpty()) {
+                messages = messageService.createMessagesForRoles(
+                    targetRoleCodes, title, content, messageType, null, priority, vehicleId, vehicleId != null ? "vehicle" : null);
+            } else {
+                // 默认发送给管理员
+                messages = messageService.createMessagesForRoles(
+                    List.of("ADMIN"), title, content, messageType, null, priority, vehicleId, vehicleId != null ? "vehicle" : null);
+            }
+            
+            if (messages != null && !messages.isEmpty()) {
+                log.info("用户 {} 创建了消息，已发送给 {} 个用户", currentUserId, messages.size());
+                return Result.success("消息创建成功", messages.get(0));
+            } else {
+                return Result.error("消息创建失败，未找到接收用户");
+            }
+        } catch (Exception e) {
+            log.error("创建消息失败", e);
+            return Result.error("创建消息失败: " + e.getMessage());
+        }
+    }
+
     @PutMapping("/mark-read")
     @Operation(summary = "标记消息为已读", description = "批量标记消息为已读")
     public Result<Void> markAsRead(

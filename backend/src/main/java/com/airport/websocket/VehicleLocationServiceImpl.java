@@ -66,8 +66,47 @@ public class VehicleLocationServiceImpl implements VehicleLocationService {
                 return;
             }
             
-            // 处理车辆位置更新
-            // 根据设备ID查找车辆
+            // 检查是否是小程序位置（通过source字段判断）
+            // 注意：source变量已在上面定义，这里直接使用
+            boolean isMiniprogramLocation = "miniprogram".equals(source);
+            
+            if (isMiniprogramLocation) {
+                // 处理小程序位置（用户位置，不关联车辆，直接推送）
+                Long userId = getLongValue(locationData, "userId");
+                String userName = getStringValue(locationData, "userName");
+                Double longitude = getDoubleValue(locationData, "longitude");
+                Double latitude = getDoubleValue(locationData, "latitude");
+                
+                if (longitude == null || latitude == null) {
+                    log.warn("小程序位置数据不完整，缺少longitude或latitude");
+                    return;
+                }
+                
+                // 构建小程序位置广播数据（不更新车辆，直接推送用户位置）
+                Map<String, Object> broadcastData = new java.util.HashMap<>();
+                broadcastData.put("vehicleId", userId); // 使用userId作为标识（前端会识别为小程序位置）
+                broadcastData.put("vehicleNo", userName != null ? userName : ("用户" + userId)); // 使用用户名作为显示名称
+                broadcastData.put("longitude", longitude);
+                broadcastData.put("latitude", latitude);
+                broadcastData.put("address", getStringValue(locationData, "address"));
+                broadcastData.put("speed", getDoubleValue(locationData, "speed"));
+                broadcastData.put("direction", getDoubleValue(locationData, "direction"));
+                broadcastData.put("accuracy", getDoubleValue(locationData, "accuracy"));
+                broadcastData.put("timestamp", getLongValue(locationData, "timestamp", System.currentTimeMillis()));
+                broadcastData.put("source", "miniprogram");
+                broadcastData.put("deviceName", "mobile_001");
+                broadcastData.put("userId", userId);
+                broadcastData.put("userName", userName);
+                
+                // 通过WebSocket广播小程序位置更新（使用userId作为标识）
+                webSocketHandler.broadcastVehicleLocationUpdate(userId, broadcastData);
+                
+                log.info("[小程序位置] 处理小程序位置更新成功，用户: {} ({}), 位置: ({}, {}), 已通过WebSocket推送到前端", 
+                        userName != null ? userName : ("用户" + userId), userId, latitude, longitude);
+                return;
+            }
+            
+            // 处理车辆位置更新（通过设备ID查找车辆）
             Vehicle vehicle = vehicleRepository.findByGpsDeviceId(deviceId)
                     .orElse(null);
             
@@ -106,6 +145,24 @@ public class VehicleLocationServiceImpl implements VehicleLocationService {
         }
     }
     
+    /**
+     * 获取Long值
+     */
+    private Long getLongValue(Map<String, Object> data, String key) {
+        Object value = data.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        try {
+            return Long.parseLong(value.toString());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * 获取Long值（带默认值）
      */

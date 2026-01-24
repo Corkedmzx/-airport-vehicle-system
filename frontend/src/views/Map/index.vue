@@ -119,6 +119,10 @@
               <div class="legend-marker pc-location"></div>
               <span>PC位置</span>
             </div>
+            <div class="legend-item" v-if="miniprogramMarkers.size > 0">
+              <div class="legend-marker miniprogram-location"></div>
+              <span>小程序位置 ({{ miniprogramMarkers.size }})</span>
+            </div>
           </div>
         </div>
       </div>
@@ -263,6 +267,37 @@ const pcLocationMarker = ref<any>(null)
 const pcLocation = ref<{ latitude: number; longitude: number; accuracy: number } | null>(null)
 let pcLocationUpdateTimer: NodeJS.Timeout | null = null
 
+// 小程序位置相关（支持多个用户）
+interface MiniprogramLocation {
+  userId: number | string
+  userName?: string
+  vehicleId: number
+  vehicleNo: string
+  latitude: number
+  longitude: number
+  accuracy?: number
+  speed?: number
+  direction?: number
+  address?: string
+  timestamp: number
+  color: string // 标记颜色
+}
+const miniprogramLocations = ref<Map<number | string, MiniprogramLocation>>(new Map())
+const miniprogramMarkers = ref<Map<number | string, any>>(new Map())
+// 小程序位置标记颜色列表（不同用户使用不同颜色）
+const miniprogramColors = [
+  '#FF6B6B', // 红色
+  '#4ECDC4', // 青色
+  '#45B7D1', // 蓝色
+  '#FFA07A', // 浅橙红色
+  '#98D8C8', // 薄荷绿
+  '#F7DC6F', // 黄色
+  '#BB8FCE', // 紫色
+  '#85C1E2', // 天蓝色
+  '#F8B739', // 橙色
+  '#52BE80'  // 绿色
+]
+
 // 搜索和筛选
 const searchKeyword = ref('')
 const statusFilter = ref('')
@@ -374,6 +409,11 @@ const locateAll = () => {
     allPoints.push(new (window as any).BMap.Point(pcLocation.value.longitude, pcLocation.value.latitude))
   }
   
+  // 添加小程序位置点
+  miniprogramLocations.value.forEach((location) => {
+    allPoints.push(new (window as any).BMap.Point(location.longitude, location.latitude))
+  })
+  
   if (allPoints.length > 0) {
     const viewport = baiduMap.getViewport(allPoints, { padding: 50 })
     baiduMap.centerAndZoom(viewport.center, viewport.zoom)
@@ -458,7 +498,7 @@ const requestMaintenance = (vehicle: Vehicle) => {
 const updateMapMarkers = () => {
   if (!baiduMap) return
   
-  // 清除现有车辆标记（保留PC位置标记）
+  // 清除现有车辆标记（保留PC位置标记和小程序位置标记）
   mapMarkers.forEach(marker => {
     baiduMap.removeOverlay(marker)
   })
@@ -524,6 +564,7 @@ const updateMapMarkers = () => {
   })
   
   // PC位置标记由updatePCLocationMarker单独管理，不在这里处理
+  // 小程序位置标记由updateMiniprogramLocationMarker单独管理，不在这里处理
   
   // 注意：不在这里调整地图视野，避免刷新时改变用户当前视图
   // 视野调整只在初始化时或用户点击"定位全部"时执行
@@ -991,7 +1032,12 @@ const loadMapData = async () => {
 
 // 处理WebSocket位置更新
 const handleVehicleLocationUpdate = (data: any) => {
-  const { vehicleId, vehicleNo, longitude, latitude, address, speed, source, deviceName } = data
+  console.log('[WebSocket位置更新] 收到完整数据:', JSON.stringify(data, null, 2))
+  const { vehicleId, vehicleNo, longitude, latitude, address, speed, source, deviceName, userId, userName } = data
+  
+  console.log('[WebSocket位置更新] 解析后的字段:', {
+    vehicleId, vehicleNo, longitude, latitude, address, speed, source, deviceName, userId, userName
+  })
   
   // 如果是PC位置，单独处理
   if (source === 'pc_browser' || deviceName === 'pc_location') {
@@ -1015,6 +1061,7 @@ const handleVehicleLocationUpdate = (data: any) => {
           bd09: { lat: pcLocation.value.latitude, lng: pcLocation.value.longitude },
         accuracy: pcLocation.value.accuracy
         })
+        console.log('[PC位置] WebSocket ⚠️ 转换前后对比: WGS84(', wgs84Lon.toFixed(6), ',', wgs84Lat.toFixed(6), ') -> BD09(', pcLocation.value.longitude.toFixed(6), ',', pcLocation.value.latitude.toFixed(6), ')')
       }).catch(error => {
         console.error('[PC位置] WebSocket位置坐标转换失败:', error.message)
         // 转换失败时，直接使用原始坐标（假设已经是BD09或容错处理）
@@ -1030,6 +1077,135 @@ const handleVehicleLocationUpdate = (data: any) => {
     }
     return
   }
+  
+  // 如果是小程序位置，单独处理
+  if (source === 'miniprogram' || deviceName === 'mobile_001') {
+    console.log('[小程序位置] 收到WebSocket位置更新:', data)
+    console.log('[小程序位置] 判断条件: source=', source, ', deviceName=', deviceName)
+    
+    // 小程序位置使用userId作为标识（vehicleId实际上是userId）
+    const miniprogramUserId = data.userId || vehicleId
+    const miniprogramUserName = data.userName || vehicleNo || `用户${miniprogramUserId}`
+    
+    console.log('[小程序位置] 提取的用户信息: userId=', miniprogramUserId, ', userName=', miniprogramUserName)
+    console.log('[小程序位置] 位置信息: longitude=', longitude, ', latitude=', latitude)
+    
+    if (longitude && latitude && miniprogramUserId) {
+      // 使用userId作为唯一标识
+      const locationKey = miniprogramUserId.toString()
+      
+      console.log('[小程序位置] 使用locationKey:', locationKey)
+      
+      // 小程序位置通常是GCJ02坐标，需要转换为BD09
+      const gcj02Lon = Number(longitude)
+      const gcj02Lat = Number(latitude)
+      
+      console.log('[小程序位置] 开始坐标转换: GCJ02(', gcj02Lon, ',', gcj02Lat, ') -> BD09')
+      
+      // 将GCJ02坐标转换为BD09坐标（百度地图使用BD09）
+      // 注意：小程序返回的是GCJ02坐标，不需要WGS84->GCJ02的转换，直接GCJ02->BD09
+      Promise.resolve(convertGCJ02ToBD09(gcj02Lon, gcj02Lat)).then(bd09Coord => {
+        console.log('[小程序位置] 坐标转换成功: BD09(', bd09Coord.lng, ',', bd09Coord.lat, ')')
+        console.log('[小程序位置] ⚠️ 转换前后对比: GCJ02(', gcj02Lon.toFixed(6), ',', gcj02Lat.toFixed(6), ') -> BD09(', bd09Coord.lng.toFixed(6), ',', bd09Coord.lat.toFixed(6), ')')
+        
+        // 检查定位精度
+        const locationAccuracy = data.accuracy || 0
+        if (locationAccuracy > 1000) {
+          console.warn(`[小程序位置] ⚠️ 定位精度较低: ${locationAccuracy.toFixed(0)}米，可能是基站定位或模拟定位（PC上运行微信开发者工具时常见）`)
+          ElMessage.warning({
+            message: `小程序定位精度较低（${locationAccuracy.toFixed(0)}米），可能是基站定位。建议在真实手机上运行小程序以获取GPS定位。`,
+            duration: 5000
+          })
+        } else if (locationAccuracy > 500) {
+          console.warn(`[小程序位置] ⚠️ 定位精度中等: ${locationAccuracy.toFixed(0)}米`)
+        }
+        
+        // 获取或创建位置对象
+        let location = miniprogramLocations.value.get(locationKey)
+        if (!location) {
+          // 新用户，分配颜色
+          const colorIndex = miniprogramLocations.value.size % miniprogramColors.length
+          location = {
+            userId: miniprogramUserId,
+            userName: miniprogramUserName,
+            vehicleId: Number(miniprogramUserId), // 使用userId作为vehicleId
+            vehicleNo: miniprogramUserName, // 使用用户名作为显示名称
+            latitude: bd09Coord.lat,
+            longitude: bd09Coord.lng,
+            accuracy: locationAccuracy,
+            speed: data.speed,
+            direction: data.direction,
+            address: address,
+            timestamp: data.timestamp || Date.now(),
+            color: miniprogramColors[colorIndex]
+          }
+          miniprogramLocations.value.set(locationKey, location)
+          console.log(`[小程序位置] 新用户位置已添加: ${miniprogramUserName}, 颜色: ${location.color}, 坐标已转换（GCJ02 -> BD09）, 精度: ${locationAccuracy.toFixed(0)}米`)
+        } else {
+          // 更新现有位置
+          location.latitude = bd09Coord.lat
+          location.longitude = bd09Coord.lng
+          location.accuracy = data.accuracy || location.accuracy
+          location.speed = data.speed || location.speed
+          location.direction = data.direction || location.direction
+          location.address = address || location.address
+          location.timestamp = data.timestamp || Date.now()
+          console.log(`[小程序位置] 位置已更新: ${miniprogramUserName}, 坐标已转换（GCJ02 -> BD09）`)
+        }
+        
+        console.log('[小程序位置] 准备更新地图标记, locationKey:', locationKey, ', location:', location)
+        // 更新地图标记
+        updateMiniprogramLocationMarker(locationKey, location)
+      }).catch(error => {
+        console.error('[小程序位置] 坐标转换失败:', error.message, error)
+        // 转换失败时，直接使用原始坐标（容错处理）
+        console.log('[小程序位置] 使用原始坐标（容错处理）')
+        let location = miniprogramLocations.value.get(locationKey)
+        if (!location) {
+          const colorIndex = miniprogramLocations.value.size % miniprogramColors.length
+          location = {
+            userId: miniprogramUserId,
+            userName: miniprogramUserName,
+            vehicleId: Number(miniprogramUserId),
+            vehicleNo: miniprogramUserName,
+            latitude: gcj02Lat,
+            longitude: gcj02Lon,
+            accuracy: data.accuracy,
+            speed: data.speed,
+            direction: data.direction,
+            address: address,
+            timestamp: data.timestamp || Date.now(),
+            color: miniprogramColors[colorIndex]
+          }
+          miniprogramLocations.value.set(locationKey, location)
+          console.log(`[小程序位置] 新用户位置已添加（容错处理）: ${miniprogramUserName}, 颜色: ${location.color}`)
+        } else {
+          location.latitude = gcj02Lat
+          location.longitude = gcj02Lon
+          location.accuracy = data.accuracy || location.accuracy
+          location.speed = data.speed || location.speed
+          location.direction = data.direction || location.direction
+          location.address = address || location.address
+          location.timestamp = data.timestamp || Date.now()
+        }
+        updateMiniprogramLocationMarker(locationKey, location)
+      })
+    } else {
+      console.warn('[小程序位置] WebSocket数据不完整，缺少longitude、latitude或userId:', { 
+        longitude, 
+        latitude, 
+        userId: miniprogramUserId, 
+        hasLongitude: !!longitude,
+        hasLatitude: !!latitude,
+        hasUserId: !!miniprogramUserId,
+        data 
+      })
+    }
+    return
+  }
+  
+  // 如果既不是PC位置也不是小程序位置，记录日志
+  console.log('[WebSocket位置更新] 未识别的位置类型，source:', source, ', deviceName:', deviceName, ', data:', data)
   
   // 处理车辆位置更新
   // 查找并更新车辆位置
@@ -1342,12 +1518,9 @@ const highPrecisionWGS84ToBD09 = (wgLon: number, wgLat: number): { lng: number; 
   // 第二步：GCJ02 -> BD09（百度坐标系）
   // 使用标准的BD09转换公式（百度坐标系偏移算法）
   // 注意：BD09是在GCJ02基础上进行非线性偏移
-  const x = gcj02Lon
-  const y = gcj02Lat
-  const z = Math.sqrt(x * x + y * y) + 0.00002 * Math.sin(y * Math.PI * 3000.0 / 180.0)
-  const theta = Math.atan2(y, x) + 0.000003 * Math.cos(x * Math.PI * 3000.0 / 180.0)
-  const bd09Lon = z * Math.cos(theta) + 0.0065
-  const bd09Lat = z * Math.sin(theta) + 0.006
+  const bd09Coord = convertGCJ02ToBD09(gcj02Lon, gcj02Lat)
+  const bd09Lon = bd09Coord.lng
+  const bd09Lat = bd09Coord.lat
   
   const result = { lng: bd09Lon, lat: bd09Lat }
   
@@ -1362,6 +1535,30 @@ const highPrecisionWGS84ToBD09 = (wgLon: number, wgLat: number): { lng: number; 
   })
   
   return result
+}
+
+// GCJ02坐标转换为BD09坐标（百度地图坐标系）
+// 小程序返回的是GCJ02坐标，需要转换为BD09坐标
+const convertGCJ02ToBD09 = (gcj02Lon: number, gcj02Lat: number): { lng: number; lat: number } => {
+  // 使用标准的BD09转换公式（百度坐标系偏移算法）
+  // 注意：BD09是在GCJ02基础上进行非线性偏移
+  const x = gcj02Lon
+  const y = gcj02Lat
+  const z = Math.sqrt(x * x + y * y) + 0.00002 * Math.sin(y * Math.PI * 3000.0 / 180.0)
+  const theta = Math.atan2(y, x) + 0.000003 * Math.cos(x * Math.PI * 3000.0 / 180.0)
+  const bd09Lon = z * Math.cos(theta) + 0.0065
+  const bd09Lat = z * Math.sin(theta) + 0.006
+  
+  console.log('[坐标转换] GCJ02 -> BD09:', {
+    gcj02: { lng: gcj02Lon.toFixed(6), lat: gcj02Lat.toFixed(6) },
+    bd09: { lng: bd09Lon.toFixed(6), lat: bd09Lat.toFixed(6) },
+    offset: { 
+      lng: ((bd09Lon - gcj02Lon) * 111000).toFixed(2) + '米', 
+      lat: ((bd09Lat - gcj02Lat) * 111000).toFixed(2) + '米' 
+    }
+  })
+  
+  return { lng: bd09Lon, lat: bd09Lat }
 }
 
 // 旧版本近似转换函数（保留作为兼容）
@@ -1397,27 +1594,29 @@ const uploadPCLocation = async (latitude: number, longitude: number, accuracy: n
     
     console.log('[PC位置] 开始上传位置信息到后端:', payload)
     
-    const response = await fetch('/api/mqtt/upload-pc-location', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    })
+    // 使用axios实例，自动添加token（如果已登录）
+    const { default: request } = await import('@/utils/request')
+    const response = await request.post('/mqtt/upload-pc-location', payload)
     
-    if (!response.ok) {
-      throw new Error(`上传失败: HTTP ${response.status}`)
-    }
-    
-    const result = await response.json()
-    if (result.code === 200) {
+    if (response.data.code === 200) {
       console.log('[PC位置] 后端接口返回成功，消息已发送到MQTT')
       return true
     } else {
-      console.error('[PC位置] 后端接口返回错误:', result.message)
+      console.error('[PC位置] 后端接口返回错误:', response.data.message)
       return false
     }
   } catch (error: any) {
+    // 如果是401错误，可能是未登录，但不影响PC位置显示（位置已通过WebSocket推送）
+    if (error.response?.status === 401) {
+      console.warn('[PC位置] 上传位置信息失败: 未授权（可能未登录），但不影响PC位置显示。位置已通过WebSocket推送。')
+      return false
+    }
+    // 如果是500错误，可能是MQTT服务未连接或其他服务器错误，但不影响PC位置显示
+    if (error.response?.status === 500) {
+      const errorMessage = error.response?.data?.message || error.message
+      console.warn('[PC位置] 上传位置信息失败: 服务器错误（可能MQTT服务未连接），但不影响PC位置显示。位置已通过WebSocket推送。错误信息:', errorMessage)
+      return false
+    }
     console.error('[PC位置] 上传位置信息失败:', error.message)
     return false
   }
@@ -1436,9 +1635,12 @@ const updatePCLocationMarker = (autoZoom = false) => {
   }
   
   // 创建新标记
+  console.log('[PC位置] 创建百度地图Point对象，坐标: (', pcLocation.value.longitude, ',', pcLocation.value.latitude, ')')
+  console.log('[PC位置] ⚠️ 坐标验证: 经度=', pcLocation.value.longitude, ', 纬度=', pcLocation.value.latitude, ', 类型: 经度=', typeof pcLocation.value.longitude, ', 纬度=', typeof pcLocation.value.latitude)
   const point = new (window as any).BMap.Point(pcLocation.value.longitude, pcLocation.value.latitude)
+  console.log('[PC位置] Point对象创建成功:', point, ', Point.lng=', point.lng, ', Point.lat=', point.lat)
   
-  // PC位置使用百度地图API的标准图标样式
+  // PC位置使用百度地图API的标准图标样式（蓝色，与小程序位置区分）
   // 创建一个Canvas图标，使用百度地图的标准样式
   const canvas = document.createElement('canvas')
   canvas.width = 32
@@ -1446,10 +1648,10 @@ const updatePCLocationMarker = (autoZoom = false) => {
   const ctx = canvas.getContext('2d')
   
   if (ctx) {
-    // 绘制外圈（白色边框）
+    // 绘制外圈（蓝色，PC位置专用颜色）
     ctx.beginPath()
     ctx.arc(16, 16, 14, 0, Math.PI * 2)
-    ctx.fillStyle = '#409eff'
+    ctx.fillStyle = '#409eff' // PC位置专用蓝色
     ctx.fill()
     ctx.strokeStyle = '#ffffff'
     ctx.lineWidth = 3
@@ -1460,6 +1662,10 @@ const updatePCLocationMarker = (autoZoom = false) => {
     ctx.arc(16, 16, 6, 0, Math.PI * 2)
     ctx.fillStyle = '#ffffff'
     ctx.fill()
+    
+    // 绘制PC图标标识（小方块，表示PC设备）
+    ctx.fillStyle = '#409eff'
+    ctx.fillRect(13, 13, 6, 6)
   }
   
   // 使用Canvas创建图标
@@ -1482,18 +1688,24 @@ const updatePCLocationMarker = (autoZoom = false) => {
     </style>
   `
   
+  // 输出信息窗口坐标信息（用于调试）
+  console.log('[PC位置] 信息窗口坐标: 经度=', pcLocation.value.longitude.toFixed(6), ', 纬度=', pcLocation.value.latitude.toFixed(6), ', Point对象: lng=', point.lng, ', lat=', point.lat)
+  
   const infoWindow = new (window as any).BMap.InfoWindow(
     `<div class="pc-info-window-container" style="padding: 12px; min-width: 260px; max-width: 320px; font-size: 13px; line-height: 1.6; max-height: 350px; overflow-y: auto; overflow-x: hidden; word-wrap: break-word;">
-      <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #303133; border-bottom: 1px solid #e4e7ed; padding-bottom: 6px;">
-        PC位置
+      <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #303133; border-bottom: 2px solid #409eff; padding-bottom: 6px; display: flex; align-items: center;">
+        <span style="display: inline-block; width: 16px; height: 16px; background-color: #409eff; border-radius: 50%; margin-right: 8px; border: 2px solid #ffffff; box-shadow: 0 0 0 2px #409eff;"></span>
+        <span style="color: #409eff;">🖥️ PC位置</span>
       </div>
       <div style="margin-bottom: 4px;">
         <span style="color: #606266; min-width: 60px; display: inline-block;">经度:</span>
-        <span style="color: #303133; font-family: monospace;">${pcLocation.value.longitude.toFixed(6)}</span>
+        <span style="color: #303133; font-family: monospace; font-weight: 500;">${pcLocation.value.longitude.toFixed(6)}</span>
+        <span style="color: #909399; font-size: 11px; margin-left: 4px;">(BD09)</span>
       </div>
       <div style="margin-bottom: 4px;">
         <span style="color: #606266; min-width: 60px; display: inline-block;">纬度:</span>
-        <span style="color: #303133; font-family: monospace;">${pcLocation.value.latitude.toFixed(6)}</span>
+        <span style="color: #303133; font-family: monospace; font-weight: 500;">${pcLocation.value.latitude.toFixed(6)}</span>
+        <span style="color: #909399; font-size: 11px; margin-left: 4px;">(BD09)</span>
       </div>
       <div style="margin-bottom: 4px;">
         <span style="color: #606266; min-width: 60px; display: inline-block;">精度:</span>
@@ -1502,15 +1714,12 @@ const updatePCLocationMarker = (autoZoom = false) => {
           ${pcLocation.value.accuracy < 50 ? '（高）' : pcLocation.value.accuracy < 100 ? '（中）' : '（低）'}
         </span>
       </div>
-      <div style="margin-top: 6px; padding: 8px; background-color: ${pcLocation.value.accuracy > 200 ? '#FEF0F0' : '#FDF6EC'}; border-left: 3px solid ${pcLocation.value.accuracy > 200 ? '#F56C6C' : '#E6A23C'}; border-radius: 4px; color: ${pcLocation.value.accuracy > 200 ? '#F56C6C' : '#E6A23C'}; font-size: 12px; line-height: 1.5; word-wrap: break-word; white-space: normal;">
-        ${pcLocation.value.accuracy > 200 
-          ? '⚠️ 警告：PC定位精度较差（实际偏差可能达200-500米）。建议连接Wi-Fi、使用移动设备，或手动选择位置以提高精度。' 
-          : pcLocation.value.accuracy > 100 
-          ? '💡 提示：精度较低，PC定位实际偏差可能大于显示值。建议连接Wi-Fi或移动到开阔地区。' 
-          : '💡 提示：PC定位精度有限，实际偏差可能大于显示值。建议连接Wi-Fi以提高精度。'}
+      <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #e4e7ed; color: #909399; font-size: 12px; display: flex; align-items: center;">
+        <span style="color: #909399;">📍 位置来源:</span>
+        <span style="color: #409eff; margin-left: 4px; font-weight: 500;">PC浏览器定位</span>
       </div>
-      <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #e4e7ed; color: #909399; font-size: 12px;">
-        <span style="color: #909399;">更新时间:</span>
+      <div style="margin-top: 4px; color: #909399; font-size: 12px;">
+        <span style="color: #909399;">🕐 更新时间:</span>
         <span style="color: #606266; margin-left: 4px;">${formatTime(new Date().toISOString())}</span>
       </div>
     </div>${scrollbarStyle}`,
@@ -1576,6 +1785,7 @@ const startPCLocationMonitoring = async () => {
       bd09: { lat: pcLocation.value.latitude, lng: pcLocation.value.longitude },
       accuracy: pcLocation.value.accuracy
     })
+    console.log('[PC位置] ⚠️ 转换前后对比: WGS84(', wgs84Lon.toFixed(6), ',', wgs84Lat.toFixed(6), ') -> BD09(', pcLocation.value.longitude.toFixed(6), ',', pcLocation.value.latitude.toFixed(6), ')')
     
     // 如果地图已初始化，立即定位到PC位置（使用BD09坐标）
     if (baiduMap) {
@@ -1584,17 +1794,22 @@ const startPCLocationMonitoring = async () => {
       console.log('[PC位置] 地图已定位到PC位置（BD09坐标）')
     }
     
-    // 上传位置信息（上传转换后的BD09坐标，确保后端使用正确的坐标系）
-    const uploadSuccess = await uploadPCLocation(
-      pcLocation.value.latitude,  // 上传转换后的BD09坐标
-      pcLocation.value.longitude,
-      accuracy
-    )
-    
-    if (uploadSuccess) {
-      console.log('[PC位置] 初始位置上传成功，等待WebSocket推送更新地图')
-    } else {
-      console.warn('[PC位置] 初始位置上传失败')
+    // 尝试上传位置信息（失败不影响显示，位置已通过WebSocket推送）
+    try {
+      const uploadSuccess = await uploadPCLocation(
+        pcLocation.value.latitude,  // 上传转换后的BD09坐标
+        pcLocation.value.longitude,
+        accuracy
+      )
+      
+      if (uploadSuccess) {
+        console.log('[PC位置] 初始位置上传成功，等待WebSocket推送更新地图')
+      } else {
+        console.warn('[PC位置] 初始位置上传失败（不影响显示，位置已通过WebSocket推送）')
+      }
+    } catch (error: any) {
+      // 上传失败不影响PC位置显示
+      console.warn('[PC位置] 初始位置上传异常（不影响显示）:', error.message)
     }
     
     // 更新地图标记（启用自动缩放）
@@ -1626,17 +1841,24 @@ const startPCLocationMonitoring = async () => {
           bd09: { lat: pcLocation.value.latitude, lng: pcLocation.value.longitude },
           accuracy: pcLocation.value.accuracy
         })
+        console.log('[PC位置] ⚠️ 转换前后对比: WGS84(', wgs84Lon.toFixed(6), ',', wgs84Lat.toFixed(6), ') -> BD09(', pcLocation.value.longitude.toFixed(6), ',', pcLocation.value.latitude.toFixed(6), ')')
         
-        const uploadSuccess = await uploadPCLocation(
-          pcLocation.value.latitude,  // 上传转换后的BD09坐标
-          pcLocation.value.longitude,
-          accuracy
-        )
-        
-        if (uploadSuccess) {
-          console.log('[PC位置] 位置信息上传成功，等待WebSocket推送更新地图')
-        } else {
-          console.warn('[PC位置] 位置信息上传失败')
+        // 尝试上传位置信息（失败不影响显示，位置已通过WebSocket推送）
+        try {
+          const uploadSuccess = await uploadPCLocation(
+            pcLocation.value.latitude,  // 上传转换后的BD09坐标
+            pcLocation.value.longitude,
+            accuracy
+          )
+          
+          if (uploadSuccess) {
+            console.log('[PC位置] 位置信息上传成功，等待WebSocket推送更新地图')
+          } else {
+            console.warn('[PC位置] 位置信息上传失败（不影响显示，位置已通过WebSocket推送）')
+          }
+        } catch (error: any) {
+          // 上传失败不影响PC位置显示
+          console.warn('[PC位置] 位置信息上传异常（不影响显示）:', error.message)
         }
         
         // 直接更新地图标记（不等待WebSocket，确保立即显示）
@@ -1669,6 +1891,205 @@ const stopPCLocationMonitoring = () => {
   
   pcLocation.value = null
   ElMessage.info('PC位置监控已停止')
+}
+
+// 更新小程序位置标记
+const updateMiniprogramLocationMarker = (locationKey: string, location: MiniprogramLocation) => {
+  console.log('[小程序位置] ========== updateMiniprogramLocationMarker被调用 ==========')
+  console.log('[小程序位置] locationKey:', locationKey)
+  console.log('[小程序位置] location对象:', JSON.stringify(location, null, 2))
+  console.log('[小程序位置] baiduMap状态:', !!baiduMap)
+  
+  if (!baiduMap) {
+    console.warn('[小程序位置] ❌ 无法更新标记：地图未初始化')
+    return
+  }
+  
+  if (!location || !location.longitude || !location.latitude) {
+    console.warn('[小程序位置] ❌ 位置数据不完整:', location)
+    return
+  }
+  
+  console.log('[小程序位置] 开始创建标记，坐标: (', location.longitude, ',', location.latitude, ')')
+  
+  // 清除旧标记
+  const oldMarker = miniprogramMarkers.value.get(locationKey)
+  if (oldMarker) {
+    baiduMap.removeOverlay(oldMarker)
+  }
+  
+  // 创建新标记
+  console.log('[小程序位置] 创建百度地图Point对象，坐标: (', location.longitude, ',', location.latitude, ')')
+  console.log('[小程序位置] ⚠️ 坐标验证: 经度=', location.longitude, ', 纬度=', location.latitude, ', 类型: 经度=', typeof location.longitude, ', 纬度=', typeof location.latitude)
+  const point = new (window as any).BMap.Point(location.longitude, location.latitude)
+  console.log('[小程序位置] Point对象创建成功:', point, ', Point.lng=', point.lng, ', Point.lat=', point.lat)
+  
+  // 使用Canvas创建图标，采用百度地图标准样式，但与PC位置颜色区分
+  // PC位置使用蓝色(#409eff)，小程序位置使用分配的颜色（如红色、青色等）
+  console.log('[小程序位置] 开始创建Canvas图标，颜色:', location.color)
+  const canvas = document.createElement('canvas')
+  canvas.width = 36
+  canvas.height = 36
+  const ctx = canvas.getContext('2d')
+  
+  if (!ctx) {
+    console.error('[小程序位置] ❌ 无法获取Canvas上下文')
+    return
+  }
+  
+  if (ctx) {
+    // 绘制外圈阴影（增强视觉效果）
+    ctx.beginPath()
+    ctx.arc(18, 18, 15, 0, Math.PI * 2)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'
+    ctx.fill()
+    
+    // 绘制外圈（使用分配的颜色，与PC位置的蓝色区分）
+    ctx.beginPath()
+    ctx.arc(18, 18, 14, 0, Math.PI * 2)
+    ctx.fillStyle = location.color
+    ctx.fill()
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 3
+    ctx.stroke()
+    
+    // 绘制内圈（白色中心，与PC位置样式一致）
+    ctx.beginPath()
+    ctx.arc(18, 18, 6, 0, Math.PI * 2)
+    ctx.fillStyle = '#ffffff'
+    ctx.fill()
+    
+    // 绘制中心点（使用分配的颜色）
+    ctx.beginPath()
+    ctx.arc(18, 18, 3, 0, Math.PI * 2)
+    ctx.fillStyle = location.color
+    ctx.fill()
+  }
+  
+  // 使用Canvas创建图标
+  console.log('[小程序位置] 创建BMap.Icon对象')
+  const icon = new (window as any).BMap.Icon(
+    canvas.toDataURL(),
+    new (window as any).BMap.Size(36, 36),
+    { anchor: new (window as any).BMap.Size(18, 18) }
+  )
+  console.log('[小程序位置] Icon对象创建成功')
+  
+  console.log('[小程序位置] 创建BMap.Marker对象')
+  const marker = new (window as any).BMap.Marker(point, { icon })
+  console.log('[小程序位置] Marker对象创建成功:', marker)
+  
+  // 输出信息窗口坐标信息（用于调试）
+  console.log('[小程序位置] 信息窗口坐标: 经度=', location.longitude.toFixed(6), ', 纬度=', location.latitude.toFixed(6), ', Point对象: lng=', point.lng, ', lat=', point.lat)
+  
+  // 添加信息窗口（与PC位置详情展开类似）
+  const scrollbarStyle = `
+    <style type="text/css">
+      .miniprogram-info-window-container::-webkit-scrollbar { width: 6px; height: 6px; }
+      .miniprogram-info-window-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+      .miniprogram-info-window-container::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+      .miniprogram-info-window-container::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+  `
+  
+  const infoWindow = new (window as any).BMap.InfoWindow(
+    `${scrollbarStyle}
+    <div class="miniprogram-info-window-container" style="padding: 12px; min-width: 200px; font-size: 13px; line-height: 1.6; max-height: 350px; overflow-y: auto;">
+      <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #303133; border-bottom: 2px solid ${location.color}; padding-bottom: 6px; display: flex; align-items: center;">
+        <span style="display: inline-block; width: 16px; height: 16px; background-color: ${location.color}; border-radius: 50%; margin-right: 8px; border: 2px solid #ffffff; box-shadow: 0 0 0 2px ${location.color};"></span>
+        <span style="color: ${location.color};">📱 小程序位置 - ${location.userName || `用户${location.userId}`}</span>
+      </div>
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">用户:</span>
+        <span style="color: #303133;">${location.userName || `用户${location.userId}`}</span>
+      </div>
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">用户ID:</span>
+        <span style="color: #303133; font-family: monospace;">${location.userId}</span>
+      </div>
+      ${location.address ? `
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">地址:</span>
+        <span style="color: #303133;">${location.address}</span>
+      </div>
+      ` : ''}
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">经度:</span>
+        <span style="color: #303133; font-family: monospace; font-weight: 500;">${location.longitude.toFixed(6)}</span>
+        <span style="color: #909399; font-size: 11px; margin-left: 4px;">(BD09)</span>
+      </div>
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">纬度:</span>
+        <span style="color: #303133; font-family: monospace; font-weight: 500;">${location.latitude.toFixed(6)}</span>
+        <span style="color: #909399; font-size: 11px; margin-left: 4px;">(BD09)</span>
+      </div>
+      ${location.accuracy ? `
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">精度:</span>
+        <span style="color: ${location.accuracy < 50 ? '#67C23A' : location.accuracy < 100 ? '#E6A23C' : '#F56C6C'};">
+          ${location.accuracy.toFixed(0)} 米
+          ${location.accuracy > 500 ? ' ⚠️ 精度较低' : location.accuracy > 1000 ? ' ⚠️⚠️ 精度很低（可能是基站定位）' : ''}
+        </span>
+      </div>
+      ${location.accuracy > 1000 ? `
+      <div style="margin-bottom: 4px; padding: 8px; background-color: #FFF3CD; border-left: 3px solid #FFC107; border-radius: 4px;">
+        <span style="color: #856404; font-size: 12px;">
+          ⚠️ 定位精度较低（${location.accuracy.toFixed(0)}米），可能是基站定位或模拟定位。<br/>
+          建议：在真实手机上运行小程序以获取GPS定位（精度通常10-50米）。
+        </span>
+      </div>
+      ` : ''}
+      ` : ''}
+      ${location.speed && location.speed > 0 ? `
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">速度:</span>
+        <span style="color: #303133;">${location.speed.toFixed(1)} km/h</span>
+      </div>
+      ` : ''}
+      ${location.direction ? `
+      <div style="margin-bottom: 4px;">
+        <span style="color: #606266; min-width: 60px; display: inline-block;">方向:</span>
+        <span style="color: #303133;">${location.direction.toFixed(0)}°</span>
+      </div>
+      ` : ''}
+      <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #e4e7ed; color: #909399; font-size: 12px; display: flex; align-items: center;">
+        <span style="color: #909399;">📍 位置来源:</span>
+        <span style="color: ${location.color}; margin-left: 4px; font-weight: 500;">微信小程序定位</span>
+      </div>
+      <div style="margin-top: 4px; color: #909399; font-size: 12px;">
+        <span style="color: #909399;">🕐 更新时间:</span>
+        <span style="color: #606266; margin-left: 4px;">${formatTime(new Date(location.timestamp).toISOString())}</span>
+      </div>
+    </div>`,
+    { width: 280, maxHeight: 350 }
+  )
+  
+  marker.addEventListener('click', () => {
+    baiduMap.openInfoWindow(infoWindow, point)
+  })
+  
+  try {
+    baiduMap.addOverlay(marker)
+    miniprogramMarkers.value.set(locationKey, marker)
+    
+    console.log(`[小程序位置] ✅ 标记已成功添加到地图: ${location.userName}, 颜色: ${location.color}, 位置: (${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}), locationKey: ${locationKey}`)
+    console.log(`[小程序位置] 当前小程序位置数量: ${miniprogramMarkers.value.size}, 位置列表:`, Array.from(miniprogramLocations.value.keys()))
+  } catch (error: any) {
+    console.error('[小程序位置] ❌ 添加标记到地图失败:', error)
+    console.error('[小程序位置] 错误详情:', { locationKey, location, error: error.message, stack: error.stack })
+  }
+}
+
+// 清除小程序位置标记
+const clearMiniprogramLocationMarkers = () => {
+  if (!baiduMap) return
+  
+  miniprogramMarkers.value.forEach((marker) => {
+    baiduMap.removeOverlay(marker)
+  })
+  miniprogramMarkers.value.clear()
+  miniprogramLocations.value.clear()
+  console.log('[小程序位置] 所有标记已清除')
 }
 
 // 组件挂载时初始化
@@ -1704,6 +2125,7 @@ onMounted(async () => {
         wgs84: wgs84Location,
         bd09: { lat: pcLocation.value.latitude, lng: pcLocation.value.longitude }
       })
+      console.log('[初始化] PC位置 ⚠️ 转换前后对比: WGS84(', wgs84Location.lng.toFixed(6), ',', wgs84Location.lat.toFixed(6), ') -> BD09(', pcLocation.value.longitude.toFixed(6), ',', pcLocation.value.latitude.toFixed(6), ')')
       
       // 使用转换后的BD09坐标定位地图
       const point = new (window as any).BMap.Point(pcLocation.value.longitude, pcLocation.value.latitude)
@@ -1722,7 +2144,21 @@ onMounted(async () => {
   loadLegendPosition()
   
   // 监听WebSocket位置更新
+  console.log('[地图初始化] ========== 注册WebSocket监听器 ==========')
+  console.log('[地图初始化] 监听器类型: vehicle_location')
+  console.log('[地图初始化] 监听器函数: handleVehicleLocationUpdate')
   webSocketClient.on('vehicle_location', handleVehicleLocationUpdate)
+  const listenerCount = webSocketClient['listeners']?.get('vehicle_location')?.length || 0
+  console.log('[地图初始化] ✅ WebSocket监听器已注册，当前监听器数量:', listenerCount)
+  
+  // 测试WebSocket连接
+  console.log('[地图初始化] 检查WebSocket连接状态...')
+  webSocketClient.on('connect', () => {
+    console.log('[地图初始化] ✅ WebSocket连接已建立')
+  })
+  webSocketClient.on('disconnect', () => {
+    console.warn('[地图初始化] ⚠️ WebSocket连接已断开')
+  })
   
   // 启动PC位置监控（如果之前获取失败，这里会再次尝试）
   await startPCLocationMonitoring()
@@ -1740,6 +2176,7 @@ onUnmounted(() => {
     clearInterval(updateTimer)
   }
   stopPCLocationMonitoring()
+  clearMiniprogramLocationMarkers()
   stopDrag() // 确保清理拖拽事件监听
   webSocketClient.off('vehicle_location', handleVehicleLocationUpdate)
 })
@@ -1961,6 +2398,17 @@ onUnmounted(() => {
               background: #409eff;
               border: 2px solid white;
               box-shadow: 0 0 0 2px #409eff;
+            }
+            
+            &.miniprogram-location {
+              // 小程序位置使用第一个颜色（红色）作为图例示例，实际地图上每个用户使用不同颜色
+              background: #FF6B6B;
+              border: 2px solid white;
+              box-shadow: 0 0 0 2px #FF6B6B;
+              background: #FF6B6B;
+              border: 2px solid white;
+              box-shadow: 0 0 0 2px #FF6B6B;
+              animation: pulse 2s infinite;
             }
           }
           

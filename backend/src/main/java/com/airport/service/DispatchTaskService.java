@@ -53,6 +53,14 @@ public interface DispatchTaskService {
      * @return 任务列表
      */
     List<DispatchTask> getTasksByVehicleId(Long vehicleId);
+    
+    /**
+     * 查找用户正在执行的任务（状态为2-已分配或3-执行中）
+     * 
+     * @param userId 用户ID
+     * @return 任务列表
+     */
+    List<DispatchTask> findActiveTasksByUserId(Long userId);
 
     /**
      * 创建任务
@@ -201,4 +209,12 @@ public interface DispatchTaskService {
      * @return 新创建的任务
      */
     DispatchTask resendTask(Long taskId);
+
+    /**
+     * 获取当前用户的任务列表（包括分配给司机和维修员的任务）
+     * 
+     * @param userId 用户ID
+     * @return 任务列表（只返回未完成的任务，状态不为4-已完成和5-已取消）
+     */
+    List<DispatchTask> getMyTasks(Long userId);
 }
