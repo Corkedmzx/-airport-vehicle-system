@@ -73,4 +73,4 @@ coverage/
 *.pid.lock
 
 # 停止跟踪特定文件
-!backend/src/main/resources/application.yml
+backend/src/main/resources/application.yml
