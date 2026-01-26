@@ -71,3 +71,6 @@ coverage/
 *.pid
 *.seed
 *.pid.lock
+
+# 停止跟踪特定文件
+!backend/src/main/resources/application.yml
