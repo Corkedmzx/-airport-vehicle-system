@@ -18,7 +18,8 @@
 ## 核心功能模块
 
 ### 1. 用户认证与权限管理
-- 用户注册与登录：JWT Token认证机制
+- 用户注册与登录：JWT Token认证机制，支持小程序端注册（手机号必填）
+- 注册通知：新用户注册后自动发送站内信通知ADMIN角色管理员
 - 密码管理：BCrypt加密存储，支持修改密码
 - 角色权限控制(RBAC)：7种角色，细粒度权限控制
 - 权限刷新：权限更新后可在个人资料页面刷新，无需重新登录
@@ -181,6 +182,15 @@ npm run dev
 9. **多地图支持**: 支持百度、高德、腾讯三种地图供应商
 10. **响应式设计**: 适配不同屏幕尺寸
 11. **多设备MQTT数据流转**: 支持手机定位、车辆定位器、网页监控端数据流转
+
+## 相关仓库
+
+### 微信小程序端
+
+- **GitHub**: [airport-vehicle-system-miniprogarm](https://github.com/Corkedmzx/airport-vehicle-system-miniprogarm.git)
+- **Gitee**: [airport-vehicle-system-miniprogarm](https://gitee.com/Corkedmzx/airport-vehicle-system-miniprogarm.git)
+
+小程序端提供司机和维修员移动端操作，支持任务管理、位置上传、问题反馈等功能。
 
 ## 文档
 

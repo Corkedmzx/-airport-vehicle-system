@@ -26,6 +26,14 @@ public interface SysRolePermissionRepository extends JpaRepository<SysRolePermis
     List<SysRolePermission> findByRoleId(Long roleId);
 
     /**
+     * 根据权限ID查找角色权限关联
+     * 
+     * @param permissionId 权限ID
+     * @return 角色权限关联列表
+     */
+    List<SysRolePermission> findByPermissionId(Long permissionId);
+
+    /**
      * 根据角色ID删除所有权限关联
      * 
      * @param roleId 角色ID

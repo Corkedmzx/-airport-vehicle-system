@@ -119,4 +119,21 @@ public interface MessageService {
      * @return 删除的消息数量
      */
     Long clearReadMessages(Long userId);
+
+    /**
+     * 根据权限代码批量创建站内信（发送给拥有指定权限的用户）
+     * 
+     * @param permissionCode 权限代码
+     * @param title 消息标题
+     * @param content 消息内容
+     * @param messageType 消息类型
+     * @param category 消息类别
+     * @param priority 优先级
+     * @param relatedId 关联ID
+     * @param relatedType 关联类型
+     * @return 创建的消息列表
+     */
+    List<Message> createMessagesForPermission(String permissionCode, String title, String content,
+                                              String messageType, String category, String priority,
+                                              Long relatedId, String relatedType);
 }

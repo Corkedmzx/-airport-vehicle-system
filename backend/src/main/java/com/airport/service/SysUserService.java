@@ -138,4 +138,12 @@ public interface SysUserService {
      * @return 是否匹配
      */
     boolean verifyPassword(Long userId, String password);
+
+    /**
+     * 根据权限代码查找拥有该权限的用户列表
+     * 
+     * @param permissionCode 权限代码
+     * @return 用户列表
+     */
+    List<SysUser> findUsersByPermission(String permissionCode);
 }

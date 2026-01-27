@@ -388,4 +388,60 @@ public class SysUserServiceImpl implements SysUserService {
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         return passwordEncoder.matches(password, user.getPassword());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SysUser> findUsersByPermission(String permissionCode) {
+        List<SysUser> users = new java.util.ArrayList<>();
+        
+        try {
+            // 查找权限ID
+            SysPermission permission = permissionRepository.findByPermissionCode(permissionCode)
+                    .orElse(null);
+            if (permission == null) {
+                log.warn("权限不存在: {}", permissionCode);
+                return users;
+            }
+
+            // 查找拥有该权限的角色
+            List<SysRolePermission> rolePermissions = rolePermissionRepository.findByPermissionId(permission.getId());
+            if (rolePermissions == null || rolePermissions.isEmpty()) {
+                log.warn("没有角色拥有权限: {}", permissionCode);
+                return users;
+            }
+
+            // 获取所有角色ID
+            List<Long> roleIds = rolePermissions.stream()
+                    .map(SysRolePermission::getRoleId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (roleIds.isEmpty()) {
+                return users;
+            }
+
+            // 优化：直接查询拥有这些角色的用户ID（避免查询所有用户角色）
+            List<SysUserRole> userRoles = userRoleRepository.findByRoleIdIn(roleIds);
+            List<Long> userIds = userRoles.stream()
+                    .map(SysUserRole::getUserId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (userIds.isEmpty()) {
+                return users;
+            }
+
+            // 优化：批量查询用户信息（避免N+1查询问题）
+            List<SysUser> allUsers = userRepository.findAllById(userIds);
+            users = allUsers.stream()
+                    .filter(user -> user.getStatus() == 1)
+                    .collect(Collectors.toList());
+
+            log.info("找到{}个拥有权限{}的用户", users.size(), permissionCode);
+        } catch (Exception e) {
+            log.error("查找拥有权限{}的用户失败", permissionCode, e);
+        }
+
+        return users;
+    }
 }

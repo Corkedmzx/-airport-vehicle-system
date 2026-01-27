@@ -3,7 +3,9 @@ package com.airport.controller;
 import com.airport.dto.LoginRequest;
 import com.airport.dto.LoginResponse;
 import com.airport.dto.Result;
+import com.airport.entity.Message;
 import com.airport.service.SysUserService;
+import com.airport.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * 认证控制器
@@ -26,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final SysUserService userService;
+    private final MessageService messageService;
 
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "根据用户名和密码进行登录")
@@ -64,6 +70,7 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "用户注册", description = "新用户注册")
     public ResponseEntity<Result<LoginResponse>> register(@RequestBody LoginRequest request) {
+        log.info("[用户注册] 收到注册请求，用户名: {}, 邮箱: {}", request.getUsername(), request.getEmail());
         try {
             // 验证必填字段
             if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
@@ -82,18 +89,56 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Result.error("邮箱不能为空"));
             }
+            if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Result.error("手机号不能为空"));
+            }
             
             // 创建新用户
             com.airport.entity.SysUser newUser = new com.airport.entity.SysUser();
             newUser.setUsername(request.getUsername().trim());
             newUser.setPassword(request.getPassword());
             newUser.setEmail(request.getEmail().trim());
-            if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
-                newUser.setPhone(request.getPhone().trim());
-            }
+            newUser.setPhone(request.getPhone().trim());
             newUser.setStatus(1); // 默认启用
             
             com.airport.entity.SysUser createdUser = userService.createUser(newUser);
+            
+            // 异步发送注册通知站内信给ADMIN角色的管理员（不阻塞注册响应）
+            final com.airport.entity.SysUser finalUser = createdUser;
+            new Thread(() -> {
+                try {
+                    String messageTitle = "新用户注册通知";
+                    String messageContent = String.format(
+                        "新用户已注册：\n" +
+                        "用户名：%s\n" +
+                        "邮箱：%s\n" +
+                        "%s\n" +
+                        "请及时审核并分配角色权限。",
+                        finalUser.getUsername(),
+                        finalUser.getEmail(),
+                        finalUser.getPhone() != null ? "手机号：" + finalUser.getPhone() : "手机号：未填写"
+                    );
+                    
+                    // 发送给所有ADMIN角色的用户
+                    List<String> adminRoles = Arrays.asList("ADMIN");
+                    List<Message> messages = messageService.createMessagesForRoles(
+                        adminRoles,
+                        messageTitle,
+                        messageContent,
+                        "system",
+                        "user_registration",
+                        "normal",
+                        finalUser.getId(),
+                        "user"
+                    );
+                    
+                    log.info("已向{}个ADMIN角色管理员发送新用户注册通知，用户ID: {}", messages.size(), finalUser.getId());
+                } catch (Exception messageError) {
+                    log.error("发送注册通知站内信失败", messageError);
+                    // 不影响注册流程，仅记录错误
+                }
+            }).start();
             
             // 注册成功后自动登录
             try {

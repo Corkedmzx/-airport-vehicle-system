@@ -9,6 +9,7 @@ import com.airport.repository.SysUserRepository;
 import com.airport.repository.SysUserRoleRepository;
 import com.airport.repository.SysRoleRepository;
 import com.airport.service.MessageService;
+import com.airport.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,7 @@ public class MessageServiceImpl implements MessageService {
     private final SysUserRepository userRepository;
     private final SysUserRoleRepository userRoleRepository;
     private final SysRoleRepository roleRepository;
+    private final SysUserService userService;
 
     @Override
     public Message createMessage(Message message) {
@@ -83,36 +85,48 @@ public class MessageServiceImpl implements MessageService {
                                                  String messageType, String category, String priority,
                                                  Long relatedId, String relatedType) {
         // 根据角色代码查找所有具有该角色的用户ID
-        List<Long> userIds = new ArrayList<>();
+        List<Long> roleIds = new ArrayList<>();
         
+        // 先查找所有角色ID
         for (String roleCode : roleCodes) {
-            // 查找角色ID
             SysRole role = roleRepository.findByRoleCode(roleCode).orElse(null);
             if (role == null || role.getStatus() != 1) {
                 log.warn("角色不存在或已禁用: {}", roleCode);
                 continue;
             }
-
-            // 查找所有具有该角色的用户（通过查询用户角色关联表）
-            List<SysUserRole> allUserRoles = userRoleRepository.findAll();
-            for (SysUserRole userRole : allUserRoles) {
-                if (userRole.getRoleId().equals(role.getId())) {
-                    SysUser user = userRepository.findById(userRole.getUserId()).orElse(null);
-                    if (user != null && user.getStatus() == 1) {
-                        if (!userIds.contains(user.getId())) {
-                            userIds.add(user.getId());
-                        }
-                    }
-                }
-            }
+            roleIds.add(role.getId());
         }
 
-        if (userIds.isEmpty()) {
-            log.warn("没有找到具有指定角色的用户: {}", roleCodes);
+        if (roleIds.isEmpty()) {
+            log.warn("没有找到有效的角色: {}", roleCodes);
             return new ArrayList<>();
         }
 
-        return createMessagesForUsers(userIds, title, content, messageType, category, priority, relatedId, relatedType);
+        // 使用findByRoleIdIn高效查询用户角色关联
+        List<SysUserRole> userRoles = userRoleRepository.findByRoleIdIn(roleIds);
+        
+        // 提取用户ID并去重
+        List<Long> userIds = userRoles.stream()
+                .map(SysUserRole::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 验证用户是否存在且启用
+        List<Long> validUserIds = new ArrayList<>();
+        for (Long userId : userIds) {
+            SysUser user = userRepository.findById(userId).orElse(null);
+            if (user != null && user.getStatus() == 1) {
+                validUserIds.add(userId);
+            }
+        }
+
+        if (validUserIds.isEmpty()) {
+            log.warn("没有找到具有指定角色的启用用户: {}", roleCodes);
+            return new ArrayList<>();
+        }
+
+        log.info("找到{}个具有角色{}的用户，准备发送站内信", validUserIds.size(), roleCodes);
+        return createMessagesForUsers(validUserIds, title, content, messageType, category, priority, relatedId, relatedType);
     }
 
     @Override
@@ -195,5 +209,24 @@ public class MessageServiceImpl implements MessageService {
             log.info("用户{}清空了{}条已读消息", userId, count);
         }
         return count;
+    }
+
+    @Override
+    public List<Message> createMessagesForPermission(String permissionCode, String title, String content,
+                                                     String messageType, String category, String priority,
+                                                     Long relatedId, String relatedType) {
+        // 使用SysUserService查找拥有该权限的用户
+        List<SysUser> users = userService.findUsersByPermission(permissionCode);
+        
+        if (users.isEmpty()) {
+            log.warn("没有找到拥有权限{}的用户", permissionCode);
+            return new ArrayList<>();
+        }
+
+        List<Long> userIds = users.stream()
+                .map(SysUser::getId)
+                .collect(Collectors.toList());
+
+        return createMessagesForUsers(userIds, title, content, messageType, category, priority, relatedId, relatedType);
     }
 }

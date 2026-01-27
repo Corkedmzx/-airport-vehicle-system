@@ -13,7 +13,81 @@
 
 ## 认证方式
 
-所有接口都需要JWT Token认证。
+所有接口都需要JWT Token认证（注册接口除外）。
+
+### 用户注册
+
+**接口**: `POST /api/auth/register`
+
+**说明**: 用户注册接口，注册成功后自动登录并返回Token
+
+**请求参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| username | String | 是 | 用户名 |
+| password | String | 是 | 密码（至少6位） |
+| email | String | 是 | 邮箱 |
+| phone | String | 是 | 手机号（11位数字） |
+
+**请求格式**: `application/json`
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "注册成功",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "expiresIn": 86400,
+    "user": {
+      "id": 6,
+      "username": "user4",
+      "email": "user4@example.com",
+      "phone": "16812341234"
+    }
+  }
+}
+```
+
+**功能说明**:
+1. 注册成功后自动登录，返回JWT Token
+2. 自动发送站内信通知给ADMIN角色的管理员
+3. 管理员可以在网页端审核并分配角色权限
+
+**小程序调用示例**:
+```javascript
+// 用户注册
+wx.request({
+  url: 'https://your-domain.com/api/auth/register',
+  method: 'POST',
+  header: {
+    'Content-Type': 'application/json'
+  },
+  data: {
+    username: 'username',
+    password: 'password',
+    email: 'email@example.com',
+    phone: 'phonenumber'
+  },
+  success: function(res) {
+    if (res.data.code === 200) {
+      // 保存Token和用户信息
+      wx.setStorageSync('token', res.data.data.token);
+      wx.setStorageSync('userInfo', res.data.data.user);
+      wx.showToast({
+        title: '注册成功',
+        icon: 'success'
+      });
+      // 跳转到首页
+      wx.switchTab({
+        url: '/pages/index/index'
+      });
+    }
+  }
+});
+```
+
+---
 
 ### 获取Token
 
@@ -36,6 +110,36 @@ Content-Type: application/json
 ```
 Authorization: Bearer <JWT_TOKEN>
 ```
+
+---
+
+### API地址自动切换
+
+小程序支持配置多个API地址，当第一个地址连接超时或失败时，自动切换到备用地址。
+
+**配置方式** (`config.js`):
+```javascript
+module.exports = {
+  // 多个API地址（支持自动切换）
+  apiBaseUrls: [
+    'http://your-domain.com/api',
+    'http://192.168.x.x:8080/api'
+  ],
+  // 默认使用第一个地址
+  apiBaseUrl: 'http://your-domain.com/api'
+}
+```
+
+**功能说明**:
+1. 首次请求使用第一个API地址
+2. 如果连接超时或失败，自动切换到下一个地址
+3. 切换后更新全局API地址，后续请求使用新地址
+4. 所有使用 `request()` 函数的API调用都支持自动切换
+
+**使用场景**:
+- 多服务器部署环境
+- 主备服务器切换
+- 网络故障自动恢复
 
 ## 核心接口
 
