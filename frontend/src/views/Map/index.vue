@@ -96,32 +96,16 @@
         <div class="legend-content" v-show="!legendCollapsed">
           <div class="legend-items">
             <div class="legend-item">
-              <div class="legend-marker active"></div>
-              <span>正常运行</span>
+              <div class="legend-marker vehicle"></div>
+              <span>车辆</span>
             </div>
             <div class="legend-item">
-              <div class="legend-marker maintenance"></div>
-              <span>维修中</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-marker fault"></div>
-              <span>故障</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-marker offline"></div>
-              <span>离线</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-marker task-running"></div>
-              <span>执行任务</span>
-            </div>
-            <div class="legend-item" v-if="pcLocationMarker">
               <div class="legend-marker pc-location"></div>
               <span>PC位置</span>
             </div>
-            <div class="legend-item" v-if="miniprogramMarkers.size > 0">
+            <div class="legend-item">
               <div class="legend-marker miniprogram-location"></div>
-              <span>小程序位置 ({{ miniprogramMarkers.size }})</span>
+              <span>小程序位置</span>
             </div>
           </div>
         </div>
@@ -254,6 +238,10 @@ const showTraffic = ref(false)
 const mapStatus = ref('加载中')
 let baiduMap: any = null
 let mapMarkers: any[] = []
+// 使用Map存储车辆标记，key为vehicleId，value为marker对象，用于高效更新
+const vehicleMarkersMap = new Map<string | number, any>()
+// 标记地图是否已初始化（确保底图只加载一次）
+let isMapInitialized = false
 
 // 图例相关
 const legendCollapsed = ref(false)
@@ -319,6 +307,7 @@ const lastUpdateTime = ref(new Date().toISOString())
 
 // 定时器
 let updateTimer: NodeJS.Timeout | null = null
+let dataSyncTimer: NodeJS.Timeout | null = null
 
 // 获取车辆状态类型
 const getVehicleStatusType = (status: number) => {
@@ -435,10 +424,11 @@ const exportMap = () => {
   ElMessage.info('导出地图功能开发中')
 }
 
-// 刷新地图
+// 刷新地图（只刷新定位目标，不刷新底图）
 const refreshMap = async () => {
   ElMessage.info('正在刷新地图数据...')
-  await loadMapData()
+  // 显示错误提示
+  await loadMapData(true)
   updateMapMarkers()
   ElMessage.success('地图数据已刷新')
 }
@@ -494,72 +484,127 @@ const requestMaintenance = (vehicle: Vehicle) => {
   ElMessage.info(`为车辆 ${vehicle.plateNumber} 提交维修申请功能开发中`)
 }
 
-// 更新地图标记
+// 创建车辆标记图标
+const createVehicleIcon = (status: number) => {
+  const iconColor = getVehicleStatusColor(status)
+  const canvas = document.createElement('canvas')
+  canvas.width = 32
+  canvas.height = 32
+  const ctx = canvas.getContext('2d')
+  
+  if (ctx) {
+    // 绘制外圈（带颜色边框）
+    ctx.beginPath()
+    ctx.arc(16, 16, 14, 0, Math.PI * 2)
+    ctx.fillStyle = iconColor
+    ctx.fill()
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 3
+    ctx.stroke()
+    
+    // 绘制内圈（白色中心）
+    ctx.beginPath()
+    ctx.arc(16, 16, 6, 0, Math.PI * 2)
+    ctx.fillStyle = '#ffffff'
+    ctx.fill()
+  }
+  
+  return new (window as any).BMap.Icon(
+    canvas.toDataURL(),
+    new (window as any).BMap.Size(32, 32),
+    { anchor: new (window as any).BMap.Size(16, 16) }
+  )
+}
+
+// 创建车辆信息窗口
+const createVehicleInfoWindow = (vehicle: any) => {
+  return new (window as any).BMap.InfoWindow(
+    `<div style="padding: 8px;">
+      <strong>${vehicle.plateNumber}</strong><br/>
+      状态: ${getVehicleStatusText(vehicle.status)}<br/>
+      位置: ${vehicle.location || '未知'}<br/>
+      ${vehicle.speed ? `速度: ${vehicle.speed} km/h<br/>` : ''}
+      更新时间: ${formatTime(vehicle.lastUpdate)}
+    </div>`,
+    { width: 200, height: 120 }
+  )
+}
+
+// 更新地图标记（优化版：只更新位置变化的标记，不刷新底图）
 const updateMapMarkers = () => {
   if (!baiduMap) return
   
-  // 清除现有车辆标记（保留PC位置标记和小程序位置标记）
-  mapMarkers.forEach(marker => {
-    baiduMap.removeOverlay(marker)
-  })
-  mapMarkers = []
+  // 获取当前需要显示的车辆ID集合
+  const currentVehicleIds = new Set<string | number>()
   
-  // 添加车辆标记
+  // 遍历筛选后的车辆，更新或创建标记
   filteredVehicles.value.forEach((vehicle: any) => {
-    if (vehicle.latitude && vehicle.longitude) {
-      const point = new (window as any).BMap.Point(vehicle.longitude, vehicle.latitude)
+    if (!vehicle.latitude || !vehicle.longitude) return
+    
+    const vehicleId = vehicle.id?.toString() || vehicle.plateNumber
+    currentVehicleIds.add(vehicleId)
+    
+    const point = new (window as any).BMap.Point(vehicle.longitude, vehicle.latitude)
+    
+    // 检查标记是否已存在
+    let marker = vehicleMarkersMap.get(vehicleId)
+    
+    if (marker) {
+      // 标记已存在，只更新位置（不重新创建，避免闪烁）
+      const oldPoint = marker.getPosition()
+      const newPoint = point
       
-      // 根据车辆状态选择图标颜色 - 使用Canvas绘制图标（百度地图标准方式）
-      const iconColor = getVehicleStatusColor(vehicle.status)
-      const canvas = document.createElement('canvas')
-      canvas.width = 32
-      canvas.height = 32
-      const ctx = canvas.getContext('2d')
-      
-      if (ctx) {
-        // 绘制外圈（带颜色边框）
-        ctx.beginPath()
-        ctx.arc(16, 16, 14, 0, Math.PI * 2)
-        ctx.fillStyle = iconColor
-        ctx.fill()
-        ctx.strokeStyle = '#ffffff'
-        ctx.lineWidth = 3
-        ctx.stroke()
-        
-        // 绘制内圈（白色中心）
-        ctx.beginPath()
-        ctx.arc(16, 16, 6, 0, Math.PI * 2)
-        ctx.fillStyle = '#ffffff'
-        ctx.fill()
+      // 只有当位置发生变化时才更新（避免不必要的更新）
+      if (oldPoint && (oldPoint.lng !== newPoint.lng || oldPoint.lat !== newPoint.lat)) {
+        marker.setPosition(newPoint)
+        // 更新信息窗口内容（如果状态或信息发生变化）
+        const infoWindow = createVehicleInfoWindow(vehicle)
+        marker.infoWindow = infoWindow
+        marker.point = newPoint
       }
       
-      const icon = new (window as any).BMap.Icon(
-        canvas.toDataURL(),
-        new (window as any).BMap.Size(32, 32),
-        { anchor: new (window as any).BMap.Size(16, 16) }
-      )
+      // 检查状态是否变化，如果变化需要更新图标
+      if (marker.vehicleStatus !== vehicle.status) {
+        const newIcon = createVehicleIcon(vehicle.status)
+        marker.setIcon(newIcon)
+        marker.vehicleStatus = vehicle.status
+      }
+    } else {
+      // 标记不存在，创建新标记
+      const icon = createVehicleIcon(vehicle.status)
+      marker = new (window as any).BMap.Marker(point, { icon })
       
-      const marker = new (window as any).BMap.Marker(point, { icon })
+      // 存储车辆状态，用于后续比较
+      marker.vehicleStatus = vehicle.status
+      marker.vehicleId = vehicleId
+      marker.point = point
       
-      // 添加信息窗口
-      const infoWindow = new (window as any).BMap.InfoWindow(
-        `<div style="padding: 8px;">
-          <strong>${vehicle.plateNumber}</strong><br/>
-          状态: ${getVehicleStatusText(vehicle.status)}<br/>
-          位置: ${vehicle.location || '未知'}<br/>
-          ${vehicle.speed ? `速度: ${vehicle.speed} km/h<br/>` : ''}
-          更新时间: ${formatTime(vehicle.lastUpdate)}
-        </div>`,
-        { width: 200, height: 120 }
-      )
+      // 创建信息窗口
+      const infoWindow = createVehicleInfoWindow(vehicle)
+      marker.infoWindow = infoWindow
       
+      // 添加点击事件
       marker.addEventListener('click', () => {
         baiduMap.openInfoWindow(infoWindow, point)
         selectedVehicle.value = vehicle
       })
       
+      // 添加到地图
       baiduMap.addOverlay(marker)
+      vehicleMarkersMap.set(vehicleId, marker)
       mapMarkers.push(marker)
+    }
+  })
+  
+  // 移除不再需要的标记（车辆已不在筛选列表中）
+  vehicleMarkersMap.forEach((marker, vehicleId) => {
+    if (!currentVehicleIds.has(vehicleId)) {
+      baiduMap.removeOverlay(marker)
+      vehicleMarkersMap.delete(vehicleId)
+      const index = mapMarkers.indexOf(marker)
+      if (index > -1) {
+        mapMarkers.splice(index, 1)
+      }
     }
   })
   
@@ -644,8 +689,14 @@ const showMapScreenshot = () => {
   // 这里可以显示一个对话框展示地图截图
 }
 
-// 初始化地图
+// 初始化地图（确保只初始化一次）
 const initMap = async () => {
+  // 如果地图已经初始化，直接返回
+  if (isMapInitialized && baiduMap) {
+    console.log('地图已初始化，跳过重复初始化')
+    return
+  }
+  
   await nextTick()
   if (!mapContainer.value) {
     console.warn('地图容器未准备好')
@@ -751,6 +802,7 @@ const initMap = async () => {
     
     baiduMap = map
     mapStatus.value = '正常'
+    isMapInitialized = true // 标记地图已初始化
     
     console.log('地图初始化成功')
     ElMessage.success('地图初始化成功')
@@ -994,8 +1046,8 @@ const loadGetscriptScript = async (getscriptUrl: string) => {
   })
 }
 
-// 加载地图数据
-const loadMapData = async () => {
+// 加载地图数据（静默加载，不显示错误提示，避免影响用户体验）
+const loadMapData = async (showError = false) => {
   try {
     // 调用API获取车辆数据
     const response = await getVehiclesApi()
@@ -1003,7 +1055,7 @@ const loadMapData = async () => {
       const vehicles = response.data.data || []
       
       // 转换为地图显示格式
-      mapVehicles.value = vehicles.map((v: Vehicle) => ({
+      const newVehicles = vehicles.map((v: Vehicle) => ({
         id: v.id?.toString() || '',
         plateNumber: v.vehicleNo || '',
         vehicleType: v.brand || '未知',
@@ -1016,6 +1068,32 @@ const loadMapData = async () => {
         currentTask: null // 任务信息需要从任务API获取
       })).filter((v: any) => v.latitude != null && v.longitude != null) // 只显示有位置的车辆
       
+      // 只更新位置变化的车辆，避免不必要的响应式更新
+      newVehicles.forEach((newVehicle: any) => {
+        const existingIndex = mapVehicles.value.findIndex((v: any) => v.id === newVehicle.id)
+        if (existingIndex >= 0) {
+          const existing = mapVehicles.value[existingIndex]
+          // 只更新位置相关的字段，避免触发不必要的响应式更新
+          if (existing.latitude !== newVehicle.latitude || existing.longitude !== newVehicle.longitude) {
+            existing.latitude = newVehicle.latitude
+            existing.longitude = newVehicle.longitude
+            existing.location = newVehicle.location
+            existing.lastUpdate = newVehicle.lastUpdate
+          }
+          // 更新状态（如果变化）
+          if (existing.status !== newVehicle.status) {
+            existing.status = newVehicle.status
+          }
+        } else {
+          // 新车辆，添加到列表
+          mapVehicles.value.push(newVehicle)
+        }
+      })
+      
+      // 移除已不存在的车辆
+      const newVehicleIds = new Set(newVehicles.map((v: any) => v.id))
+      mapVehicles.value = mapVehicles.value.filter((v: any) => newVehicleIds.has(v.id))
+      
       // 更新统计信息
       realTimeStats.value.onlineVehicles = mapVehicles.value.filter((v: any) => v.status === 1).length
       realTimeStats.value.runningTasks = mapVehicles.value.filter((v: any) => v.currentTask).length
@@ -1026,7 +1104,10 @@ const loadMapData = async () => {
     }
   } catch (error) {
     console.error('Load map data failed:', error)
-    ElMessage.error('加载地图数据失败')
+    // 只在需要时显示错误提示
+    if (showError) {
+      ElMessage.error('加载地图数据失败')
+    }
   }
 }
 
@@ -1207,7 +1288,7 @@ const handleVehicleLocationUpdate = (data: any) => {
   // 如果既不是PC位置也不是小程序位置，记录日志
   console.log('[WebSocket位置更新] 未识别的位置类型，source:', source, ', deviceName:', deviceName, ', data:', data)
   
-  // 处理车辆位置更新
+  // 处理车辆位置更新（WebSocket实时更新）
   // 查找并更新车辆位置
   const vehicleIndex = mapVehicles.value.findIndex((v: any) => v.id === vehicleId?.toString() || v.plateNumber === vehicleNo)
   if (vehicleIndex >= 0) {
@@ -1244,8 +1325,22 @@ const handleVehicleLocationUpdate = (data: any) => {
     }
   }
   
-  // 更新地图标记
-  updateMapMarkers()
+  // 立即更新地图标记（WebSocket实时更新，不等待定时器）
+  // 使用优化后的更新逻辑，只更新位置变化的标记
+  if (baiduMap && isMapInitialized) {
+    const vehicleIdStr = vehicleId?.toString() || vehicleNo
+    const marker = vehicleMarkersMap.get(vehicleIdStr)
+    
+    if (marker) {
+      // 标记已存在，直接更新位置（最快的方式）
+      const newPoint = new (window as any).BMap.Point(Number(longitude), Number(latitude))
+      marker.setPosition(newPoint)
+      marker.point = newPoint
+    } else {
+      // 标记不存在，调用updateMapMarkers创建
+      updateMapMarkers()
+    }
+  }
   
   // 更新最后更新时间
   lastUpdateTime.value = new Date().toISOString()
@@ -1869,7 +1964,7 @@ const startPCLocationMonitoring = async () => {
       }
     }, 60000) // 60秒更新一次
     
-    ElMessage.success('PC位置监控已启动（60秒更新一次）')
+    // 不弹出“60秒更新”提示，避免用户误以为页面在整体刷新
     console.log('[PC位置] PC位置监控已启动，更新间隔: 60秒')
   } catch (error: any) {
     console.error('[PC位置] 启动PC位置监控失败:', error)
@@ -2163,22 +2258,59 @@ onMounted(async () => {
   // 启动PC位置监控（如果之前获取失败，这里会再次尝试）
   await startPCLocationMonitoring()
   
-  // 设置定时更新（作为备用，主要依赖WebSocket实时更新）
-  updateTimer = setInterval(async () => {
-    await loadMapData()
-    updateMapMarkers()
-  }, 60000) // 60秒更新一次（备用）
+  // 设置轻量级定时更新（1秒更新一次标记位置，不发起HTTP请求）
+  // 主要依赖WebSocket实时更新，定时器只更新已有标记的位置，不重新加载数据
+  updateTimer = setInterval(() => {
+    // 只更新地图标记位置，不重新加载数据（避免页面刷新）
+    // 数据更新主要依赖WebSocket实时推送
+    if (isMapInitialized && baiduMap) {
+      // 静默更新标记位置，不触发HTTP请求
+      updateMapMarkers()
+    }
+  }, 1000) // 1秒更新一次标记位置，实现实时定位效果
+  
+  // 设置数据同步定时器（30秒同步一次，作为WebSocket的备用）
+  // 这个定时器用于定期同步服务器数据，频率较低，避免频繁请求
+  dataSyncTimer = setInterval(async () => {
+    if (isMapInitialized) {
+      // 静默同步数据，不显示加载提示
+      try {
+        await loadMapData(false) // 不显示错误提示
+        updateMapMarkers()
+      } catch (error) {
+        // 静默失败，不影响用户体验
+        console.warn('数据同步失败:', error)
+      }
+    }
+  }, 30000) // 30秒同步一次数据
 })
 
 // 组件卸载时清理定时器和WebSocket监听
 onUnmounted(() => {
   if (updateTimer) {
     clearInterval(updateTimer)
+    updateTimer = null
+  }
+  if (dataSyncTimer) {
+    clearInterval(dataSyncTimer)
+    dataSyncTimer = null
   }
   stopPCLocationMonitoring()
   clearMiniprogramLocationMarkers()
   stopDrag() // 确保清理拖拽事件监听
   webSocketClient.off('vehicle_location', handleVehicleLocationUpdate)
+  
+  // 清理车辆标记Map
+  vehicleMarkersMap.forEach((marker) => {
+    if (baiduMap) {
+      baiduMap.removeOverlay(marker)
+    }
+  })
+  vehicleMarkersMap.clear()
+  mapMarkers = []
+  
+  // 重置地图初始化标志
+  isMapInitialized = false
 })
 </script>
 
@@ -2373,25 +2505,8 @@ onUnmounted(() => {
             border-radius: 50%;
             flex-shrink: 0;
             
-            &.active {
+            &.vehicle {
               background: #67c23a;
-            }
-            
-            &.maintenance {
-              background: #e6a23c;
-            }
-            
-            &.fault {
-              background: #f56c6c;
-            }
-            
-            &.offline {
-              background: #909399;
-            }
-            
-            &.task-running {
-              background: #409eff;
-              animation: pulse 2s infinite;
             }
             
             &.pc-location {
@@ -2401,14 +2516,9 @@ onUnmounted(() => {
             }
             
             &.miniprogram-location {
-              // 小程序位置使用第一个颜色（红色）作为图例示例，实际地图上每个用户使用不同颜色
               background: #FF6B6B;
               border: 2px solid white;
               box-shadow: 0 0 0 2px #FF6B6B;
-              background: #FF6B6B;
-              border: 2px solid white;
-              box-shadow: 0 0 0 2px #FF6B6B;
-              animation: pulse 2s infinite;
             }
           }
           
