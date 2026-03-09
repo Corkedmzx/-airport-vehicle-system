@@ -47,7 +47,7 @@ if not exist "node_modules" (
 
 REM 启动开发服务器
 echo [信息] 正在启动前端开发服务器...
-echo [信息] 前端地址: http://localhost:5173
+echo [信息] 前端地址: http://localhost:3000
 echo [信息] 按Ctrl+C停止服务
 echo.
 call npm run dev

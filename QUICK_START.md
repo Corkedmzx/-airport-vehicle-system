@@ -1,16 +1,16 @@
 # 快速启动指南
 
-## 📦 系统要求
+## 系统要求
 
 在开始之前，请确保您的系统已安装：
 
-- ✅ **Java 17+** (JDK)
-- ✅ **MySQL 8.0+** 或 **MariaDB 10.11+**
-- ✅ **Maven 3.8+** (后端构建)
-- ✅ **Node.js 16+** 和 **npm 8+** (前端构建)
-- ⚠️ **Redis** (可选，未安装时系统会自动降级到内存缓存)
+- [x] **Java 17+** (JDK)
+- [x] **MySQL 8.0+** 或 **MariaDB 10.11+**
+- [x] **Maven 3.8+** (后端构建)
+- [x] **Node.js 16+** 和 **npm 8+** (前端构建)
+- [ ] **Redis** (可选，未安装时系统会自动降级到内存缓存)
 
-## 🚀 快速启动步骤
+## 快速启动步骤
 
 ### 第一步：配置数据库
 
@@ -118,7 +118,7 @@ npm run dev
 
 ### 第四步：访问系统
 
-- **前端地址**: http://localhost:5173
+- **前端地址**: http://localhost:3000
 - **后端API**: http://localhost:8080/api
 - **API文档**: http://localhost:8080/api/doc.html
 
@@ -126,7 +126,7 @@ npm run dev
 - 用户名: `admin`
 - 密码: `admin123`
 
-## ⚠️ 常见问题
+## 常见问题
 
 ### 问题1: 数据库连接失败
 
@@ -161,14 +161,14 @@ npm run dev
 2. 检查 `frontend/.env.development` 中的API地址配置
 3. 检查浏览器控制台的错误信息
 
-## 📝 配置说明
+## 配置说明
 
 ### 数据库配置参数说明
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
 | `url` | 数据库连接URL | `jdbc:mysql://localhost:3306/airport_vehicle_system...` |
-| `username` | 数据库用户名 | `root` |
+| `username` | 数据库用户名 | `app_user`（可改为 root 等） |
 | `password` | 数据库密码 | 需用户配置 |
 
 ### 环境变量配置（可选）
@@ -187,18 +187,12 @@ export DB_PASSWORD=your_password
 java -jar target/airport-vehicle-system-1.0.0.jar
 ```
 
-## 🔧 生产环境部署
+## 生产环境部署
 
 生产环境部署请参考 `docs/deployment-guide.md` 文档。
 
-## 📞 获取帮助
+## 获取帮助
 
 如遇到问题，请：
-1. 查看 `docs/deployment-guide.md` 详细部署文档
-2. 查看 `docs/system-integrity-check.md` 系统检查报告
-3. 检查日志文件：`backend/logs/airport-vehicle-system.log`
-
----
-
-**祝您使用愉快！** 🎉
-
+1. 查看 `docs/deployment-guide.md` 详细部署与故障排查说明
+2. 检查日志文件：`backend/logs/airport-vehicle-system.log`

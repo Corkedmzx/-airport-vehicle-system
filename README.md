@@ -138,7 +138,7 @@ npm install
 npm run dev
 ```
 
-前端默认运行在：http://localhost:5173
+前端默认运行在：http://localhost:3000
 
 ### 6. 默认账号
 
@@ -211,8 +211,7 @@ npm run dev
 - [邮件配置指南](docs/email-configuration.md) - 邮件发送功能配置
 
 ### 测试与安全
-- [Git安全配置指南](docs/git-security-guide.md) - Git提交前的安全检查
-- [MQTT故障排除](docs/troubleshooting-mqtt-connection.md) - MQTT连接问题排查
+- MQTT 与连接问题可参考 [部署指南](docs/deployment-guide.md) 及 [MQTT 集成指南](docs/mqtt-huawei-iot-integration-guide.md)
 
 ## 作者
 
