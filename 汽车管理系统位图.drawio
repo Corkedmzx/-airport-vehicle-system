@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0" version="29.3.2">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0" version="29.6.1">
   <diagram name="第 1 页" id="_MS0GFyF_rsiVvA-KbCJ">
-    <mxGraphModel dx="1017" dy="500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="848" dy="417" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -14,7 +14,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="机场车辆管理系统" vertex="1">
-          <mxGeometry height="60" width="120" x="360" as="geometry" />
+          <mxGeometry height="60" width="120" x="355" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-93" edge="1" parent="1" source="8urXZs3rGDVe_AGbHTJm-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="8urXZs3rGDVe_AGbHTJm-6">
           <mxGeometry relative="1" as="geometry" />
@@ -35,7 +35,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="普通用户" vertex="1">
-          <mxGeometry height="60" width="120" x="360" y="140" as="geometry" />
+          <mxGeometry height="60" width="120" x="355" y="140" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-85" edge="1" parent="1" source="8urXZs3rGDVe_AGbHTJm-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="8urXZs3rGDVe_AGbHTJm-14">
           <mxGeometry relative="1" as="geometry" />
@@ -59,19 +59,19 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="维修员" vertex="1">
-          <mxGeometry height="120" width="60" x="429" y="260" as="geometry" />
+          <mxGeometry height="120" width="60" x="431" y="260" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-90" edge="1" parent="1" source="8urXZs3rGDVe_AGbHTJm-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="8urXZs3rGDVe_AGbHTJm-75">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-9" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="监控员" vertex="1">
-          <mxGeometry height="120" width="60" x="345" y="260" as="geometry" />
+          <mxGeometry height="120" width="60" x="349" y="260" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-91" edge="1" parent="1" source="8urXZs3rGDVe_AGbHTJm-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="8urXZs3rGDVe_AGbHTJm-65">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-10" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="操作员" vertex="1">
-          <mxGeometry height="120" width="60" x="265" y="260" as="geometry" />
+          <mxGeometry height="120" width="60" x="267" y="260" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-87" edge="1" parent="1" source="8urXZs3rGDVe_AGbHTJm-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="8urXZs3rGDVe_AGbHTJm-63">
           <mxGeometry relative="1" as="geometry" />
@@ -83,7 +83,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-13" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="司机" vertex="1">
-          <mxGeometry height="120" width="60" x="515" y="260" as="geometry" />
+          <mxGeometry height="120" width="60" x="513" y="260" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-14" collapsed="1" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="权限" vertex="1">
           <mxGeometry height="30" width="60" x="40" y="450" as="geometry">
@@ -135,11 +135,11 @@
           <mxGeometry height="30" width="60" x="595" y="450" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-64" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="只接收任务信息和汇报车辆状态" vertex="1">
-          <mxGeometry height="80" width="60" x="515" y="450" as="geometry" />
+          <mxGeometry height="80" width="60" x="513" y="450" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-65" collapsed="1" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="权限" vertex="1">
-          <mxGeometry height="30" width="60" x="265" y="450" as="geometry">
-            <mxRectangle height="150" width="140" x="265" y="450" as="alternateBounds" />
+          <mxGeometry height="30" width="60" x="267" y="450" as="geometry">
+            <mxRectangle height="150" width="140" x="267" y="450" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-67" parent="8urXZs3rGDVe_AGbHTJm-65" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="车辆管理" vertex="1">
@@ -155,8 +155,8 @@
           <mxGeometry height="30" width="140" y="120" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-75" collapsed="1" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="权限" vertex="1">
-          <mxGeometry height="30" width="60" x="345" y="450" as="geometry">
-            <mxRectangle height="90" width="140" x="345" y="450" as="alternateBounds" />
+          <mxGeometry height="30" width="60" x="349" y="450" as="geometry">
+            <mxRectangle height="90" width="140" x="349" y="450" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-76" parent="8urXZs3rGDVe_AGbHTJm-75" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="统计分析仪表盘查看" vertex="1">
@@ -166,8 +166,8 @@
           <mxGeometry height="30" width="140" y="60" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-80" collapsed="1" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="权限" vertex="1">
-          <mxGeometry height="30" width="60" x="429" y="450" as="geometry">
-            <mxRectangle height="120" width="140" x="429" y="450" as="alternateBounds" />
+          <mxGeometry height="30" width="60" x="431" y="450" as="geometry">
+            <mxRectangle height="120" width="140" x="431" y="450" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-81" parent="8urXZs3rGDVe_AGbHTJm-80" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="车辆管理" vertex="1">
@@ -216,7 +216,7 @@
         <mxCell id="8urXZs3rGDVe_AGbHTJm-109" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="任务汇报、突发事件汇报、车辆状态汇报" vertex="1">
           <mxGeometry height="30" width="60" x="280" y="840" as="geometry" />
         </mxCell>
-        <mxCell id="8urXZs3rGDVe_AGbHTJm-110" parent="1" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;" value="http天气消息&lt;div&gt;http地图&lt;/div&gt;" vertex="1">
+        <mxCell id="8urXZs3rGDVe_AGbHTJm-110" parent="1" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;" value="&lt;div&gt;其他功能API接入&lt;/div&gt;" vertex="1">
           <mxGeometry height="80" width="120" x="354" y="620" as="geometry" />
         </mxCell>
         <mxCell id="8urXZs3rGDVe_AGbHTJm-112" edge="1" parent="1" source="8urXZs3rGDVe_AGbHTJm-102" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.4;exitY=0.1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.31;entryY=0.8;entryDx=0;entryDy=0;entryPerimeter=0;" target="8urXZs3rGDVe_AGbHTJm-110">
