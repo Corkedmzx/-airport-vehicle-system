@@ -67,6 +67,9 @@ frontend/public/uploads/
 coverage/
 .nyc_output/
 
+# 本地临时（论文解压等，勿提交）
+_docx_extract/
+
 # 其他
 *.pid
 *.seed
