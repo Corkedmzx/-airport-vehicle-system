@@ -10,6 +10,9 @@ backend/.idea/
 backend/logs/
 *.log
 *.log.*
+*.log.*.gz
+*.gz
+**/logs/
 
 # 环境变量和敏感配置
 backend/src/main/resources/application-local.yml
@@ -34,6 +37,9 @@ frontend/.cache/
 *.swp
 *.swo
 *~
+
+# Metals / Scala tooling cache
+.metals/
 
 # 操作系统文件
 .DS_Store
