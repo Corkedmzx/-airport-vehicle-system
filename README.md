@@ -230,21 +230,6 @@ npm run dev
 ### 测试与安全
 - MQTT 与连接问题可参考 [部署指南](docs/deployment-guide.md) 及 [MQTT 集成指南](docs/mqtt-huawei-iot-integration-guide.md)
 
-## 安全与 Git 提交注意
-
-提交代码前请确认 **未包含** 下列内容（仓库已通过 `.gitignore` 尽量排除，合并前仍建议自检）：
-
-| 类型 | 说明 |
-|------|------|
-| `backend/.env` | 真实数据库密码、JWT、华为 Token、百度 AK 等 |
-| `backend/logs/`、`*.log` | 运行日志可能含请求参数、路径或脱敏不全的密钥片段 |
-| `backend/target/`、`backend/out/` | Maven 编译产物，体积大且可能含打包进 jar 的本地配置 |
-| `**/设备密钥/`、`*.pem`、`*.key` | 华为设备密钥文件、证书 |
-| 本地 `application.yml` | 若含非占位符敏感项（该文件默认不跟踪）；团队共享请只用 `application-example.yml` + 环境变量 |
-| ngrok 临时域名、生产内网地址 | 可写进个人笔记，避免写进对外文档的固定示例 |
-
-可提交的模板：**`backend/.env.example`**（无真实密钥）、**`application-example.yml`**。生产环境密钥请使用 CI/宿主机的密钥管理或环境注入，勿写入仓库。
-
 ## 作者
 
 Corkedmzx
