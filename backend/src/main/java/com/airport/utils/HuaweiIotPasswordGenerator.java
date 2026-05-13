@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
  * 
  * 华为云IoT平台使用动态密码机制：
  * - Client ID格式: {deviceId}_{deviceType}_{passwordSignatureType}_{timestamp}
- *   例如: 6961b5c87f2e6c302f48db15_vihecle_001_0_0_2026011517
+ *   例如: {deviceId}_0_0_2026011517（deviceId 为控制台完整设备 ID）
  * - Username: 设备ID
  * - Password: HMAC-SHA256(deviceSecret, timestamp) 的十六进制字符串
  * 
@@ -56,7 +56,7 @@ public class HuaweiIotPasswordGenerator {
      * 格式: {deviceId}_{deviceType}_{passwordSignatureType}_{timestamp}
      * 
      * @param deviceId 设备ID
-     * @return Client ID，例如：6961b5c87f2e6c302f48db15_vihecle_001_0_0_2026011517
+     * @return Client ID，例如：{你的设备ID}_0_0_2026011517
      */
     public static String generateClientId(String deviceId) {
         String timestamp = generateTimestamp();

@@ -11,6 +11,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -109,9 +110,23 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.error("WebSocket传输错误", exception);
+        if (hasClosedChannelCause(exception)) {
+            log.debug("WebSocket 通道已关闭（常见于应用停止）: {}", exception.getMessage());
+        } else {
+            log.error("WebSocket传输错误", exception);
+        }
         userSessions.entrySet().removeIf(entry -> entry.getValue().equals(session));
         vehicleSessions.entrySet().removeIf(entry -> entry.getValue().equals(session));
+    }
+
+    private static boolean hasClosedChannelCause(Throwable t) {
+        while (t != null) {
+            if (t instanceof ClosedChannelException) {
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 
     /**

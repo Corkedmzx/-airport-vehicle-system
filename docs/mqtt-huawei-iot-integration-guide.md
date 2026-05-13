@@ -27,6 +27,19 @@
 手机定位器 → MQTT (华为云IoT) → 后端MQTT客户端 → 车辆位置服务 → WebSocket → 前端地图页面
 ```
 
+### 备选：规则引擎「HTTP 推送」到本服务
+
+当华为侧**不向应用 MQTT 订阅投递**设备上行时，可在控制台配置**数据转发**到本服务：
+
+- **URL**：`POST https://<你的域名>/api/mqtt/iot-forward-location`（本地调试可用 ngrok 等隧道，**勿将临时域名写入仓库**）
+- **鉴权**：与控制台「转发目标」中 Token 一致的环境变量 **`HUAWEI_IOT_FORWARD_WEBHOOK_SECRET`**（见 `backend/.env.example`）。华为勾选鉴权后，请求头为 **`timestamp`、`nonce`、`signature`**（SHA256，规则见华为文档「HTTP/HTTPS推送基于Token认证」）；本服务亦兼容调试用请求头 **`X-IoT-Webhook-Token`** 与密钥明文相同。
+- **数据库**：`vehicle.gps_device_id` 必须与上报的华为 **device_id** 完全一致（含产品 ID 前缀）。
+- **与 MQTT 关系**：两条链路可并存；地图与入库逻辑一致。
+
+```
+硬件/手机 → 华为 IoT → HTTP 推送 → 后端 /mqtt/iot-forward-location → 车辆位置服务 → WebSocket → 前端地图
+```
+
 ---
 
 ## 准备工作

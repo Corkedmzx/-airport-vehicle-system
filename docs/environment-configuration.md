@@ -98,13 +98,18 @@ DB_PASSWORD=your-password
 - `HUAWEI_IOT_MQTT_INSTANCE_ID` - 实例ID
 - `HUAWEI_IOT_MQTT_DEVICE_KEY_PATH` - 设备密钥文件路径
 
+#### 华为「数据转发」HTTP 推送（可选）
+- `HUAWEI_IOT_FORWARD_WEBHOOK_SECRET` - 与控制台「转发目标」Token **完全一致**；用于校验华为推送的 `signature`（或调试用 `X-IoT-Webhook-Token`）。勿提交到 Git，仅写在 `backend/.env` 或部署环境变量中。
+
 #### 百度地图配置
 - `BAIDU_MAP_AK` - 百度地图API密钥
 
 ## 安全性
 
-1. `.env` 文件已加入 `.gitignore`，不会被提交到Git仓库
-2. `.env.example` 作为模板，可以提交到Git仓库，不包含实际敏感信息
+1. **`backend/.env`** 与仓库根目录 **`.env`** 已加入 `.gitignore`，不会被提交。
+2. **`backend/.env.example`** 为无敏感值的模板，**可以且应当**提交；新成员复制为 `.env` 后本地填写。
+3. **`backend/src/main/resources/application.yml`** 默认被忽略（每人本地一份）；团队共享请使用 **`application-example.yml`** + `${环境变量}`，勿在可提交 YAML 中写生产密码或华为 Token。
+4. **`backend/logs/`**、`*.log` 已忽略；日志可能含 URL、设备 ID 等，发布前勿打包进仓库。
 
 ## 故障排除
 
@@ -132,4 +137,4 @@ DB_PASSWORD=your-password
 
 ---
 
-**最后更新**：2026-01-16
+**最后更新**：2026-05-13

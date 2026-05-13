@@ -156,5 +156,9 @@ public class DotEnvConfig {
         if (dotenv.get("JWT_SECRET") != null) {
             log.debug("  JWT密钥: ***");
         }
+
+        if (dotenv.get("HUAWEI_IOT_FORWARD_WEBHOOK_SECRET") != null) {
+            log.debug("  华为HTTP转发密钥: ***");
+        }
     }
 }

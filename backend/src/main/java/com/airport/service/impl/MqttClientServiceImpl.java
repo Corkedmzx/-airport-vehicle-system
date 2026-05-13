@@ -506,9 +506,9 @@ public class MqttClientServiceImpl implements MqttClientService, MqttCallback {
      * 华为云IoT主题格式支持两种：
      * 1. 带$oc前缀: $oc/{实例ID}/{device_id}/user/{topic}
      * 2. 不带前缀: /{实例ID}/{device_id}/user/{topic}
-     * 示例: 
-     *   - $oc/a494d922-ff97-4873-bd0c-2d6b1a72086d/6961b5c87f2e6c302f48db15_vihecle_001/user/location
-     *   - /a494d922-ff97-4873-bd0c-2d6b1a72086d/6961b5c87f2e6c302f48db15_vihecle_001/user/location
+     * 示例:
+     *   - $oc/{实例ID}/{device_id}/user/location
+     *   - /{实例ID}/{device_id}/user/location
      */
     private String extractDeviceId(String topic, Map<String, Object> data) {
         // 方式1: 从主题中提取（华为云IoT标准格式）

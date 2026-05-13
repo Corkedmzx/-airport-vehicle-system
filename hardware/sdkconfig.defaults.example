@@ -1,0 +1,26 @@
+# =============================================================================
+# 机场车辆终端 — 安全模板（无真实密钥，可提交到 Git）
+#
+# 用法（任选其一）：
+#  1) idf.py menuconfig → 「机场车辆系统」菜单中逐项填写；
+#  2) 将本文件中 CONFIG_* 行复制到你本地的 sdkconfig（该文件已在 .gitignore）；
+#  3) 复制为本目录下的 sdkconfig.defaults.local，并按 ESP-IDF 文档与 sdkconfig.defaults 合并策略使用。
+#
+# 切勿把真实 WiFi 密码、IoT 密钥写入即将提交的 sdkconfig.defaults。
+# =============================================================================
+
+CONFIG_AIRPORT_USE_WIFI_MQTT=y
+
+CONFIG_AIRPORT_WIFI_SSID="REPLACE_WITH_WIFI_SSID"
+CONFIG_AIRPORT_WIFI_PASSWORD="REPLACE_WITH_WIFI_PASSWORD"
+
+CONFIG_AIRPORT_IOT_MQTT_URI="mqtts://your-broker.st1.iotda-device.cn-north-4.myhuaweicloud.com:8883"
+CONFIG_AIRPORT_IOT_INSTANCE_ID="your-instance-id-here"
+CONFIG_AIRPORT_IOT_DEVICE_ID="your_device_id_vehicle_001"
+CONFIG_AIRPORT_IOT_DEVICE_SECRET="your_device_secret_here"
+
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL=y
+CONFIG_ESP_WIFI_STA=y
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=y
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y

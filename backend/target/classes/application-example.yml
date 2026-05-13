@@ -181,6 +181,19 @@ jwt:
   header: Authorization
   prefix: "Bearer "
 
+# 华为云 IoTDA 多设备 MQTT（详见仓库文档）
+huawei:
+  iot:
+    # 与控制台「转发目标」鉴权 Token 相同；华为 POST 头 X-IoT-Webhook-Token。勿把真实 Token 写入仓库，仅在本机设 HUAWEI_IOT_FORWARD_WEBHOOK_SECRET 或使用未跟踪的 application-local.yml
+    forward-webhook-secret: "${HUAWEI_IOT_FORWARD_WEBHOOK_SECRET:}"
+    mqtt:
+      hardware-gps-device-ids: "${HUAWEI_HARDWARE_GPS_IDS:}"
+      hardware-gps-subscribe-from-database: true
+      hardware-gps-subscribe-oc-prefix: false
+      # true：额外建立与 ESP 同身份的 MQTT 连接（默认 vehicle_002 密钥）；因华为通常不把本机上行投递给同身份订阅，实际上行仍由 vehicle_001 跨设备只读订阅（与小程序转发在代码中隔离）
+      hardware-gps-dedicated-client: true
+      hardware-gps-mqtt-client-name: vehicle_002
+
 vehicle:
   tracking:
     update-interval: 30

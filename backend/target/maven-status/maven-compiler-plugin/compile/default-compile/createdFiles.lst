@@ -1,0 +1,4 @@
+com\airport\controller\MqttLocationController$1.class
+com\airport\utils\ChinaCoordinateUtils.class
+com\airport\controller\MqttLocationController$2.class
+com\airport\config\HardwareGpsDeviceRegistry.class

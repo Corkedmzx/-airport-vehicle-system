@@ -336,6 +336,13 @@ const formatTime = (time: string) => {
   return dayjs(time).format('HH:mm:ss')
 }
 
+/** WebSocket 的 vehicleId 可能为 number，列表里 id 多为 string，统一字符串比较 */
+const vehicleEntryMatches = (v: any, vehicleId: unknown, vehicleNo?: unknown) => {
+  const idMatch = vehicleId != null && vehicleId !== '' && String(v.id) === String(vehicleId)
+  const plateMatch = vehicleNo != null && vehicleNo !== '' && v.plateNumber === vehicleNo
+  return idMatch || plateMatch
+}
+
 // 搜索处理
 const handleSearch = () => {
   filterVehicles()
@@ -446,7 +453,9 @@ const trackVehicle = (vehicleId: string) => {
   }
   
   // 查找车辆
-  const vehicle = mapVehicles.value.find((v: any) => v.id === vehicleId?.toString() || v.plateNumber === vehicleId?.toString())
+  const vehicle = mapVehicles.value.find(
+    (v: any) => String(v.id) === String(vehicleId) || v.plateNumber === vehicleId
+  )
   
   if (!vehicle) {
     ElMessage.warning('未找到该车辆')
@@ -1290,7 +1299,7 @@ const handleVehicleLocationUpdate = (data: any) => {
   
   // 处理车辆位置更新（WebSocket实时更新）
   // 查找并更新车辆位置
-  const vehicleIndex = mapVehicles.value.findIndex((v: any) => v.id === vehicleId?.toString() || v.plateNumber === vehicleNo)
+  const vehicleIndex = mapVehicles.value.findIndex((v: any) => vehicleEntryMatches(v, vehicleId, vehicleNo))
   if (vehicleIndex >= 0) {
     const vehicle = mapVehicles.value[vehicleIndex]
     vehicle.longitude = Number(longitude)
@@ -1318,8 +1327,8 @@ const handleVehicleLocationUpdate = (data: any) => {
   filterVehicles()
   
   // 如果当前选中的车辆位置更新了，也更新选中车辆的信息
-  if (selectedVehicle.value && (selectedVehicle.value.id === vehicleId?.toString() || selectedVehicle.value.plateNumber === vehicleNo)) {
-    const updatedVehicle = mapVehicles.value.find((v: any) => v.id === vehicleId?.toString() || v.plateNumber === vehicleNo)
+  if (selectedVehicle.value && vehicleEntryMatches(selectedVehicle.value, vehicleId, vehicleNo)) {
+    const updatedVehicle = mapVehicles.value.find((v: any) => vehicleEntryMatches(v, vehicleId, vehicleNo))
     if (updatedVehicle) {
       selectedVehicle.value = { ...updatedVehicle }
     }
@@ -1328,7 +1337,7 @@ const handleVehicleLocationUpdate = (data: any) => {
   // 立即更新地图标记（WebSocket实时更新，不等待定时器）
   // 使用优化后的更新逻辑，只更新位置变化的标记
   if (baiduMap && isMapInitialized) {
-    const vehicleIdStr = vehicleId?.toString() || vehicleNo
+    const vehicleIdStr = vehicleId != null && vehicleId !== '' ? String(vehicleId) : String(vehicleNo ?? '')
     const marker = vehicleMarkersMap.get(vehicleIdStr)
     
     if (marker) {

@@ -47,33 +47,25 @@ mysql -u root -p airport_vehicle_system < database/init.sql
 
 ### 第二步：配置应用
 
-#### 2.1 配置后端数据库连接
+#### 2.1 配置后端（数据库与密钥）
 
-**方式一：直接修改配置文件（推荐）**
+**推荐：仅使用 `backend/.env`（不入库）**
 
-1. 打开 `backend/src/main/resources/application.yml`
-2. 找到以下配置项并修改为您的数据库信息：
+1. 在 `backend` 目录执行：`copy .env.example .env`（Linux/macOS：`cp .env.example .env`）
+2. 用编辑器打开 `.env`，填写 `DB_PASSWORD`、`JWT_SECRET` 等（说明见 `backend/.env.example` 与 [环境变量配置指南](docs/environment-configuration.md)）
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/airport_vehicle_system?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-    username: root          # 修改为您的MySQL用户名
-    password: your_password # 修改为您的MySQL密码
-```
+**关于 `application.yml`**
 
-**方式二：使用环境变量（高级）**
+仓库中 **`backend/src/main/resources/application.yml` 默认被 Git 忽略**（每人本地一份）。若克隆后缺少该文件，可复制模板：
 
-1. 创建 `.env` 文件（在 `backend` 目录下）：
 ```bash
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=airport_vehicle_system
-DB_USERNAME=root
-DB_PASSWORD=your_password
+cd backend/src/main/resources
+copy application-example.yml application.yml
 ```
 
-2. 使用启动脚本（脚本会自动读取环境变量）
+再按需修改；敏感项仍建议放在 `.env`，由占位符 `${VAR}` 引用。
+
+**不推荐：** 在可提交的 `application-example.yml` 中写入真实密码或生产 Token。若仅改 YAML，只改本地 `application.yml`，且勿 `git add -f` 将含密文文件加入仓库。
 
 #### 2.2 配置前端API地址（可选）
 
@@ -143,7 +135,7 @@ npm run dev
 **错误信息**: `Port 8080 is already in use`
 
 **解决方案:**
-1. 修改 `application.yml` 中的 `server.port` 为其他端口（如8081）
+1. 在本地 `application.yml`（或环境变量 `SERVER_PORT`）中将 `server.port` 改为其他端口（如 8081）
 2. 或关闭占用端口的程序
 
 ### 问题3: Redis连接失败
@@ -162,6 +154,11 @@ npm run dev
 3. 检查浏览器控制台的错误信息
 
 ## 配置说明
+
+### 提交到 Git 前（安全）
+
+- **不要** `git add`：`backend/.env`、`backend/logs/`、设备密钥目录、含真实密码的 `application.yml`。
+- **可以** 提交：`backend/.env.example`、`application-example.yml`（仅占位符）。
 
 ### 数据库配置参数说明
 

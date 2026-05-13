@@ -1,0 +1,3 @@
+## ESP-IDF 6.x：内置目录 esp-idf/components/mqtt 可能为空，MQTT 需从组件注册表拉取
+dependencies:
+  espressif/mqtt: "^1.0.0"

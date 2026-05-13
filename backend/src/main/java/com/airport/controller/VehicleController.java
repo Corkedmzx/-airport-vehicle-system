@@ -390,10 +390,12 @@ public class VehicleController {
             locationMessage.put("userId", userId); // 用户ID
             locationMessage.put("userName", userName); // 用户名
 
-            // 构建主题：mobile_001发布位置的主题（vehicle_001会订阅此主题）
-            // 格式：/{instanceId}/{mobile_001_deviceId}/user/location
-            String topic = String.format("/%s/%s/user/location", 
-                    instanceId, "6961b5c87f2e6c302f48db15_mobile_001");
+            // 构建主题：mobile_001 发布位置的主题（vehicle_001 会订阅此主题）
+            String mobileDeviceId = multiDeviceMqttService.getLoadedDeviceId("mobile_001");
+            if (mobileDeviceId == null || mobileDeviceId.isBlank()) {
+                throw new RuntimeException("未加载 mobile_001 设备密钥，无法发布小程序位置");
+            }
+            String topic = String.format("/%s/%s/user/location", instanceId, mobileDeviceId);
 
             // 转换为JSON字符串
             String payload = objectMapper.writeValueAsString(locationMessage);

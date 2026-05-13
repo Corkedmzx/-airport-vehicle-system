@@ -99,4 +99,10 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
      */
     @Query("SELECT v.status, COUNT(v) FROM Vehicle v GROUP BY v.status")
     List<Object[]> countVehiclesByStatus();
+
+    /**
+     * 所有已绑定华为等设备 ID 的车辆（用于 MQTT 额外订阅 Topic，与配置项合并）
+     */
+    @Query("SELECT DISTINCT v.gpsDeviceId FROM Vehicle v WHERE v.gpsDeviceId IS NOT NULL AND v.gpsDeviceId <> ''")
+    List<String> findDistinctNonBlankGpsDeviceIds();
 }

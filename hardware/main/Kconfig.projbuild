@@ -1,0 +1,77 @@
+menu "机场车辆系统 — WiFi / 华为云 IoT / GPS"
+
+    config AIRPORT_USE_WIFI_MQTT
+        bool "启用 WiFi + 华为云 MQTT 上报"
+        default y
+        help
+            关闭时：不初始化 WiFi，定位 JSON 经 USB 串口打印（PC 上为 COMx）。
+            开启后：连接 WiFi 并通过 MQTT 上报（需正确配置下方 IoT 参数）。
+
+    config AIRPORT_WIFI_SSID
+        string "WiFi SSID"
+        depends on AIRPORT_USE_WIFI_MQTT
+        default "REPLACE_WITH_WIFI_SSID"
+        help
+            ESP32-S3 仅支持 2.4GHz STA；纯 5GHz 热点无法连接，请用手机开「2.4GHz 频段」或双频路由器。
+
+    config AIRPORT_WIFI_PASSWORD
+        string "WiFi 密码"
+        depends on AIRPORT_USE_WIFI_MQTT
+        default "my-password"
+        help
+            勿将含真实密码的 sdkconfig 提交到公开仓库。
+
+    config AIRPORT_IOT_MQTT_URI
+        string "华为云 IoT MQTT 接入 URI"
+        depends on AIRPORT_USE_WIFI_MQTT
+        default "mqtts://your-broker.st1.iotda-device.cn-north-4.myhuaweicloud.com:8883"
+        help
+            控制台「实例详情」中的 MQTT 接入地址，ESP-IDF 使用 mqtts:// 前缀。
+            与 Java 中 ssl://host:8883 等价。
+
+    config AIRPORT_IOT_INSTANCE_ID
+        string "华为云 IoT 实例 ID (project_id)"
+        default "your-instance-id-here"
+        help
+            用于拼接主题 /{实例ID}/{设备ID}/user/location（与后端 MQTT 订阅一致）
+
+    config AIRPORT_IOT_DEVICE_ID
+        string "华为云 IoT 设备 ID"
+        default "your_device_id_vehicle_001"
+        help
+            必须与 MySQL 表 vehicle.gps_device_id 一致，后端才能关联车辆。
+
+    config AIRPORT_IOT_DEVICE_SECRET
+        string "华为云 IoT 设备密钥 (用于 HMAC 计算)"
+        depends on AIRPORT_USE_WIFI_MQTT
+        default "your_device_secret_here"
+        help
+            控制台「设备密钥」一机一密字符串（与下载的 DEVICES-KEY 中 secret 一致）。
+            固件会按华为 IoTDA 要求用其计算 MQTT Password（HMAC），不能把它当作 MQTT 明文密码使用。
+
+    config AIRPORT_GPS_UART_PORT
+        int "GPS UART 端口号 (UART_NUM_x)"
+        range 0 2
+        default 1
+        help
+            常用 UART1 或 UART2。
+
+    config AIRPORT_GPS_UART_RX_PIN
+        int "GPS 模块 TXD 接入的 GPIO (ESP RX)"
+        default 10
+
+    config AIRPORT_GPS_UART_TX_PIN
+        int "GPS 模块 RXD 接入的 GPIO (ESP TX)"
+        default 11
+
+    config AIRPORT_GPS_UART_BAUD
+        int "GPS NMEA 波特率"
+        default 9600
+
+    config AIRPORT_LOCATION_PUBLISH_INTERVAL_MS
+        int "定位输出间隔 (毫秒)"
+        default 5000
+        help
+            串口模式：同一间隔打印一行 JSON；MQTT 模式：同一间隔尝试上报。
+
+endmenu

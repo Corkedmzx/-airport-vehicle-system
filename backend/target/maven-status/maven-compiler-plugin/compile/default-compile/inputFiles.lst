@@ -15,6 +15,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\AlertRu
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SysRoleRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\SystemLogRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\JacksonConfig.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\utils\ChinaCoordinateUtils.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\WebConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\WebSocketHandlerConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\RedisConfig.java
@@ -68,6 +69,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleDTO
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\VehicleReportService.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\security\SecurityConfig.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\service\impl\MessageServiceImpl.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\HardwareGpsDeviceRegistry.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\SystemLog.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\utils\JwtUtils.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\entity\Vehicle.java

@@ -57,6 +57,7 @@
 - 位置标记区分：PC位置和小程序位置使用不同颜色和样式的标记，信息窗口清晰区分
 - 坐标系统一：所有位置数据统一转换为BD09坐标系（百度地图标准）显示
 - 多设备MQTT数据流转：手机定位 → 车辆定位器 → 网页监控端 → 系统地图
+- 华为云「数据转发」HTTP 推送（可选）：平台 `POST` 至 `/api/mqtt/iot-forward-location`，与 MQTT 链路二选一或并存；需配置 `HUAWEI_IOT_FORWARD_WEBHOOK_SECRET`（与控制台 Token 一致），鉴权为华为 `timestamp`/`nonce`/`signature` 签名（详见 `docs/mqtt-huawei-iot-integration-guide.md`）
 - 自动视野调整：自动调整地图视野以包含所有车辆和用户位置
 
 ### 6. 统计分析
@@ -83,7 +84,7 @@
 
 ### 1. 配置数据库
 
-编辑 `backend/src/main/resources/application.yml`，修改数据库配置，或使用 `.env` 文件配置（推荐）。
+推荐使用 **`backend/.env`**（从 `backend/.env.example` 复制）管理密码与密钥；本地 `backend/src/main/resources/application.yml` 默认 **已被 `.gitignore` 忽略**，不会进入 Git，新克隆仓库时可复制 `application-example.yml` 为 `application.yml` 再按需修改。
 
 ### 2. 初始化数据库
 
@@ -99,7 +100,15 @@ mysql -u root -p airport_vehicle_system < database/init.sql
 
 ### 3. 配置环境变量
 
-在 `backend` 目录下创建 `.env` 文件：
+在 `backend` 目录下复制示例并编辑（**勿将填好后的 `.env` 提交到 Git**）：
+
+```bash
+cd backend
+copy .env.example .env
+# Linux/macOS: cp .env.example .env
+```
+
+`.env` 中至少配置数据库与 JWT；启用华为 IoT 时再补 MQTT 与 HTTP 转发项，例如：
 
 ```env
 # MySQL数据库配置
@@ -117,9 +126,14 @@ HUAWEI_IOT_MQTT_ENABLED=true
 HUAWEI_IOT_MQTT_BROKER=ssl://your-broker:8883
 HUAWEI_IOT_MQTT_INSTANCE_ID=your-instance-id
 
+# 华为「数据转发」HTTP 推送鉴权（可选，与控制台「转发目标」Token 一致，须符合华为长度与字符集要求）
+HUAWEI_IOT_FORWARD_WEBHOOK_SECRET=your-token-3-32-chars-alnum
+
 # 百度地图配置（可选）
 BAIDU_MAP_AK=your-baidu-map-ak
 ```
+
+完整占位说明见 **`backend/.env.example`**。
 
 ### 4. 启动后端
 
@@ -198,10 +212,13 @@ npm run dev
 - [架构设计文档](docs/architecture.md) - 系统架构设计和技术选型
 - [部署指南](docs/deployment-guide.md) - 详细的部署步骤和配置说明
 
+### 嵌入式终端（ESP32）
+- [ESP32 固件（ESP-IDF）](hardware/README.md) - GPS → 华为云 MQTT → 前端地图；**在 `hardware/` 下**执行 `idf.py`；敏感项见 `hardware/.gitignore` 与 **`hardware/sdkconfig.defaults.example`（可提交的无密钥模板）**
+
 ### 功能文档
 - [功能更新文档](docs/feature-updates.md) - 最新功能更新和改进说明
 - [小程序接口使用指南](docs/miniprogram-api-guide.md) - 小程序端API接口使用说明和集成指南
-- [环境变量配置指南](docs/environment-configuration.md) - 环境变量配置说明
+- [环境变量配置指南](docs/environment-configuration.md) - `.env` 与 **`backend/.env.example`** 说明
 - [MQTT + 华为云IoT集成指南](docs/mqtt-huawei-iot-integration-guide.md) - MQTT定位数据接入和地图显示
 - [多设备MQTT数据流转指南](docs/multi-device-mqtt-integration-guide.md) - 多设备数据流转配置
 - [设备激活指南](docs/device-activation-guide.md) - 华为云IoT设备激活
@@ -212,6 +229,21 @@ npm run dev
 
 ### 测试与安全
 - MQTT 与连接问题可参考 [部署指南](docs/deployment-guide.md) 及 [MQTT 集成指南](docs/mqtt-huawei-iot-integration-guide.md)
+
+## 安全与 Git 提交注意
+
+提交代码前请确认 **未包含** 下列内容（仓库已通过 `.gitignore` 尽量排除，合并前仍建议自检）：
+
+| 类型 | 说明 |
+|------|------|
+| `backend/.env` | 真实数据库密码、JWT、华为 Token、百度 AK 等 |
+| `backend/logs/`、`*.log` | 运行日志可能含请求参数、路径或脱敏不全的密钥片段 |
+| `backend/target/`、`backend/out/` | Maven 编译产物，体积大且可能含打包进 jar 的本地配置 |
+| `**/设备密钥/`、`*.pem`、`*.key` | 华为设备密钥文件、证书 |
+| 本地 `application.yml` | 若含非占位符敏感项（该文件默认不跟踪）；团队共享请只用 `application-example.yml` + 环境变量 |
+| ngrok 临时域名、生产内网地址 | 可写进个人笔记，避免写进对外文档的固定示例 |
+
+可提交的模板：**`backend/.env.example`**（无真实密钥）、**`application-example.yml`**。生产环境密钥请使用 CI/宿主机的密钥管理或环境注入，勿写入仓库。
 
 ## 作者
 

@@ -1,0 +1,19 @@
+/build/
+/sdkconfig
+/sdkconfig.old
+/sdkconfig.ci
+dependencies.lock
+managed_components/
+
+# ---- 本地敏感配置（含 WiFi、华为云设备密钥等），切勿提交 ----
+/sdkconfig.defaults.local
+/sdkconfig.private
+/sdkconfig.local
+secrets/
+*.secret
+.env
+.env.*
+!.env.example
+
+# 可选：若将含密码的 sdkconfig 副本放在仓库目录调试，可使用此类后缀
+*.local.sdkconfig

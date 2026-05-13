@@ -12,7 +12,8 @@ public interface VehicleLocationService {
     
     /**
      * 处理位置更新
-     * 
+     *
+     * @return 已落库并（或）已广播则为 true；硬件车辆路径下未匹配到 {@code vehicle.gps_device_id} 则为 false
      * @param deviceId 设备ID
      * @param locationData 位置数据，包含：
      *                    - vehicleId: 车辆ID（可选）
@@ -22,6 +23,6 @@ public interface VehicleLocationService {
      *                    - speed: 速度（可选）
      *                    - direction: 方向（可选）
      */
-    void processLocationUpdate(String deviceId, Map<String, Object> locationData);
+    boolean processLocationUpdate(String deviceId, Map<String, Object> locationData);
 }
 

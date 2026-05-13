@@ -27,7 +27,7 @@ public class HuaweiIotDeviceConfig {
     @Value("${huawei.iot.mqtt.device-key-path:e:/share/设备密钥}")
     private String deviceKeyPath;
 
-    @Value("${huawei.iot.mqtt.device-name:vihecle_001}")
+    @Value("${huawei.iot.mqtt.device-name:vehicle_001}")
     private String deviceName;
 
     private DeviceInfo cachedDeviceInfo;
@@ -90,7 +90,7 @@ public class HuaweiIotDeviceConfig {
     private DeviceInfo loadDeviceInfoFromFile() throws IOException {
         // 构建文件路径
         // 文件名格式: DEVICES-KEY-{device_id}.txt
-        // 例如: DEVICES-KEY-6961b5c87f2e6c302f48db15_vihecle_001.txt
+        // 例如: DEVICES-KEY-{productId}_vehicle_001.txt
         
         // 先尝试根据deviceName查找文件
         String fileName = String.format("DEVICES-KEY-*_%s.txt", deviceName);
