@@ -184,7 +184,7 @@ jwt:
 # 华为云 IoTDA 多设备 MQTT（详见仓库文档）
 huawei:
   iot:
-    # 与控制台「转发目标」鉴权 Token 相同；华为 POST 头 X-IoT-Webhook-Token。勿把真实 Token 写入仓库，仅在本机设 HUAWEI_IOT_FORWARD_WEBHOOK_SECRET 或使用未跟踪的 application-local.yml
+    # 与控制台「转发目标」Token 相同；环境变量 HUAWEI_IOT_FORWARD_WEBHOOK_SECRET。华为默认用请求头 timestamp/nonce/signature 签名校验；亦支持调试用 X-IoT-Webhook-Token 明文。勿把真实值写入仓库
     forward-webhook-secret: "${HUAWEI_IOT_FORWARD_WEBHOOK_SECRET:}"
     mqtt:
       hardware-gps-device-ids: "${HUAWEI_HARDWARE_GPS_IDS:}"
