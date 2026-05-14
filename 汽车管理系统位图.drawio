@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0" pages="22">
   <diagram name="主要部分" id="_MS0GFyF_rsiVvA-KbCJ">
-    <mxGraphModel dx="901" dy="588" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="851" dy="556" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -189,7 +189,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="TaskMgmtFlow" name="任务管理流程图">
-    <mxGraphModel dx="1277" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1393" dy="909" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -208,11 +208,14 @@
         <mxCell id="taskFlow-title" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="任务管理流程图" vertex="1">
           <mxGeometry height="30" width="160" x="334" y="40" as="geometry" />
         </mxCell>
+        <mxCell id="mbruCbLcMRdWX7nYpQMk-2" edge="1" parent="1" source="taskFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="taskFlow-create">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="taskFlow-start" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="进入任务管理" vertex="1">
           <mxGeometry height="60" width="120" x="354" y="138" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-create" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="新建任务" vertex="1">
-          <mxGeometry height="60" width="120" x="354" y="228" as="geometry" />
+          <mxGeometry height="60" width="120" x="354" y="240" as="geometry" />
         </mxCell>
         <mxCell id="wtT8Hq-6BSYiTPlg8KAh-1" edge="1" parent="1" source="taskFlow-review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="taskFlow-reject">
           <mxGeometry relative="1" as="geometry" />
@@ -221,19 +224,22 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-review" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否审核通过" vertex="1">
-          <mxGeometry height="80" width="80" x="374" y="318" as="geometry" />
+          <mxGeometry height="80" width="80" x="374" y="330" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-approve" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="审核通过" vertex="1">
-          <mxGeometry height="60" width="120" x="534" y="328" as="geometry" />
+          <mxGeometry height="60" width="120" x="534" y="340" as="geometry" />
         </mxCell>
-        <mxCell id="wtT8Hq-6BSYiTPlg8KAh-2" edge="1" parent="1" source="taskFlow-reject" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="taskFlow-create">
+        <mxCell id="yMrHnGF7uzlO6OB9rgSh-1" edge="1" parent="1" source="taskFlow-reject" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="taskFlow-create">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-reject" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="驳回修改" vertex="1">
-          <mxGeometry height="60" width="120" x="194" y="328" as="geometry" />
+          <mxGeometry height="60" width="120" x="198" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="mbruCbLcMRdWX7nYpQMk-4" edge="1" parent="1" source="taskFlow-assign" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="taskFlow-exec">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-assign" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="分配车辆/司机" vertex="1">
-          <mxGeometry height="60" width="140" x="344" y="428" as="geometry" />
+          <mxGeometry height="60" width="140" x="344" y="430" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-exec" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="任务执行" vertex="1">
           <mxGeometry height="60" width="120" x="354" y="528" as="geometry" />
@@ -244,34 +250,30 @@
         <mxCell id="taskFlow-finishCheck" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="任务是否完成" vertex="1">
           <mxGeometry height="80" width="80" x="374" y="618" as="geometry" />
         </mxCell>
-        <mxCell id="wtT8Hq-6BSYiTPlg8KAh-4" edge="1" parent="1" source="taskFlow-continue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="taskFlow-exec">
+        <mxCell id="yMrHnGF7uzlO6OB9rgSh-2" edge="1" parent="1" source="taskFlow-continue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="taskFlow-exec">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-continue" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="继续执行/汇报进度" vertex="1">
-          <mxGeometry height="60" width="160" x="534" y="628" as="geometry" />
+          <mxGeometry height="60" width="160" x="528" y="628" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-close" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="关闭/归档任务" vertex="1">
           <mxGeometry height="60" width="140" x="344" y="738" as="geometry" />
         </mxCell>
-        <mxCell id="taskFlow-start-to-create" edge="1" parent="1" source="taskFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="taskFlow-create">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="taskFlow-start-to-create" edge="1" parent="1" source="taskFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="414" y="198" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="taskFlow-create-to-review" edge="1" parent="1" source="taskFlow-create" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="taskFlow-review">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-yesText-review" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="是" vertex="1">
-          <mxGeometry height="30" width="60" x="454" y="328" as="geometry" />
+          <mxGeometry height="30" width="60" x="454" y="340" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-noText-review" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="否" vertex="1">
-          <mxGeometry height="30" width="60" x="314" y="328" as="geometry" />
+          <mxGeometry height="30" width="60" x="314" y="340" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-approve-to-assign" edge="1" parent="1" source="taskFlow-approve" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;" target="taskFlow-assign">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="taskFlow-review-to-assign" edge="1" parent="1" source="taskFlow-review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="taskFlow-assign">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="taskFlow-assign-to-exec" edge="1" parent="1" source="taskFlow-assign" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="taskFlow-exec">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="taskFlow-exec-to-finishCheck" edge="1" parent="1" source="taskFlow-exec" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="taskFlow-finishCheck">
@@ -290,7 +292,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="RealtimeMonitorFlow" name="实时监控流程图">
-    <mxGraphModel dx="766" dy="500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1021" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -321,29 +323,26 @@
         <mxCell id="1LbAJPQRhmovwYOqPRVN-1" edge="1" parent="1" source="rtFlow-abnormal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="rtFlow-alert">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="1LbAJPQRhmovwYOqPRVN-6" edge="1" parent="1" source="rtFlow-abnormal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="rtFlow-loop">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="1LbAJPQRhmovwYOqPRVN-8" edge="1" parent="1" source="rtFlow-abnormal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="rtFlow-updateUI">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="rtFlow-abnormal" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否异常" vertex="1">
           <mxGeometry height="80" width="80" x="374" y="333" as="geometry" />
         </mxCell>
-        <mxCell id="1LbAJPQRhmovwYOqPRVN-9" edge="1" parent="1" source="rtFlow-updateUI" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="rtFlow-loop">
+        <mxCell id="8lensaNztFojcUMB4ZUn-1" edge="1" parent="1" source="rtFlow-updateUI" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="rtFlow-loop">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="rtFlow-updateUI" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="更新监控状态" vertex="1">
-          <mxGeometry height="60" width="140" x="172" y="343" as="geometry" />
+          <mxGeometry height="60" width="140" x="184" y="343" as="geometry" />
         </mxCell>
-        <mxCell id="1LbAJPQRhmovwYOqPRVN-7" edge="1" parent="1" source="rtFlow-alert" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="rtFlow-loop">
+        <mxCell id="8lensaNztFojcUMB4ZUn-2" edge="1" parent="1" source="rtFlow-alert" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="rtFlow-loop">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="rtFlow-alert" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="触发告警&lt;br&gt;推送通知" vertex="1">
-          <mxGeometry height="60" width="140" x="534" y="343" as="geometry" />
+          <mxGeometry height="60" width="140" x="500" y="343" as="geometry" />
         </mxCell>
         <mxCell id="rtFlow-loop" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="持续订阅/刷新" vertex="1">
-          <mxGeometry height="60" width="140" x="344" y="453" as="geometry" />
+          <mxGeometry height="60" width="140" x="344" y="460" as="geometry" />
         </mxCell>
         <mxCell id="rtFlow-recv-to-abnormal" edge="1" parent="1" source="rtFlow-recv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="rtFlow-abnormal">
           <mxGeometry relative="1" as="geometry" />
@@ -358,7 +357,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="StatsAnalysisFlow" name="统计分析流程图">
-    <mxGraphModel dx="1021" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1178" dy="769" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -392,16 +391,19 @@
         <mxCell id="aJBWTUBmXfmiFLbelytH-3" edge="1" parent="1" source="statsFlow-cache" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="statsFlow-calc">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="mqEn-AErDdyhB7Rw0kbK-1" edge="1" parent="1" source="statsFlow-cache" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="statsFlow-chart">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="statsFlow-cache" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否命中缓存" vertex="1">
           <mxGeometry height="80" width="80" x="374" y="408" as="geometry" />
         </mxCell>
-        <mxCell id="aJBWTUBmXfmiFLbelytH-4" edge="1" parent="1" source="statsFlow-useCache" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="statsFlow-chart">
+        <mxCell id="mqEn-AErDdyhB7Rw0kbK-3" edge="1" parent="1" source="statsFlow-useCache" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="statsFlow-chart">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="statsFlow-useCache" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="读取缓存结果" vertex="1">
           <mxGeometry height="60" width="140" x="170" y="418" as="geometry" />
         </mxCell>
-        <mxCell id="aJBWTUBmXfmiFLbelytH-5" edge="1" parent="1" source="statsFlow-calc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="statsFlow-chart">
+        <mxCell id="mqEn-AErDdyhB7Rw0kbK-2" edge="1" parent="1" source="statsFlow-calc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="statsFlow-chart">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="statsFlow-calc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="生成报表数据" vertex="1">
@@ -435,7 +437,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="AlarmMgmtFlow" name="告警管理流程图">
-    <mxGraphModel dx="1277" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1702" dy="1111" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -443,7 +445,7 @@
           <mxGeometry height="40" width="100" x="364" y="78" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-term-end" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;" value="结束" vertex="1">
-          <mxGeometry height="40" width="100" x="364" y="910" as="geometry" />
+          <mxGeometry height="40" width="100" x="364" y="1044" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-e-begin" edge="1" parent="1" source="alarmFlow-term-begin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-start">
           <mxGeometry relative="1" as="geometry" />
@@ -463,41 +465,54 @@
         <mxCell id="alarmFlow-level" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否高等级" vertex="1">
           <mxGeometry height="80" width="80" x="374" y="318" as="geometry" />
         </mxCell>
-        <mxCell id="fLWjfIzbhPidNppfkBbg-2" edge="1" parent="1" source="alarmFlow-notify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="alarmFlow-ack">
+        <mxCell id="SDGhFzER4GlvL5atL9xv-1" edge="1" parent="1" source="alarmFlow-notify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-ack">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-notify" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="通知相关人员" vertex="1">
           <mxGeometry height="60" width="140" x="170" y="378" as="geometry" />
         </mxCell>
-        <mxCell id="fLWjfIzbhPidNppfkBbg-1" edge="1" parent="1" source="alarmFlow-escalate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="alarmFlow-ack">
+        <mxCell id="SDGhFzER4GlvL5atL9xv-2" edge="1" parent="1" source="alarmFlow-escalate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-ack">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-escalate" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="升级通知&lt;br&gt;(短信/电话)" vertex="1">
-          <mxGeometry height="60" width="160" x="534" y="378" as="geometry" />
+          <mxGeometry height="60" width="160" x="520" y="378" as="geometry" />
+        </mxCell>
+        <mxCell id="alarmFlow-mergeAck-to-ack" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-ack">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="414" y="526.0000000000001" as="sourcePoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="alarmFlow-ack" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="告警确认" vertex="1">
-          <mxGeometry height="60" width="120" x="354" y="438" as="geometry" />
+          <mxGeometry height="60" width="120" x="354" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="SDGhFzER4GlvL5atL9xv-5" edge="1" parent="1" source="alarmFlow-ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-handle">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-ticket" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="派单/指派处理人" vertex="1">
-          <mxGeometry height="60" width="160" x="334" y="528" as="geometry" />
+          <mxGeometry height="60" width="160" x="334" y="610" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-handle" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="处理并记录结果" vertex="1">
-          <mxGeometry height="60" width="160" x="334" y="618" as="geometry" />
+          <mxGeometry height="60" width="160" x="334" y="752" as="geometry" />
         </mxCell>
         <mxCell id="fLWjfIzbhPidNppfkBbg-4" edge="1" parent="1" source="alarmFlow-closeCheck" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="alarmFlow-reopen">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-closeCheck" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否已消除" vertex="1">
-          <mxGeometry height="80" width="80" x="374" y="708" as="geometry" />
+          <mxGeometry height="80" width="80" x="374" y="842" as="geometry" />
         </mxCell>
-        <mxCell id="fLWjfIzbhPidNppfkBbg-5" edge="1" parent="1" source="alarmFlow-reopen" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="alarmFlow-handle">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="SDGhFzER4GlvL5atL9xv-6" edge="1" parent="1" source="alarmFlow-reopen" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-handle">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="614" y="720" />
+              <mxPoint x="414" y="720" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="alarmFlow-reopen" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="继续跟踪/复核" vertex="1">
-          <mxGeometry height="60" width="160" x="534" y="718" as="geometry" />
+          <mxGeometry height="60" width="160" x="534" y="852" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-close" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="关闭告警" vertex="1">
-          <mxGeometry height="60" width="120" x="354" y="828" as="geometry" />
+          <mxGeometry height="60" width="120" x="354" y="962" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-start-to-ingest" edge="1" parent="1" source="alarmFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-ingest">
           <mxGeometry relative="1" as="geometry" />
@@ -520,9 +535,6 @@
         <mxCell id="alarmFlow-ack-to-ticket" edge="1" parent="1" source="alarmFlow-ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-ticket">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="alarmFlow-ticket-to-handle" edge="1" parent="1" source="alarmFlow-ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-handle">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="alarmFlow-handle-to-closeCheck" edge="1" parent="1" source="alarmFlow-handle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-closeCheck">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -530,16 +542,16 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-yesText-close" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="是" vertex="1">
-          <mxGeometry height="30" width="60" x="354" y="788" as="geometry" />
+          <mxGeometry height="30" width="60" x="354" y="922" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-noText-close" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="否" vertex="1">
-          <mxGeometry height="30" width="60" x="454" y="718" as="geometry" />
+          <mxGeometry height="30" width="60" x="454" y="852" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
   <diagram id="SystemMgmtFlow" name="系统管理流程图">
-    <mxGraphModel dx="1021" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1178" dy="769" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -547,7 +559,7 @@
           <mxGeometry height="40" width="100" x="364" y="78" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-term-end" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;" value="结束" vertex="1">
-          <mxGeometry height="40" width="100" x="364" y="720" as="geometry" />
+          <mxGeometry height="40" width="100" x="364" y="710" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-e-begin" edge="1" parent="1" source="sysFlow-term-begin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="sysFlow-start">
           <mxGeometry relative="1" as="geometry" />
@@ -555,62 +567,46 @@
         <mxCell id="sysFlow-e-end" edge="1" parent="1" source="sysFlow-success" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="sysFlow-term-end">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="sysFlow-e-end-fail" edge="1" parent="1" source="sysFlow-fail" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" target="sysFlow-term-end">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="sysFlow-e-end-fail" edge="1" parent="1" source="sysFlow-fail" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;dashed=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="414" y="710" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="sysFlow-title" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="系统管理流程图" vertex="1">
           <mxGeometry height="30" width="160" x="334" y="40" as="geometry" />
         </mxCell>
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-3" edge="1" parent="1" source="sysFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="gUy8_8cRdpr0Q_8CguzL-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="sysFlow-start" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="进入系统管理" vertex="1">
           <mxGeometry height="60" width="120" x="354" y="138" as="geometry" />
         </mxCell>
-        <mxCell id="sysFlow-op" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="选择模块" vertex="1">
-          <mxGeometry height="80" width="80" x="374" y="228" as="geometry" />
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-7" edge="1" parent="1" source="sysFlow-userRole" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="sysFlow-validate">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-userRole" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="用户/角色/权限" vertex="1">
-          <mxGeometry height="60" width="140" x="154" y="328" as="geometry" />
+          <mxGeometry height="60" width="140" x="154" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-9" edge="1" parent="1" source="sysFlow-config" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="sysFlow-validate">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-config" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="系统配置/字典" vertex="1">
-          <mxGeometry height="60" width="140" x="344" y="328" as="geometry" />
+          <mxGeometry height="60" width="140" x="534" y="390" as="geometry" />
         </mxCell>
-        <mxCell id="sysFlow-maint" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="备份/日志/审计" vertex="1">
-          <mxGeometry height="60" width="140" x="534" y="328" as="geometry" />
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-8" edge="1" parent="1" source="sysFlow-apply" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="sysFlow-validate">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-apply" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="提交变更" vertex="1">
-          <mxGeometry height="60" width="120" x="354" y="438" as="geometry" />
+          <mxGeometry height="60" width="120" x="354" y="390" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-validate" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="校验是否通过" vertex="1">
-          <mxGeometry height="80" width="80" x="374" y="528" as="geometry" />
+          <mxGeometry height="80" width="80" x="374" y="520" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-success" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="保存生效" vertex="1">
-          <mxGeometry height="60" width="120" x="494" y="618" as="geometry" />
+          <mxGeometry height="60" width="120" x="494" y="610" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-fail" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="提示修正" vertex="1">
-          <mxGeometry height="60" width="120" x="214" y="618" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-start-to-op" edge="1" parent="1" source="sysFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-op">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-op-to-userRole" edge="1" parent="1" source="sysFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-userRole">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-op-to-config" edge="1" parent="1" source="sysFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-config">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-op-to-maint" edge="1" parent="1" source="sysFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-maint">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-userRole-to-apply" edge="1" parent="1" source="sysFlow-userRole" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-apply">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-config-to-apply" edge="1" parent="1" source="sysFlow-config" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-apply">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-maint-to-apply" edge="1" parent="1" source="sysFlow-maint" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-apply">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="sysFlow-apply-to-validate" edge="1" parent="1" source="sysFlow-apply" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-validate">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry height="60" width="120" x="214" y="610" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-validate-to-success" edge="1" parent="1" source="sysFlow-validate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="sysFlow-success">
           <mxGeometry relative="1" as="geometry" />
@@ -619,10 +615,22 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-yesText" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="是" vertex="1">
-          <mxGeometry height="30" width="60" x="460" y="538" as="geometry" />
+          <mxGeometry height="30" width="60" x="460" y="530" as="geometry" />
         </mxCell>
         <mxCell id="sysFlow-noText" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="否" vertex="1">
-          <mxGeometry height="30" width="60" x="310" y="538" as="geometry" />
+          <mxGeometry height="30" width="60" x="310" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-4" edge="1" parent="1" source="gUy8_8cRdpr0Q_8CguzL-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="sysFlow-userRole">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-5" edge="1" parent="1" source="gUy8_8cRdpr0Q_8CguzL-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="sysFlow-apply">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-6" edge="1" parent="1" source="gUy8_8cRdpr0Q_8CguzL-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="sysFlow-config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gUy8_8cRdpr0Q_8CguzL-2" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;选择模块&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="80" x="374" y="240" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
@@ -951,34 +959,41 @@
           <mxGeometry height="30" width="200" x="314" y="20" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-start" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;" value="开始" vertex="1">
-          <mxGeometry height="44" width="100" x="334" y="50" as="geometry" />
+          <mxGeometry height="44" width="100" x="362" y="70" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-openPage" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;" value="访问登录/注册页面" vertex="1">
-          <mxGeometry height="48" width="160" x="304" y="110" as="geometry" />
+          <mxGeometry height="48" width="160" x="332" y="130" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-edge-start-open" edge="1" parent="1" source="authFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-openPage">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-dec-account" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否已有账户" vertex="1">
-          <mxGeometry height="88" width="100" x="334" y="180" as="geometry" />
+          <mxGeometry height="88" width="100" x="362" y="200" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-edge-open-dec" edge="1" parent="1" source="authFlow-openPage" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-dec-account">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="authFlow-mergeLogin-to-input" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-login-input">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="163" y="301.9999999999999" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="authFlow-login-input" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;" value="输入用户名、密码&lt;br&gt;提交登录" vertex="1">
-          <mxGeometry height="56" width="150" x="79" y="268" as="geometry" />
+          <mxGeometry height="56" width="150" x="88" y="288" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-login-api" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;" value="POST /auth/login&lt;br&gt;后端校验密码（BCrypt）" vertex="1">
-          <mxGeometry height="52" width="170" x="69" y="375" as="geometry" />
+          <mxGeometry height="52" width="170" x="78" y="395" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-dec-loginOk" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="登录是否成功" vertex="1">
-          <mxGeometry height="80" width="88" x="151" y="475" as="geometry" />
+          <mxGeometry height="80" width="88" x="119" y="480" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-login-err" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="提示错误&lt;br&gt;（401/用户名或密码错误等）" vertex="1">
-          <mxGeometry height="52" width="170" x="40" y="622" as="geometry" />
+          <mxGeometry height="52" width="170" x="78" y="642" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-edge-dec-yes-login" edge="1" parent="1" source="authFlow-dec-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-login-input" value="是">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="163" y="270" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="authFlow-edge-login-input-api" edge="1" parent="1" source="authFlow-login-input" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-login-api">
           <mxGeometry relative="1" as="geometry" />
@@ -986,42 +1001,35 @@
         <mxCell id="authFlow-edge-api-decLogin" edge="1" parent="1" source="authFlow-login-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-dec-loginOk">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="authFlow-edge-loginOk-no" edge="1" parent="1" source="authFlow-dec-loginOk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-login-err" value="否">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="authFlow-edge-err-loop" edge="1" parent="1" source="authFlow-login-err" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;dashed=1;" target="authFlow-login-input">
+        <mxCell id="authFlow-edge-loginOk-no" edge="1" parent="1" source="authFlow-dec-loginOk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-login-err" value="否">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="10" y="648" />
-              <mxPoint x="10" y="296" />
+              <mxPoint x="163" y="642" />
             </Array>
-            <mxPoint x="-15" y="641" as="sourcePoint" />
-            <mxPoint x="-61" y="315" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="authFlow-token" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="保存 JWT 与用户信息&lt;br&gt;（Pinia / 本地存储）" vertex="1">
-          <mxGeometry height="52" width="190" x="289" y="570" as="geometry" />
-        </mxCell>
-        <mxCell id="authFlow-edge-loginOk-yes-token" edge="1" parent="1" source="authFlow-dec-loginOk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-token" value="是">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry height="52" width="190" x="317" y="590" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-reg-input" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="填写注册信息并提交&lt;br&gt;（用户名/密码/邮箱/手机号等）" vertex="1">
-          <mxGeometry height="56" width="190" x="551" y="275" as="geometry" />
+          <mxGeometry height="56" width="190" x="560" y="295" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-reg-api" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;" value="POST /auth/register&lt;br&gt;校验字段与唯一性" vertex="1">
-          <mxGeometry height="52" width="180" x="556" y="375" as="geometry" />
+          <mxGeometry height="52" width="180" x="565" y="395" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-dec-regOk" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="注册是否成功" vertex="1">
-          <mxGeometry height="80" width="92" x="600" y="460" as="geometry" />
+          <mxGeometry height="80" width="92" x="609" y="480" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-reg-err" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="提示错误&lt;br&gt;（用户名已存在、校验失败等）" vertex="1">
-          <mxGeometry height="52" width="190" x="600" y="585" as="geometry" />
+          <mxGeometry height="52" width="190" x="560" y="642" as="geometry" />
         </mxCell>
-        <mxCell id="F1nbFPB-Gr0d_9MTWqmB-2" edge="1" parent="1" source="authFlow-reg-save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="authFlow-token">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="F1nbFPB-Gr0d_9MTWqmB-2" edge="1" parent="1" source="authFlow-reg-save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="authFlow-token">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="409.0000000000009" y="584" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="authFlow-reg-save" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;" value="创建账户，分配默认角色&lt;br&gt;返回 Token（可自动登录）" vertex="1">
-          <mxGeometry height="52" width="210" x="279" y="474" as="geometry" />
+          <mxGeometry height="52" width="210" x="307" y="494" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-edge-dec-no-reg" edge="1" parent="1" source="authFlow-dec-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-reg-input" value="否">
           <mxGeometry relative="1" as="geometry" />
@@ -1032,33 +1040,29 @@
         <mxCell id="authFlow-edge-reg-api-dec" edge="1" parent="1" source="authFlow-reg-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-dec-regOk">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="authFlow-edge-regOk-no" edge="1" parent="1" source="authFlow-dec-regOk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-reg-err" value="否">
+        <mxCell id="authFlow-edge-regOk-no" edge="1" parent="1" source="authFlow-dec-regOk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-reg-err" value="否">
           <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="authFlow-edge-reg-err-loop" edge="1" parent="1" source="authFlow-reg-err" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;dashed=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;" target="authFlow-reg-input">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="800" y="585" />
-              <mxPoint x="800" y="303" />
-            </Array>
-            <mxPoint x="1000" y="600" as="sourcePoint" />
-            <mxPoint x="860" y="249.9999999999999" as="targetPoint" />
-          </mxGeometry>
         </mxCell>
         <mxCell id="authFlow-edge-regOk-yes-save" edge="1" parent="1" source="authFlow-dec-regOk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-reg-save" value="是">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-enterMain" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;" value="进入系统主界面&lt;br&gt;（Vue Router 跳转，按 RBAC 加载菜单）" vertex="1">
-          <mxGeometry height="46" width="246" x="261" y="661" as="geometry" />
+          <mxGeometry height="46" width="246" x="289" y="691" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-edge-token-main" edge="1" parent="1" source="authFlow-token" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-enterMain">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-end" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;" value="结束" vertex="1">
-          <mxGeometry height="44" width="100" x="334" y="740" as="geometry" />
+          <mxGeometry height="44" width="100" x="362" y="770" as="geometry" />
         </mxCell>
         <mxCell id="authFlow-edge-main-end" edge="1" parent="1" source="authFlow-enterMain" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-end">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hjLypw9Wwgf--quDBIsU-7" edge="1" parent="1" source="authFlow-dec-loginOk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;" target="authFlow-reg-save" value="是">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="321" y="520" as="sourcePoint" />
+            <mxPoint x="229" y="520" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
@@ -1175,7 +1179,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="Cd5B_kxzRXXF2uPm63LM" name="车辆管理流程图">
-    <mxGraphModel dx="1178" dy="769" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1393" dy="909" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1183,7 +1187,7 @@
           <mxGeometry height="40" width="100" x="318" y="36" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-term-end" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;" value="结束" vertex="1">
-          <mxGeometry height="40" width="100" x="328" y="708" as="geometry" />
+          <mxGeometry height="40" width="100" x="328" y="770" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-e-begin" edge="1" parent="1" source="vehFlow-term-begin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="vehFlow-start">
           <mxGeometry relative="1" as="geometry" />
@@ -1206,34 +1210,51 @@
         <mxCell id="vehFlow-start" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="进入车辆管理" vertex="1">
           <mxGeometry height="60" width="120" x="308" y="98" as="geometry" />
         </mxCell>
-        <mxCell id="vehFlow-op" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="选择操作" vertex="1">
+        <mxCell id="vehFlow-op" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否新增车辆？" vertex="1">
           <mxGeometry height="80" width="80" x="328" y="188" as="geometry" />
+        </mxCell>
+        <mxCell id="vehFlow-decStop" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否停用/报废？" vertex="1">
+          <mxGeometry height="80" width="80" x="200" y="300" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-start-to-op" edge="1" parent="1" source="vehFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-op">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-edit" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="编辑车辆信息" vertex="1">
-          <mxGeometry height="60" width="120" x="34" y="278" as="geometry" />
+          <mxGeometry height="60" width="120" x="38" y="360" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-save" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="保存更新" vertex="1">
-          <mxGeometry height="60" width="120" x="34" y="408" as="geometry" />
-        </mxCell>
-        <mxCell id="vehFlow-op-to-edit" edge="1" parent="1" source="vehFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-edit">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry height="60" width="120" x="38" y="490" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-edit-to-save" edge="1" parent="1" source="vehFlow-edit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-save">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-add" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="新增车辆" vertex="1">
-          <mxGeometry height="60" width="120" x="585" y="258" as="geometry" />
+          <mxGeometry height="60" width="120" x="581" y="258" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-fill" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="填写车辆信息" vertex="1">
-          <mxGeometry height="60" width="120" x="585" y="388" as="geometry" />
+          <mxGeometry height="60" width="120" x="581" y="388" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-bindCheck" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否绑定设备" vertex="1">
-          <mxGeometry height="80" width="80" x="605" y="498" as="geometry" />
+          <mxGeometry height="80" width="80" x="601" y="479" as="geometry" />
         </mxCell>
-        <mxCell id="vehFlow-op-to-add" edge="1" parent="1" source="vehFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-add">
+        <mxCell id="vehFlow-op-to-decStop" edge="1" parent="1" source="vehFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-decStop" value="否">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="240" y="228" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="vehFlow-decStop-to-edit" edge="1" parent="1" source="vehFlow-decStop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-edit" value="否">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vehFlow-decStop-to-disable" edge="1" parent="1" source="vehFlow-decStop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-disable" value="是">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="vehFlow-op-to-add" edge="1" parent="1" source="vehFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-add" value="是">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-add-to-fill" edge="1" parent="1" source="vehFlow-add" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-fill">
@@ -1242,14 +1263,20 @@
         <mxCell id="vehFlow-fill-to-bindCheck" edge="1" parent="1" source="vehFlow-fill" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-bindCheck">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="xIHx9poe0yohepclmj_9-3" edge="1" parent="1" source="vehFlow-bindYes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="vehFlow-enable">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="vehFlow-bindYes" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="绑定GPS/定位器" vertex="1">
-          <mxGeometry height="60" width="120" x="674" y="570" as="geometry" />
+          <mxGeometry height="60" width="120" x="670" y="551" as="geometry" />
+        </mxCell>
+        <mxCell id="xIHx9poe0yohepclmj_9-4" edge="1" parent="1" source="vehFlow-bindNo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="vehFlow-enable">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-bindNo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="车辆入库&lt;br&gt;(待绑定)" vertex="1">
-          <mxGeometry height="60" width="120" x="474" y="570" as="geometry" />
+          <mxGeometry height="60" width="120" x="470" y="551" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-enable" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="启用车辆" vertex="1">
-          <mxGeometry height="60" width="120" x="585" y="668" as="geometry" />
+          <mxGeometry height="60" width="120" x="581" y="668" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-bindCheck-to-yes" edge="1" parent="1" source="vehFlow-bindCheck" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-bindYes">
           <mxGeometry relative="1" as="geometry" />
@@ -1258,25 +1285,16 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-yesText-bind" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="是" vertex="1">
-          <mxGeometry height="30" width="60" x="685" y="508" as="geometry" />
+          <mxGeometry height="30" width="60" x="681" y="489" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-noText-bind" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="否" vertex="1">
-          <mxGeometry height="30" width="60" x="545" y="508" as="geometry" />
-        </mxCell>
-        <mxCell id="vehFlow-bindYes-to-enable" edge="1" parent="1" source="vehFlow-bindYes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-enable">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="vehFlow-bindNo-to-enable" edge="1" parent="1" source="vehFlow-bindNo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-enable">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry height="30" width="60" x="541" y="489" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-disable" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="停用/报废车辆" vertex="1">
-          <mxGeometry height="60" width="120" x="308" y="328" as="geometry" />
+          <mxGeometry height="60" width="120" x="240" y="410" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-taskCheck" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否有未完成任务" vertex="1">
-          <mxGeometry height="80" width="80" x="274" y="458" as="geometry" />
-        </mxCell>
-        <mxCell id="vehFlow-op-to-disable" edge="1" parent="1" source="vehFlow-op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-disable">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry height="80" width="80" x="260" y="505" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-disable-to-taskCheck" edge="1" parent="1" source="vehFlow-disable" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="vehFlow-taskCheck">
           <mxGeometry relative="1" as="geometry" />
@@ -1294,10 +1312,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-yesText-task" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="是" vertex="1">
-          <mxGeometry height="30" width="60" x="224" y="468" as="geometry" />
+          <mxGeometry height="30" width="60" x="190" y="520" as="geometry" />
         </mxCell>
         <mxCell id="vehFlow-noText-task" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="否" vertex="1">
-          <mxGeometry height="30" width="60" x="354" y="468" as="geometry" />
+          <mxGeometry height="30" width="60" x="348" y="520" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
@@ -1654,6 +1672,14 @@
         <mxCell id="pf-task-e45" edge="1" parent="1" source="pf-task-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;" target="pf-task-5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="pf-task-e56" edge="1" parent="1" source="pf-task-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;" target="pf-task-6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="380" />
+              <mxPoint x="125" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
         <mxCell id="pf-task-e67" edge="1" parent="1" source="pf-task-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;" target="pf-task-7">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -1667,7 +1693,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="ProgramFlow-RealtimeLocation" name="实时监控流程">
-    <mxGraphModel dx="958" dy="625" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="901" dy="588" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1692,8 +1718,14 @@
         <mxCell id="pf-loc-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="VehicleController&lt;div&gt;upload-location&lt;/div&gt;&lt;div&gt;解析用户+位置&lt;/div&gt;" vertex="1">
           <mxGeometry height="80" width="200" x="309" y="145" as="geometry" />
         </mxCell>
+        <mxCell id="KBBmskmPELoNKqgiZbuQ-1" edge="1" parent="1" source="pf-loc-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="pf-loc-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="pf-loc-3" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="MQTT发布" vertex="1">
           <mxGeometry height="80" width="80" x="569" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="KBBmskmPELoNKqgiZbuQ-2" edge="1" parent="1" source="pf-loc-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pf-loc-5">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="pf-loc-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="直接WebSocket推送&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;broadcastVehicleLocationUpdate()&lt;/span&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="80" width="240" x="109" y="260" as="geometry" />
@@ -1711,16 +1743,6 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="pf-loc-e23" edge="1" parent="1" source="pf-loc-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;" target="pf-loc-3">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="pf-loc-e34" edge="1" parent="1" source="pf-loc-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" target="pf-loc-4">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="609" y="300" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="pf-loc-e45" edge="1" parent="1" source="pf-loc-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="pf-loc-5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="pf-loc-note" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="注解：&lt;div&gt;- 关键点：MQTT失败也会走WebSocket直推，保证实时性&lt;/div&gt;&lt;div&gt;- 子程序：broadcastVehicleLocationUpdate&lt;/div&gt;&lt;div&gt;WebSocketClient.handleMessage（与图5-6 前端封装衔接）&lt;/div&gt;" vertex="1">

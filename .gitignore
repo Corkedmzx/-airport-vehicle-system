@@ -45,6 +45,9 @@ frontend/.cache/
 # Metals / Scala tooling cache
 .metals/
 
+# clangd（C/C++ 语言服务）本地索引缓存：二进制、机器相关，勿提交
+**/.cache/clangd/
+
 # 操作系统文件
 .DS_Store
 Thumbs.db
