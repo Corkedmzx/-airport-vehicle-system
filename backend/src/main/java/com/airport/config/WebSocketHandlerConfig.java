@@ -1,5 +1,6 @@
 package com.airport.config;
 
+import com.airport.config.security.AirportSecurityProperties;
 import com.airport.websocket.SensorWebSocketHandler;
 import com.airport.websocket.VehicleLocationWebSocketHandler;
 import lombok.RequiredArgsConstructor;
@@ -21,16 +22,18 @@ public class WebSocketHandlerConfig implements WebSocketConfigurer {
 
     private final VehicleLocationWebSocketHandler vehicleLocationWebSocketHandler;
     private final SensorWebSocketHandler sensorWebSocketHandler;
+    private final AirportSecurityProperties securityProperties;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        // 注册车辆位置WebSocket处理器（用于前端连接）
+        String[] origins = securityProperties.getCorsAllowedOriginPatterns()
+                .toArray(new String[0]);
+
         registry.addHandler(vehicleLocationWebSocketHandler, "/ws/vehicles")
-                .setAllowedOriginPatterns("*");
-        
-        // 注册传感器WebSocket处理器（用于传感器设备连接）
+                .setAllowedOriginPatterns(origins);
+
         registry.addHandler(sensorWebSocketHandler, "/ws/sensor")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOriginPatterns(origins);
     }
 }
 

@@ -80,6 +80,7 @@ E:\share\airport-vehicle-system\backend\src\main\java\com\airport\common\excepti
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\websocket\VehicleLocationWebSocketHandler.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\RolePermissionController.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\controller\MqttLocationController.java
+E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\security\AirportSecurityProperties.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\dto\VehicleStatistics.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\repository\VehicleRepository.java
 E:\share\airport-vehicle-system\backend\src\main\java\com\airport\config\DotEnvConfig.java

@@ -225,3 +225,15 @@ system:
   page-size: 10
   export-max-rows: 10000
   maintenance-mode: false
+
+# 安全：生产环境保持 expose-admin-endpoints=false；本地开发可设为 true 以访问 Swagger/Druid/Actuator
+airport:
+  security:
+    expose-admin-endpoints: true
+    cors-allowed-origin-patterns:
+      - http://localhost:3000
+      - http://127.0.0.1:3000
+      - http://localhost:8080
+      - http://127.0.0.1:8080
+      - http://localhost:8081
+      - http://127.0.0.1:8081

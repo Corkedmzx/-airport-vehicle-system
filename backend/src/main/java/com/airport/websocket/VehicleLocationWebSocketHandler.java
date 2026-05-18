@@ -14,11 +14,14 @@ import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 车辆位置WebSocket处理器
  * 用于实时推送车辆位置更新
- * 
+ *
  * @author Corkedmzx
  */
 @Slf4j
@@ -26,43 +29,35 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
 
+    private static final String ATTR_AUTHENTICATED = "authenticated";
+    private static final long AUTH_TIMEOUT_SECONDS = 15L;
+
     private final JwtUtils jwtUtils;
     private final ObjectMapper objectMapper;
-    
-    // 存储所有连接的WebSocket会话，key为车辆ID，value为会话集合
+    private final ScheduledExecutorService authScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "ws-auth-timeout");
+        t.setDaemon(true);
+        return t;
+    });
+
     private final Map<Long, WebSocketSession> vehicleSessions = new ConcurrentHashMap<>();
-    
-    // 存储用户会话，key为用户名，value为会话集合
     private final Map<String, WebSocketSession> userSessions = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        log.info("========== WebSocket连接尝试建立 ==========");
-        log.info("会话ID: {}", session.getId());
-        log.info("连接URI: {}", session.getUri());
-        
-        String token = getTokenFromSession(session);
-        log.info("从会话中提取的token: {}", token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "null");
-        
-        if (token == null || !validateToken(token)) {
-            log.warn("WebSocket连接失败：无效的token");
-            session.close(CloseStatus.BAD_DATA.withReason("无效的认证token"));
-            return;
-        }
-        
-        String username = jwtUtils.getUsernameFromToken(token);
-        Long userId = jwtUtils.getUserIdFromToken(token);
-        
-        log.info("Token验证成功，用户: {}, 用户ID: {}", username, userId);
-        
-        userSessions.put(username, session);
-        log.info("========== ✅ WebSocket连接已建立 ==========");
-        log.info("用户: {}, 用户ID: {}, 会话ID: {}", username, userId, session.getId());
-        log.info("当前用户会话数量: {}", userSessions.size());
-        log.info("所有用户会话: {}", userSessions.keySet());
-        
-        // 发送连接成功消息
-        sendMessage(session, createMessage("CONNECTED", Map.of("message", "连接成功")));
+        log.info("WebSocket 握手成功，等待 AUTH 帧，会话ID: {}", session.getId());
+        session.getAttributes().put(ATTR_AUTHENTICATED, Boolean.FALSE);
+        sendMessage(session, createMessage("AUTH_REQUIRED", Map.of("message", "请发送 AUTH 消息")));
+
+        authScheduler.schedule(() -> {
+            if (Boolean.FALSE.equals(session.getAttributes().get(ATTR_AUTHENTICATED)) && session.isOpen()) {
+                try {
+                    session.close(CloseStatus.POLICY_VIOLATION.withReason("认证超时"));
+                } catch (IOException e) {
+                    log.debug("关闭未认证 WebSocket 失败: {}", e.getMessage());
+                }
+            }
+        }, AUTH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
     @Override
@@ -70,23 +65,30 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         try {
             String payload = message.getPayload();
             Map<String, Object> data = objectMapper.readValue(payload, Map.class);
-            
+
             String type = (String) data.get("type");
-            
+
+            if ("AUTH".equals(type)) {
+                handleAuth(session, data);
+                return;
+            }
+
+            if (!isAuthenticated(session)) {
+                sendMessage(session, createMessage("ERROR", Map.of("message", "未认证")));
+                return;
+            }
+
             switch (type) {
                 case "PING":
-                    // 心跳检测
                     sendMessage(session, createMessage("PONG", Map.of("timestamp", System.currentTimeMillis())));
                     break;
                 case "SUBSCRIBE_VEHICLE":
-                    // 订阅车辆位置更新
                     Long vehicleId = Long.valueOf(data.get("data").toString());
                     vehicleSessions.put(vehicleId, session);
                     log.info("用户订阅车辆位置更新，车辆ID: {}", vehicleId);
                     sendMessage(session, createMessage("SUBSCRIBED", Map.of("vehicleId", vehicleId)));
                     break;
                 case "UNSUBSCRIBE_VEHICLE":
-                    // 取消订阅
                     Long unsubVehicleId = Long.valueOf(data.get("data").toString());
                     vehicleSessions.remove(unsubVehicleId);
                     log.info("用户取消订阅车辆位置更新，车辆ID: {}", unsubVehicleId);
@@ -100,9 +102,47 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    private void handleAuth(WebSocketSession session, Map<String, Object> data) throws IOException {
+        if (isAuthenticated(session)) {
+            return;
+        }
+
+        String token = extractTokenFromAuthPayload(data);
+        if (token == null || !validateToken(token)) {
+            log.warn("WebSocket AUTH 失败，会话ID: {}", session.getId());
+            session.close(CloseStatus.BAD_DATA.withReason("无效的认证token"));
+            return;
+        }
+
+        String username = jwtUtils.getUsernameFromToken(token);
+        Long userId = jwtUtils.getUserIdFromToken(token);
+        session.getAttributes().put(ATTR_AUTHENTICATED, Boolean.TRUE);
+        userSessions.put(username, session);
+        log.info("WebSocket 认证成功，用户: {}, 用户ID: {}, 会话ID: {}", username, userId, session.getId());
+        sendMessage(session, createMessage("CONNECTED", Map.of("message", "连接成功")));
+    }
+
+    @SuppressWarnings("unchecked")
+    private String extractTokenFromAuthPayload(Map<String, Object> data) {
+        Object payload = data.get("data");
+        if (payload instanceof Map<?, ?> map) {
+            Object token = map.get("token");
+            if (token != null) {
+                return token.toString();
+            }
+        }
+        if (payload instanceof String s && !s.isBlank()) {
+            return s;
+        }
+        return null;
+    }
+
+    private boolean isAuthenticated(WebSocketSession session) {
+        return Boolean.TRUE.equals(session.getAttributes().get(ATTR_AUTHENTICATED));
+    }
+
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        // 清理会话
         userSessions.entrySet().removeIf(entry -> entry.getValue().equals(session));
         vehicleSessions.entrySet().removeIf(entry -> entry.getValue().equals(session));
         log.info("WebSocket连接已关闭: {}", status);
@@ -129,14 +169,7 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         return false;
     }
 
-    /**
-     * 发送车辆位置更新消息给所有订阅的用户
-     * 
-     * @param vehicleId 车辆ID，如果为null表示PC位置或其他非车辆位置
-     * @param locationData 位置数据
-     */
     public void broadcastVehicleLocationUpdate(Long vehicleId, Map<String, Object> locationData) {
-        // 如果有车辆ID，发送给订阅该车辆的会话
         if (vehicleId != null) {
             WebSocketSession session = vehicleSessions.get(vehicleId);
             if (session != null && session.isOpen()) {
@@ -147,8 +180,7 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
                 }
             }
         }
-        
-        // 发送给所有连接的用户（用于地图监控页面，包括PC位置）
+
         log.debug("广播位置更新给所有用户，位置数据: {}", locationData);
         int sentCount = 0;
         for (WebSocketSession s : userSessions.values()) {
@@ -157,7 +189,6 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
                     String message = createMessage("VEHICLE_LOCATION_UPDATE", locationData);
                     sendMessage(s, message);
                     sentCount++;
-                    log.debug("位置更新已发送给用户会话: {}", s.getId());
                 } catch (Exception e) {
                     log.error("发送位置更新给用户失败，会话ID: {}", s.getId(), e);
                 }
@@ -166,9 +197,6 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         log.info("位置更新已广播给 {} 个用户会话", sentCount);
     }
 
-    /**
-     * 发送告警通知
-     */
     public void broadcastAlert(Map<String, Object> alertData) {
         userSessions.values().forEach(session -> {
             if (session.isOpen()) {
@@ -181,9 +209,6 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         });
     }
 
-    /**
-     * 发送任务状态更新
-     */
     public void broadcastTaskUpdate(Map<String, Object> taskData) {
         userSessions.values().forEach(session -> {
             if (session.isOpen()) {
@@ -196,18 +221,12 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         });
     }
 
-    /**
-     * 发送消息
-     */
     private void sendMessage(WebSocketSession session, String message) throws IOException {
         if (session.isOpen()) {
             session.sendMessage(new TextMessage(message));
         }
     }
 
-    /**
-     * 创建消息
-     */
     private String createMessage(String type, Map<String, Object> data) {
         try {
             Map<String, Object> message = Map.of(
@@ -222,26 +241,6 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    /**
-     * 从会话中获取token
-     */
-    private String getTokenFromSession(WebSocketSession session) {
-        // 从查询参数中获取token
-        String query = session.getUri().getQuery();
-        if (query != null && query.contains("token=")) {
-            String[] params = query.split("&");
-            for (String param : params) {
-                if (param.startsWith("token=")) {
-                    return param.substring(6);
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 验证token
-     */
     private boolean validateToken(String token) {
         try {
             String username = jwtUtils.getUsernameFromToken(token);
@@ -251,4 +250,3 @@ public class VehicleLocationWebSocketHandler extends TextWebSocketHandler {
         }
     }
 }
-
