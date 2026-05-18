@@ -416,6 +416,7 @@ import { InfoFilled, Loading } from '@element-plus/icons-vue'
 import { getAllRolesApi, getRolePermissionsApi, updateRolePermissionsApi, getAllPermissionsApi } from '@/api/rolePermissions'
 import type { Role, Permission, RolePermissionDTO } from '@/api/rolePermissions'
 import { isAdmin } from '@/utils/permission'
+import { escapeHtml } from '@/utils/escapeHtml'
 import { useUserStore } from '@/store/user'
 import { getSystemConfigsApi, saveSystemConfigsApi } from '@/api/system'
 import { getUsersWithEmailApi } from '@/api/users'
@@ -565,14 +566,14 @@ const viewRolePermissions = (row: RolePermissionDTO & { id?: number }) => {
     ? permissions.map(p => `
         <div style="display: inline-block; margin: 6px 8px 6px 0; padding: 4px 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #f5f7fa;">
           <span style="display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center; border: 1px solid #67c23a; border-radius: 2px; background-color: #67c23a; color: white; margin-right: 6px; font-size: 12px;">√</span>
-          <span>${p.name}</span>
+          <span>${escapeHtml(p.name)}</span>
         </div>
       `).join('')
     : '<div style="color: #909399; padding: 10px;">暂无权限</div>'
   
   ElMessageBox.alert(
     `<div style="text-align: left; padding: 10px;">
-      <p style="margin-bottom: 12px;"><strong style="font-size: 16px;">角色：</strong><span style="font-size: 16px;">${row.roleName}</span></p>
+      <p style="margin-bottom: 12px;"><strong style="font-size: 16px;">角色：</strong><span style="font-size: 16px;">${escapeHtml(row.roleName || '')}</span></p>
       <p style="margin-bottom: 8px;"><strong>权限列表：</strong></p>
       <div style="max-height: 400px; overflow-y: auto; padding: 8px 0;">
         ${permissionList}

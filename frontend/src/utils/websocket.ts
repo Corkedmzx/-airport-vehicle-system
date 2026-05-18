@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/user'
 
 export class WebSocketClient {
   private ws: WebSocket | null = null
+  private pendingAuthToken: string | null = null
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private reconnectTimeout: number = 3000
@@ -29,19 +30,17 @@ export class WebSocketClient {
       }
 
       console.log('[WebSocket] ========== 开始连接WebSocket ==========')
-      console.log('[WebSocket] Token存在:', !!token)
-      console.log('[WebSocket] Token前10个字符:', token.substring(0, 10) + '...')
-      
-      // 如果已有连接，先关闭
+
+      this.pendingAuthToken = token
+
       if (this.ws) {
         console.log('[WebSocket] 关闭现有连接')
         this.ws.close()
         this.ws = null
       }
 
-      // 使用SockJS降级方案
-      const wsUrl = this.getWebSocketUrl(token)
-      console.log('[WebSocket] 创建WebSocket连接，URL:', wsUrl)
+      const wsUrl = this.getWebSocketUrl()
+      console.log('[WebSocket] 创建 WebSocket（鉴权经 AUTH 帧，不含 URL token）:', wsUrl)
       this.ws = new WebSocket(wsUrl)
       
       this.setupEventListeners()
@@ -57,27 +56,27 @@ export class WebSocketClient {
   /**
    * 获取WebSocket URL
    */
-  private getWebSocketUrl(token: string): string {
-    // 前端开发环境使用代理，需要直接连接到后端
+  private getWebSocketUrl(): string {
     const isDev = import.meta.env.DEV
     let protocol = 'ws:'
     let host = 'localhost:8080'
-    
-    if (isDev) {
-      // 开发环境：直接连接后端
-      protocol = 'ws:'
-      host = 'localhost:8080'
-    } else {
-      // 生产环境：使用当前域名
+
+    if (!isDev) {
       protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       host = window.location.host
     }
-    
-    const wsPath = '/api/ws/vehicles'
-    const url = `${protocol}//${host}${wsPath}?token=${encodeURIComponent(token)}`
-    
-    console.log('[WebSocket] 连接URL:', url)
-    return url
+
+    return `${protocol}//${host}/api/ws/vehicles`
+  }
+
+  private sendAuthFrame(): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.pendingAuthToken) {
+      return
+    }
+    this.ws.send(JSON.stringify({
+      type: 'AUTH',
+      data: { token: this.pendingAuthToken }
+    }))
   }
 
   /**
@@ -87,12 +86,8 @@ export class WebSocketClient {
     if (!this.ws) return
 
     this.ws.onopen = () => {
-      console.log('[WebSocket] ========== ✅ WebSocket连接已建立 ==========')
-      console.log('[WebSocket] 连接URL:', this.ws?.url)
-      console.log('[WebSocket] 连接状态:', this.ws?.readyState, '(OPEN=1)')
-      this.reconnectAttempts = 0
-      this.startHeartbeat()
-      this.notifyListeners('connect', {})
+      console.log('[WebSocket] 握手完成，发送 AUTH 帧')
+      this.sendAuthFrame()
     }
 
     this.ws.onmessage = (event) => {
@@ -144,6 +139,15 @@ export class WebSocketClient {
     
     // 特殊处理某些消息类型
     switch (type) {
+      case 'AUTH_REQUIRED':
+        this.sendAuthFrame()
+        break
+      case 'CONNECTED':
+        console.log('[WebSocket] ========== ✅ 已认证并连接 ==========')
+        this.reconnectAttempts = 0
+        this.startHeartbeat()
+        this.notifyListeners('connect', {})
+        break
       case 'VEHICLE_LOCATION_UPDATE':
         console.log('[WebSocket] VEHICLE_LOCATION_UPDATE消息，调用handleVehicleLocationUpdate')
         this.handleVehicleLocationUpdate(messageData)
