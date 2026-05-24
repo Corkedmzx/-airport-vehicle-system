@@ -189,7 +189,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="TaskMgmtFlow" name="任务管理流程图">
-    <mxGraphModel dx="1393" dy="909" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1277" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -292,7 +292,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="RealtimeMonitorFlow" name="实时监控流程图">
-    <mxGraphModel dx="1021" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="851" dy="556" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -442,13 +442,10 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="alarmFlow-term-begin" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;" value="开始" vertex="1">
-          <mxGeometry height="40" width="100" x="364" y="78" as="geometry" />
+          <mxGeometry height="40" width="100" x="364" y="80" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-term-end" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;" value="结束" vertex="1">
-          <mxGeometry height="40" width="100" x="364" y="1044" as="geometry" />
-        </mxCell>
-        <mxCell id="alarmFlow-e-begin" edge="1" parent="1" source="alarmFlow-term-begin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-start">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry height="40" width="100" x="364" y="943.91" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-e-end" edge="1" parent="1" source="alarmFlow-close" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-term-end">
           <mxGeometry relative="1" as="geometry" />
@@ -456,66 +453,65 @@
         <mxCell id="alarmFlow-title" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="告警管理流程图" vertex="1">
           <mxGeometry height="30" width="160" x="334" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="alarmFlow-start" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="告警产生" vertex="1">
-          <mxGeometry height="60" width="120" x="354" y="138" as="geometry" />
-        </mxCell>
         <mxCell id="alarmFlow-ingest" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="写入告警记录" vertex="1">
-          <mxGeometry height="60" width="140" x="344" y="228" as="geometry" />
+          <mxGeometry height="60" width="140" x="344" y="148" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-level" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否高等级" vertex="1">
-          <mxGeometry height="80" width="80" x="374" y="318" as="geometry" />
+          <mxGeometry height="80" width="80" x="374" y="238" as="geometry" />
         </mxCell>
         <mxCell id="SDGhFzER4GlvL5atL9xv-1" edge="1" parent="1" source="alarmFlow-notify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-ack">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-notify" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="通知相关人员" vertex="1">
-          <mxGeometry height="60" width="140" x="170" y="378" as="geometry" />
+          <mxGeometry height="60" width="140" x="170" y="298" as="geometry" />
         </mxCell>
         <mxCell id="SDGhFzER4GlvL5atL9xv-2" edge="1" parent="1" source="alarmFlow-escalate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-ack">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-escalate" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="升级通知&lt;br&gt;(短信/电话)" vertex="1">
-          <mxGeometry height="60" width="160" x="520" y="378" as="geometry" />
+          <mxGeometry height="60" width="160" x="520" y="298" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-mergeAck-to-ack" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-ack">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="414" y="526.0000000000001" as="sourcePoint" />
+            <mxPoint x="414" y="446.0000000000001" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="alarmFlow-ack" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="告警确认" vertex="1">
-          <mxGeometry height="60" width="120" x="354" y="520" as="geometry" />
+          <mxGeometry height="60" width="120" x="354" y="440" as="geometry" />
         </mxCell>
         <mxCell id="SDGhFzER4GlvL5atL9xv-5" edge="1" parent="1" source="alarmFlow-ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-handle">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-ticket" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="派单/指派处理人" vertex="1">
-          <mxGeometry height="60" width="160" x="334" y="610" as="geometry" />
+          <mxGeometry height="60" width="160" x="334" y="530" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-handle" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="处理并记录结果" vertex="1">
-          <mxGeometry height="60" width="160" x="334" y="752" as="geometry" />
+          <mxGeometry height="60" width="160" x="334" y="651.91" as="geometry" />
         </mxCell>
         <mxCell id="fLWjfIzbhPidNppfkBbg-4" edge="1" parent="1" source="alarmFlow-closeCheck" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="alarmFlow-reopen">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-closeCheck" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;" value="是否已消除" vertex="1">
-          <mxGeometry height="80" width="80" x="374" y="842" as="geometry" />
+          <mxGeometry height="80" width="80" x="374" y="741.91" as="geometry" />
         </mxCell>
         <mxCell id="SDGhFzER4GlvL5atL9xv-6" edge="1" parent="1" source="alarmFlow-reopen" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="alarmFlow-handle">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="614" y="720" />
-              <mxPoint x="414" y="720" />
+              <mxPoint x="614" y="619.91" />
+              <mxPoint x="414" y="619.91" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="alarmFlow-reopen" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="继续跟踪/复核" vertex="1">
-          <mxGeometry height="60" width="160" x="534" y="852" as="geometry" />
+          <mxGeometry height="60" width="160" x="534" y="751.91" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-close" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="关闭告警" vertex="1">
-          <mxGeometry height="60" width="120" x="354" y="962" as="geometry" />
+          <mxGeometry height="60" width="120" x="354" y="861.91" as="geometry" />
         </mxCell>
-        <mxCell id="alarmFlow-start-to-ingest" edge="1" parent="1" source="alarmFlow-start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-ingest">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="alarmFlow-start-to-ingest" edge="1" parent="1" source="alarmFlow-term-begin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-ingest">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="414" y="118" as="sourcePoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="alarmFlow-ingest-to-level" edge="1" parent="1" source="alarmFlow-ingest" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-level">
           <mxGeometry relative="1" as="geometry" />
@@ -527,10 +523,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-yesText-level" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="是" vertex="1">
-          <mxGeometry height="30" width="60" x="460" y="338" as="geometry" />
+          <mxGeometry height="30" width="60" x="460" y="258" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-noText-level" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="否" vertex="1">
-          <mxGeometry height="30" width="60" x="310" y="338" as="geometry" />
+          <mxGeometry height="30" width="60" x="310" y="258" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-ack-to-ticket" edge="1" parent="1" source="alarmFlow-ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" target="alarmFlow-ticket">
           <mxGeometry relative="1" as="geometry" />
@@ -542,16 +538,16 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-yesText-close" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="是" vertex="1">
-          <mxGeometry height="30" width="60" x="354" y="922" as="geometry" />
+          <mxGeometry height="30" width="60" x="354" y="821.91" as="geometry" />
         </mxCell>
         <mxCell id="alarmFlow-noText-close" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=14;" value="否" vertex="1">
-          <mxGeometry height="30" width="60" x="454" y="852" as="geometry" />
+          <mxGeometry height="30" width="60" x="454" y="751.91" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
   <diagram id="SystemMgmtFlow" name="系统管理流程图">
-    <mxGraphModel dx="1178" dy="769" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1094" dy="714" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -733,7 +729,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="XUURh4LQ5RTX4jIHj9M-" name="消息传输流程">
-    <mxGraphModel dx="806" dy="526" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="958" dy="625" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -854,7 +850,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="iz2lyKShHDdoXkqVIq7N" name="上下级通信过程">
-    <mxGraphModel dx="806" dy="526" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="766" dy="500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -951,7 +947,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="PFsVrZJxmL8ammRjC5r9" name="用户注册登录流程">
-    <mxGraphModel dx="1178" dy="769" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1277" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1081,7 +1077,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="X46ql16G1DZVpqVz3mb7" name="技术架构">
-    <mxGraphModel dx="1393" dy="909" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1532" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1179,7 +1175,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="Cd5B_kxzRXXF2uPm63LM" name="车辆管理流程图">
-    <mxGraphModel dx="1393" dy="909" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1277" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1321,7 +1317,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="FrontendModuleDiagram" name="前端功能模块图">
-    <mxGraphModel dx="901" dy="588" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="806" dy="526" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1383,7 +1379,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="BackendModuleDiagram" name="后端功能模块图">
-    <mxGraphModel dx="1094" dy="714" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1021" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1461,7 +1457,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="ProgramFlow-BackendMain" name="程序设计-后端主程序流程">
-    <mxGraphModel dx="958" dy="625" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1094" dy="714" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1508,7 +1504,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="pf-be-main-note" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" value="注解：该流程对应后端主程序&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;AirportVehicleSystemApplication.main()&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;核心子程序：loadDotEnvFile()&lt;/span&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="90" width="270" x="524" y="115" as="geometry" />
+          <mxGeometry height="90" width="270" x="550" y="115" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
